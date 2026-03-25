@@ -14,6 +14,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { Icon } from '../../components/common/Icon';
 import { useRegistrationStore } from '../../store/registration.store';
+import { useBrandingStore } from '../../store/branding.store';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { getClubs, Club } from '../../api/services/registration.service';
@@ -76,6 +77,7 @@ const ClubCard = React.memo(
 // ── Main Screen ──────────────────────────────────────────────────
 export const ClubSelectionScreen: React.FC<Props> = ({ navigation }) => {
   const { setClub } = useRegistrationStore();
+  const { setSlug } = useBrandingStore();
 
   const [clubs, setClubs] = useState<Club[]>([]);
   const [filteredClubs, setFilteredClubs] = useState<Club[]>([]);
@@ -117,9 +119,11 @@ export const ClubSelectionScreen: React.FC<Props> = ({ navigation }) => {
   const handleSelect = useCallback(
     (club: Club) => {
       setClub(club.slug, club.display_name || club.name);
+      // Set branding slug so X-Club-Slug header is correct for registration API calls
+      setSlug(club.slug);
       navigation.navigate('Step1_BasicProfile');
     },
-    [navigation, setClub],
+    [navigation, setClub, setSlug],
   );
 
   // ── Render item ────────────────────────────────────────────────
