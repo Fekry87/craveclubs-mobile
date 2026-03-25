@@ -5,6 +5,7 @@ import { ENDPOINTS } from '../endpoints';
 export interface Club {
   id: number;
   name: string;
+  display_name: string;
   slug: string;
   primary_color: string | null;
   logo_url: string | null;

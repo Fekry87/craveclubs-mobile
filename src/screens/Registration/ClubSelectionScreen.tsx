@@ -44,7 +44,8 @@ const ClubCard = React.memo(
   }) => {
     const entry = useAnimatedEntry(Math.min(index, 10));
     const press = useAnimatedPress();
-    const initial = club.name.charAt(0).toUpperCase();
+    const displayName = club.display_name || club.name;
+    const initial = displayName.charAt(0).toUpperCase();
     const bgColor = club.primary_color
       ? (club.primary_color.startsWith('#') ? club.primary_color : `#${club.primary_color}`)
       : colors.primary;
@@ -62,7 +63,7 @@ const ClubCard = React.memo(
           </View>
           <View style={styles.clubInfo}>
             <Text style={styles.clubName} numberOfLines={1}>
-              {club.name}
+              {displayName}
             </Text>
           </View>
           <Icon name="arrow-right-s-line" size={22} color={colors.textDim} />
@@ -108,14 +109,14 @@ export const ClubSelectionScreen: React.FC<Props> = ({ navigation }) => {
       setFilteredClubs(clubs);
     } else {
       const q = search.toLowerCase();
-      setFilteredClubs(clubs.filter((c) => c.name.toLowerCase().includes(q)));
+      setFilteredClubs(clubs.filter((c) => (c.display_name || c.name).toLowerCase().includes(q)));
     }
   }, [search, clubs]);
 
   // ── Select club ────────────────────────────────────────────────
   const handleSelect = useCallback(
     (club: Club) => {
-      setClub(club.slug, club.name);
+      setClub(club.slug, club.display_name || club.name);
       navigation.navigate('Step1_BasicProfile');
     },
     [navigation, setClub],
