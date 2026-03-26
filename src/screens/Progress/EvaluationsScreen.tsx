@@ -91,7 +91,7 @@ export const EvaluationsScreen: React.FC = () => {
     try {
       const data = await progressService.getEvaluations(1, 100);
       const sorted = [...data.data].sort(
-        (a, b) => new Date(b.session.date).getTime() - new Date(a.session.date).getTime(),
+        (a, b) => new Date(b.session?.date ?? b.created_at ?? 0).getTime() - new Date(a.session?.date ?? a.created_at ?? 0).getTime(),
       );
       setEvaluations(sorted);
       setError(null);
