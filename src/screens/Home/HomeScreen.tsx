@@ -355,7 +355,7 @@ export const HomeScreen: React.FC = () => {
       </Animated.View>
 
       {/* ═══ Latest Evaluation — taps to Progress ═══ */}
-      {dashboard.recent_evaluations.length > 0 && (
+      {dashboard.recent_evaluations?.length > 0 && dashboard.recent_evaluations[0] && (
         <Animated.View style={[screenStyles.section, evalsEntry]}>
           <View style={screenStyles.sectionHeader}>
             <Text style={screenStyles.sectionTitle}>Latest Evaluation</Text>
@@ -376,7 +376,7 @@ export const HomeScreen: React.FC = () => {
           {(() => {
             const evaluation = dashboard.recent_evaluations[0];
             const emptyStars = 5 - evaluation.rating;
-            const evalDate = new Date(evaluation.session.date);
+            const evalDate = new Date(evaluation.session?.date ?? evaluation.created_at ?? Date.now());
             const dateLabel = evalDate.toLocaleDateString('en-GB', {
               day: 'numeric',
               month: 'short',
