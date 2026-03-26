@@ -73,6 +73,7 @@ export const HomeScreen: React.FC = () => {
   const sessionsEntry = useAnimatedEntry(3);
   const evalsEntry = useAnimatedEntry(4);
 
+  /** Full fetch — shows loading/error states. Used for initial load + pull-to-refresh. */
   const fetchDashboard = useCallback(async () => {
     try {
       setError(null);
@@ -96,20 +97,42 @@ export const HomeScreen: React.FC = () => {
     // eslint-disable-next-line -- checkForCompletions is stable from the hook
   }, []);
 
+  /** Silent poll — keeps existing data, no loading/error UI changes. */
+  const silentPoll = useCallback(async () => {
+    try {
+      const [dashData, lbData, sessionsData] = await Promise.all([
+        progressService.getDashboard(),
+        progressService.getLeaderboard(),
+        sessionService.getSessions(1, 50),
+      ]);
+      setDashboard(dashData);
+      setLeaderboard(lbData);
+      setSessions(sessionsData.data);
+      checkForCompletions(sessionsData.data);
+    } catch {
+      // Silent fail — keep showing existing data
+    }
+    // eslint-disable-next-line
+  }, []);
+
   // Keep a stable ref so polling always calls the latest version
-  fetchRef.current = fetchDashboard;
+  fetchRef.current = silentPoll;
 
   useFocusEffect(
     useCallback(() => {
       fetchDashboard();
       // Register for real-time dashboard refresh (attendance, evaluations)
-      setDashboardRefreshCallback(fetchDashboard);
+      setDashboardRefreshCallback(() => silentPoll());
       return () => setDashboardRefreshCallback(null);
-    }, [fetchDashboard]),
+      // eslint-disable-next-line
+    }, []),
   );
 
-  /* ─── Auto-poll when a Live session exists ─── */
+  /* ─── Auto-poll when a Live session exists (only if no error) ─── */
   useEffect(() => {
+    // Don't poll if there's an error — user must tap "Try Again"
+    if (error) return;
+
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const hasActiveSession = sessions.some(
@@ -130,8 +153,7 @@ export const HomeScreen: React.FC = () => {
         pollIntervalRef.current = null;
       }
     };
-    // Only re-evaluate when sessions list changes (not fetchDashboard ref)
-  }, [sessions]);
+  }, [sessions, error]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
