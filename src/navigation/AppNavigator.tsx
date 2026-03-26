@@ -176,18 +176,25 @@ export const AppNavigator: React.FC = () => {
   // Keep WebSocket connection alive across all tabs
   useRealtime();
 
-  // Global session polling fallback — runs every 1s when WebSocket is NOT connected.
+  // Global session polling fallback — runs every 30s when WebSocket is NOT connected.
   // Ensures session status changes from the portal reflect on ALL tabs without pull-to-refresh.
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isPollingRef = useRef(false);
 
   useEffect(() => {
     // If WebSocket is connected, real-time events handle everything — no polling needed
     if (isEchoConnected()) return;
 
-    pollRef.current = setInterval(() => {
-      // Access store directly to avoid dependency instability
-      useSessionStore.getState().refreshSessions();
-    }, 1000);
+    pollRef.current = setInterval(async () => {
+      // Skip if a previous poll is still in progress
+      if (isPollingRef.current) return;
+      isPollingRef.current = true;
+      try {
+        await useSessionStore.getState().refreshSessions();
+      } finally {
+        isPollingRef.current = false;
+      }
+    }, 30000);
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);

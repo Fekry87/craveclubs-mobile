@@ -143,14 +143,13 @@ export const HomeScreen: React.FC = () => {
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const hasActiveSession = sessions.some(
       (s) =>
-        (s.status === 'Live' || s.status === 'Scheduled') &&
-        s.date.startsWith(todayStr),
+        s.status === 'Live' && s.date.startsWith(todayStr),
     );
 
     if (hasActiveSession) {
       pollIntervalRef.current = setInterval(() => {
         fetchRef.current?.();
-      }, 1000);
+      }, 10000); // 10s — only during active Live sessions
     }
 
     return () => {
