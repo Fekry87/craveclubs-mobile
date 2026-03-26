@@ -15,6 +15,7 @@ import { useBrandingStore } from '../store/branding.store';
 import { useSportModuleStore } from '../store/sportModule.store';
 import { useNotificationStore } from '../store/notification.store';
 import { setOnUnauthorized } from '../api/client';
+// Note: store functions are accessed via getState() to avoid dependency instability
 import { checkAppVersion, VersionCheckResponse } from '../api/services/app.service';
 import { registerForPushNotifications } from '../services/pushNotifications';
 import { Loader } from '../components/common/Loader';
@@ -53,11 +54,12 @@ export const RootNavigator: React.FC = () => {
 
   useEffect(() => {
     // Restore persisted slug for shared builds, then restore auth session + sport modules
+    // eslint-disable-next-line -- run once on mount only; store functions are stable singletons
     restoreSlug().then(() => {
       restoreSession();
       fetchAndInitModules();
     });
-  }, [restoreSlug, restoreSession, fetchAndInitModules]);
+  }, []);
 
   // Refresh branding when app returns to foreground
   const appState = useRef(AppState.currentState);
@@ -69,7 +71,7 @@ export const RootNavigator: React.FC = () => {
       appState.current = next;
     });
     return () => sub.remove();
-  }, [refreshBranding]);
+  }, []);
 
   // Version check after auth restore completes
   useEffect(() => {
@@ -90,16 +92,15 @@ export const RootNavigator: React.FC = () => {
     setOnUnauthorized(() => {
       logout();
     });
-  }, [logout]);
+  }, []);
 
   // Register push token + fetch notifications after auth
-  const fetchNotifications = useNotificationStore((s) => s.fetchNotifications);
   useEffect(() => {
     if (isAuthenticated) {
       registerForPushNotifications();
-      fetchNotifications();
+      useNotificationStore.getState().fetchNotifications();
     }
-  }, [isAuthenticated, fetchNotifications]);
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return <Loader message="Loading..." />;
