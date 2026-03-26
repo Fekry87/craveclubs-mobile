@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useLayoutEffect, useRef } from 'react';
 import {
   ScrollView,
   View,
@@ -113,13 +113,18 @@ export const ProfileScreen: React.FC = () => {
     });
   }, [navigation, handleLogout, loggingOut]);
 
+  const hasDataRef = useRef(false);
+
   const fetchProfile = useCallback(async () => {
     try {
-      setError(null);
       const data = await progressService.getDashboard();
       setDashboard(data);
+      setError(null);
+      hasDataRef.current = true;
     } catch {
-      setError('Failed to load profile.');
+      if (!hasDataRef.current) {
+        setError('Failed to load profile.');
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -85,17 +85,21 @@ export const EvaluationsScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  const hasDataRef = useRef(false);
+
   const fetchEvaluations = useCallback(async () => {
     try {
-      setError(null);
       const data = await progressService.getEvaluations(1, 100);
-      // Sort newest first by session date
       const sorted = [...data.data].sort(
         (a, b) => new Date(b.session.date).getTime() - new Date(a.session.date).getTime(),
       );
       setEvaluations(sorted);
+      setError(null);
+      hasDataRef.current = true;
     } catch {
-      setError('Failed to load evaluations.');
+      if (!hasDataRef.current) {
+        setError('Failed to load evaluations.');
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);

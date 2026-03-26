@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   ScrollView,
   View,
@@ -43,9 +43,10 @@ export const ProgressScreen: React.FC = () => {
   const chartEntry = useAnimatedEntry(3);
   const evalsEntry = useAnimatedEntry(4);
 
+  const hasDataRef = useRef(false);
+
   const fetchData = useCallback(async () => {
     try {
-      setError(null);
       const [statsData, evalData] = await Promise.all([
         progressService.getStats(),
         hasEvaluations
@@ -54,8 +55,12 @@ export const ProgressScreen: React.FC = () => {
       ]);
       setStats(statsData);
       if (evalData) setEvaluations(evalData);
+      setError(null);
+      hasDataRef.current = true;
     } catch {
-      setError('Failed to load progress data.');
+      if (!hasDataRef.current) {
+        setError('Failed to load progress data.');
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);

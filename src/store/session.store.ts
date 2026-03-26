@@ -13,7 +13,7 @@ interface SessionState {
   reset: () => void;
 }
 
-export const useSessionStore = create<SessionState>((set) => ({
+export const useSessionStore = create<SessionState>((set, get) => ({
   sessions: [],
   isLoading: false,
   error: null,
@@ -21,7 +21,11 @@ export const useSessionStore = create<SessionState>((set) => ({
   totalPages: 1,
 
   fetchSessions: async (page: number = 1) => {
-    set({ isLoading: true, error: null });
+    const hasData = get().sessions.length > 0;
+    // Only show loading spinner on first load (no existing data)
+    if (!hasData) {
+      set({ isLoading: true, error: null });
+    }
     try {
       const response = await sessionService.getSessions(page);
       set((state) => ({
@@ -32,9 +36,15 @@ export const useSessionStore = create<SessionState>((set) => ({
         currentPage: response.current_page,
         totalPages: response.last_page,
         isLoading: false,
+        error: null,
       }));
     } catch {
-      set({ isLoading: false, error: 'Failed to load sessions.' });
+      // Only show error if there's no existing data to display
+      if (!hasData) {
+        set({ isLoading: false, error: 'Failed to load sessions.' });
+      } else {
+        set({ isLoading: false });
+      }
     }
   },
 

@@ -247,14 +247,19 @@ export const ManagerCoachesScreen: React.FC = () => {
 
   const headerEntry = useAnimatedEntry(0);
 
+  const hasDataRef = useRef(false);
+
   const fetchCoaches = useCallback(async (isRefresh = false) => {
-    if (!isRefresh) setIsLoading(true);
-    setError(null);
+    if (!hasDataRef.current && !isRefresh) setIsLoading(true);
     try {
       const data = await managerService.getCoachPerformance();
       setCoaches(data);
+      setError(null);
+      hasDataRef.current = true;
     } catch {
-      setError('Failed to load coach performance.');
+      if (!hasDataRef.current) {
+        setError('Failed to load coach performance.');
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);

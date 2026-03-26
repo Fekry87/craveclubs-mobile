@@ -145,13 +145,18 @@ export const LeaderboardScreen: React.FC = () => {
     outputRange: [0, -4],
   });
 
+  const hasDataRef = useRef(false);
+
   const fetchLeaderboard = useCallback(async () => {
     try {
-      setError(null);
       const response = await progressService.getLeaderboard();
       setData(response);
+      setError(null);
+      hasDataRef.current = true;
     } catch {
-      setError('Failed to load leaderboard.');
+      if (!hasDataRef.current) {
+        setError('Failed to load leaderboard.');
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);

@@ -73,10 +73,11 @@ export const HomeScreen: React.FC = () => {
   const sessionsEntry = useAnimatedEntry(3);
   const evalsEntry = useAnimatedEntry(4);
 
-  /** Full fetch — shows loading/error states. Used for initial load + pull-to-refresh. */
+  const hasDataRef = useRef(false);
+
+  /** Full fetch — shows loading/error only when no data exists yet. */
   const fetchDashboard = useCallback(async () => {
     try {
-      setError(null);
       const [dashData, lbData, sessionsData] = await Promise.all([
         progressService.getDashboard(),
         progressService.getLeaderboard(),
@@ -85,11 +86,16 @@ export const HomeScreen: React.FC = () => {
       setDashboard(dashData);
       setLeaderboard(lbData);
       setSessions(sessionsData.data);
+      setError(null);
+      hasDataRef.current = true;
 
       // Polling fallback: detect session completions
       checkForCompletions(sessionsData.data);
     } catch {
-      setError('Failed to load dashboard.');
+      // Only show error if there's no existing data to display
+      if (!hasDataRef.current) {
+        setError('Failed to load dashboard.');
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);

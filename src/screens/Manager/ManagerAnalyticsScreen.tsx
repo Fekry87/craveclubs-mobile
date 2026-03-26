@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -105,14 +105,19 @@ export const ManagerAnalyticsScreen: React.FC = () => {
   const sectionEntry3 = useAnimatedEntry(4);
   const sectionEntry4 = useAnimatedEntry(5);
 
+  const hasDataRef = useRef(false);
+
   const fetchAnalytics = useCallback(async (force = false) => {
-    if (!force) setIsLoading(true);
-    setError(null);
+    if (!hasDataRef.current && !force) setIsLoading(true);
     try {
       const data = await managerService.getAnalytics(force);
       setAnalytics(data);
+      setError(null);
+      hasDataRef.current = true;
     } catch {
-      setError('Failed to load analytics.');
+      if (!hasDataRef.current) {
+        setError('Failed to load analytics.');
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);
