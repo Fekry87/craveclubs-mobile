@@ -39,7 +39,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   lastPage: 1,
 
   fetchNotifications: async (page = 1) => {
-    set({ isLoading: true, error: null });
+    const hadData = get().notifications.length > 0;
+    if (!hadData) {
+      set({ isLoading: true, error: null });
+    }
     try {
       const response = await notificationApiService.getNotifications(page);
       const items = Array.isArray(response.data)
@@ -52,12 +55,14 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         currentPage: response.meta?.current_page ?? 1,
         lastPage: response.meta?.last_page ?? 1,
         isLoading: false,
+        error: null,
       });
-    } catch (err) {
-      set({
-        isLoading: false,
-        error: 'Failed to load notifications',
-      });
+    } catch {
+      if (!hadData) {
+        set({ isLoading: false, error: 'Failed to load notifications' });
+      } else {
+        set({ isLoading: false });
+      }
     }
   },
 
