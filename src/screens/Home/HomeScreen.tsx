@@ -417,7 +417,7 @@ export const HomeScreen: React.FC = () => {
                       </Text>
                     </View>
                     <Text style={screenStyles.evalGroupName}>
-                      {evaluation.session.group.name}
+                      {evaluation.session?.group?.name ?? 'Training Session'}
                     </Text>
                     {evaluation.notes && (
                       <Text style={screenStyles.evalNotes} numberOfLines={2}>
