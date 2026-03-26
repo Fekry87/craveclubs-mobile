@@ -160,7 +160,7 @@ export const ProgressScreen: React.FC = () => {
           </View>
           {latestEvals.map((evaluation) => {
             const emptyStars = 5 - evaluation.rating;
-            const evalDate = new Date(evaluation.session.date);
+            const evalDate = new Date(evaluation.session?.date ?? evaluation.created_at ?? Date.now());
             const dateLabel = evalDate.toLocaleDateString('en-GB', {
               day: 'numeric',
               month: 'short',
@@ -199,7 +199,7 @@ export const ProgressScreen: React.FC = () => {
                       </Text>
                     </View>
                     <Text style={screenStyles.evalGroupName}>
-                      {evaluation.session.group.name}
+                      {evaluation.session?.group?.name ?? 'Training Session'}
                     </Text>
                     {evaluation.notes && (
                       <Text style={screenStyles.evalNotes} numberOfLines={2}>

@@ -27,7 +27,7 @@ interface EvalCardProps {
 const EvalCard: React.FC<EvalCardProps> = React.memo(({ evaluation, index }) => {
   const entryStyle = useAnimatedEntry(index);
   const emptyStars = 5 - evaluation.rating;
-  const date = new Date(evaluation.session.date);
+  const date = new Date(evaluation.session?.date ?? evaluation.created_at ?? Date.now());
   const dateLabel = date.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -64,7 +64,7 @@ const EvalCard: React.FC<EvalCardProps> = React.memo(({ evaluation, index }) => 
               </Text>
             </View>
             <Text style={screenStyles.evalGroupName}>
-              {evaluation.session.group.name}
+              {evaluation.session?.group?.name ?? 'Training Session'}
             </Text>
             {evaluation.notes && (
               <Text style={screenStyles.evalNotes} numberOfLines={2}>
