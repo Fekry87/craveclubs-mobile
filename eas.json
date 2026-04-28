@@ -1,0 +1,69 @@
+{
+  "cli": { "version": ">= 12.0.0" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "distribution": "store"
+    },
+
+    "future-academy": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_CLUB_SLUG": "future-academy",
+        "EXPO_PUBLIC_APP_NAME": "Future Academy",
+        "EXPO_PUBLIC_CLUB_NAME": "Future Academy",
+        "EXPO_PUBLIC_PRIMARY_COLOR": "0ea5e9",
+        "EXPO_PUBLIC_CLUB_PRIMARY_COLOR": "#0ea5e9",
+        "EXPO_PUBLIC_API_URL": "https://api.craveclubs.com"
+      },
+      "ios": {
+        "bundleIdentifier": "com.futureacademy.swim"
+      },
+      "android": {
+        "applicationId": "com.futureacademy.swim"
+      }
+    },
+
+    "sharks-cairo": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_CLUB_SLUG": "sharks-cairo",
+        "EXPO_PUBLIC_APP_NAME": "Sharks Cairo",
+        "EXPO_PUBLIC_CLUB_NAME": "Sharks Cairo Swimming Club",
+        "EXPO_PUBLIC_PRIMARY_COLOR": "1CB0F6",
+        "EXPO_PUBLIC_CLUB_PRIMARY_COLOR": "#1CB0F6",
+        "EXPO_PUBLIC_API_URL": "https://api.craveclubs.com"
+      },
+      "ios": {
+        "bundleIdentifier": "com.sharkscairo.swim"
+      },
+      "android": {
+        "applicationId": "com.sharkscairo.swim"
+      }
+    },
+
+    "dolphins-alex": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_CLUB_SLUG": "dolphins-alex",
+        "EXPO_PUBLIC_APP_NAME": "Dolphins Alexandria",
+        "EXPO_PUBLIC_CLUB_NAME": "Dolphins Alexandria",
+        "EXPO_PUBLIC_PRIMARY_COLOR": "58CC02",
+        "EXPO_PUBLIC_CLUB_PRIMARY_COLOR": "#58CC02",
+        "EXPO_PUBLIC_API_URL": "https://api.craveclubs.com"
+      },
+      "ios": {
+        "bundleIdentifier": "com.dolphinsalex.swim"
+      },
+      "android": {
+        "applicationId": "com.dolphinsalex.swim"
+      }
+    }
+  }
+}
