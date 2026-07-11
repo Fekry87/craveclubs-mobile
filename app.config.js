@@ -7,6 +7,12 @@ module.exports = ({ config }) => {
   const primaryColor =
     '#' + (process.env.EXPO_PUBLIC_PRIMARY_COLOR || '1A6FB5');
 
+  // Bundle ID: set per club via env.APP_BUNDLE_ID in eas.json profiles
+  // (eas.json build profiles cannot set bundleIdentifier/package directly —
+  // only app config can). Fallback derives from the slug.
+  const bundleId =
+    process.env.APP_BUNDLE_ID || `com.craveclubs.${slug.replace(/-/g, '')}`;
+
   // Resolve per-club icon assets (fallback to default)
   const clubIconDir = path.join(__dirname, 'assets', 'icons', slug);
   const defaultIconDir = path.join(__dirname, 'assets', 'icons', 'craveclubs');
@@ -45,8 +51,7 @@ module.exports = ({ config }) => {
 
     ios: {
       supportsTablet: true,
-      bundleIdentifier:
-        config.expo?.ios?.bundleIdentifier || `com.craveclubs.${slug.replace(/-/g, '')}`,
+      bundleIdentifier: bundleId,
     },
 
     android: {
@@ -59,8 +64,7 @@ module.exports = ({ config }) => {
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
-      package:
-        config.expo?.android?.package || `com.craveclubs.${slug.replace(/-/g, '')}`,
+      package: bundleId,
     },
 
     web: {

@@ -1,3 +1,5 @@
+import { applyBrandingToGradients } from './gradients';
+
 /** Darken a hex color by ~15% */
 function darken(hex: string): string {
   const h = hex.replace('#', '');
@@ -74,9 +76,24 @@ export let colors = {
   tealDim: 'rgba(45, 212, 191, 0.12)',
 };
 
+type BrandingListener = () => void;
+const brandingListeners: BrandingListener[] = [];
+
+/**
+ * Register a callback that runs whenever branding colors are applied.
+ * Used by theme/index.ts to keep buttonShadows in sync without a
+ * circular import (index.ts imports colors.ts).
+ */
+export function onBrandingApplied(listener: BrandingListener): void {
+  brandingListeners.push(listener);
+}
+
 /**
  * Apply branding colors globally — mutates the colors object in-place
  * so every screen that imports `colors` gets the branded values.
+ * Also re-derives brand-dependent gradients and notifies listeners
+ * (button shadows). Neutral/semantic colors (grays, error, warning,
+ * success, accents) are intentionally untouched.
  */
 export function applyBrandingColors(primary: string, secondary: string): void {
   colors.primary = primary;
@@ -85,4 +102,7 @@ export function applyBrandingColors(primary: string, secondary: string): void {
   colors.secondary = secondary;
   colors.secondaryDark = darken(secondary);
   colors.secondaryDim = dim(secondary);
+
+  applyBrandingToGradients(colors.primary, colors.swimmer, colors.secondary);
+  brandingListeners.forEach((listener) => listener());
 }

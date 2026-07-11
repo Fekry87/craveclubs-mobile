@@ -35,57 +35,60 @@ interface TabIconConfig {
   shadowColor: string;
 }
 
-const TAB_ICON_CONFIG: Record<string, TabIconConfig> = {
+// Resolved at render time so branded colors (mutated in-place by
+// applyBrandingColors) are picked up — a module-level const would
+// capture the pre-branding defaults.
+const getTabIconConfig = (): Record<string, TabIconConfig> => ({
   Home: {
     filledIcon: 'home-4-fill',
     outlineIcon: 'home-4-line',
-    color: '#1CB0F6',
-    glowColor: 'rgba(28, 176, 246, 0.13)',
-    shadowColor: '#1CB0F6',
+    color: colors.primary,
+    glowColor: colors.primaryDim,
+    shadowColor: colors.primary,
   },
   Sessions: {
     filledIcon: 'calendar-event-fill',
     outlineIcon: 'calendar-event-line',
-    color: '#FF9600',
-    glowColor: 'rgba(255, 150, 0, 0.13)',
-    shadowColor: '#FF9600',
+    color: colors.orange,
+    glowColor: colors.orangeDim,
+    shadowColor: colors.orange,
   },
   MyPlan: {
     filledIcon: 'clipboard-fill',
     outlineIcon: 'clipboard-line',
-    color: '#2DD4BF',
-    glowColor: 'rgba(45, 212, 191, 0.13)',
-    shadowColor: '#2DD4BF',
+    color: colors.teal,
+    glowColor: colors.tealDim,
+    shadowColor: colors.teal,
   },
   Progress: {
     filledIcon: 'bar-chart-box-fill',
     outlineIcon: 'bar-chart-box-line',
-    color: '#58CC02',
-    glowColor: 'rgba(88, 204, 2, 0.13)',
-    shadowColor: '#58CC02',
+    color: colors.swimmer,
+    glowColor: colors.swimmerDim,
+    shadowColor: colors.swimmer,
   },
   Leaderboard: {
     filledIcon: 'trophy-fill',
     outlineIcon: 'trophy-line',
-    color: '#FFC800',
-    glowColor: 'rgba(255, 200, 0, 0.15)',
-    shadowColor: '#FFC800',
+    color: colors.warning,
+    glowColor: colors.warningDim,
+    shadowColor: colors.warning,
   },
   Profile: {
     filledIcon: 'user-fill',
     outlineIcon: 'user-line',
-    color: '#CE82FF',
-    glowColor: 'rgba(206, 130, 255, 0.13)',
-    shadowColor: '#CE82FF',
+    color: colors.secondary,
+    glowColor: colors.secondaryDim,
+    shadowColor: colors.secondary,
   },
-};
+});
 
 /* ── Soft Glow Tab Icon ── */
 const TabIcon: React.FC<{ routeName: string; focused: boolean }> = ({
   routeName,
   focused,
 }) => {
-  const config = TAB_ICON_CONFIG[routeName];
+  const config = getTabIconConfig()[routeName];
   if (!config) return null;
 
   if (!focused) {
@@ -111,15 +114,15 @@ const TabIcon: React.FC<{ routeName: string; focused: boolean }> = ({
   );
 };
 
-/* ── Tab color map for labels ── */
-const TAB_COLORS: Record<string, string> = {
-  Home: '#1CB0F6',
-  Sessions: '#FF9600',
-  MyPlan: '#2DD4BF',
-  Progress: '#58CC02',
-  Leaderboard: '#FFC800',
-  Profile: '#CE82FF',
-};
+/* ── Tab color map for labels (render-time for branding) ── */
+const getTabColors = (): Record<string, string> => ({
+  Home: colors.primary,
+  Sessions: colors.orange,
+  MyPlan: colors.teal,
+  Progress: colors.swimmer,
+  Leaderboard: colors.warning,
+  Profile: colors.secondary,
+});
 
 /* ── Sport Switcher Chip (header right) ── */
 const SportSwitcherChip: React.FC = () => {
@@ -207,7 +210,7 @@ export const AppNavigator: React.FC = () => {
         tabBarIcon: ({ focused }) => (
           <TabIcon routeName={route.name} focused={focused} />
         ),
-        tabBarActiveTintColor: TAB_COLORS[route.name] ?? colors.primary,
+        tabBarActiveTintColor: getTabColors()[route.name] ?? colors.primary,
         tabBarInactiveTintColor: colors.textDim,
         tabBarLabelStyle: {
           fontSize: 11,

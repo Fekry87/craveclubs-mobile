@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:branded": "node scripts/build-all-branded.js",
-    "build:branded:dry": "node scripts/build-all-branded.js --dry-run"
+    "build:branded:dry": "node scripts/build-all-branded.js --dry-run",
+    "add-club": "node scripts/add-club.js"
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",

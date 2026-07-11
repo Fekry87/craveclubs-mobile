@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { notificationApiService } from '../api/services/notification.service';
+import { colors } from '../theme';
 
 /**
  * Check if we're running inside Expo Go (not a dev build).
@@ -68,7 +69,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
       name: 'Default',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#1CB0F6',
+      lightColor: colors.primary,
     });
   }
 

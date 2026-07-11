@@ -1,6 +1,7 @@
 import { Platform, ViewStyle } from 'react-native';
+import { colors, onBrandingApplied } from './colors';
 
-export { colors } from './colors';
+export { colors, applyBrandingColors, onBrandingApplied } from './colors';
 export { gradients } from './gradients';
 export { spacing } from './spacing';
 export { typography, fontFamily } from './typography';
@@ -127,3 +128,10 @@ export const buttonShadows = {
     },
   }) as ViewStyle,
 };
+
+// Keep 3D button shadows in sync with branded colors.
+// danger stays on errorDark (semantic, not brand-dependent).
+onBrandingApplied(() => {
+  buttonShadows.primary.shadowColor = colors.primaryDark;
+  buttonShadows.swimmer.shadowColor = colors.swimmerDark;
+});

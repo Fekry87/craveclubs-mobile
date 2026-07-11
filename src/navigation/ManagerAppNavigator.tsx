@@ -22,36 +22,38 @@ interface TabIconConfig {
   shadowColor: string;
 }
 
-const TAB_ICON_CONFIG: Record<string, TabIconConfig> = {
+// Resolved at render time so branded colors (mutated in-place by
+// applyBrandingColors) are picked up.
+const getTabIconConfig = (): Record<string, TabIconConfig> => ({
   ManagerAnalytics: {
     filledIcon: 'bar-chart-box-fill',
     outlineIcon: 'bar-chart-box-line',
-    color: '#1CB0F6',
-    glowColor: 'rgba(28, 176, 246, 0.13)',
-    shadowColor: '#1CB0F6',
+    color: colors.primary,
+    glowColor: colors.primaryDim,
+    shadowColor: colors.primary,
   },
   ManagerCoaches: {
     filledIcon: 'team-fill',
     outlineIcon: 'team-line',
-    color: '#58CC02',
-    glowColor: 'rgba(88, 204, 2, 0.13)',
-    shadowColor: '#58CC02',
+    color: colors.swimmer,
+    glowColor: colors.swimmerDim,
+    shadowColor: colors.swimmer,
   },
   ManagerProfile: {
     filledIcon: 'user-fill',
     outlineIcon: 'user-line',
-    color: '#CE82FF',
-    glowColor: 'rgba(206, 130, 255, 0.13)',
-    shadowColor: '#CE82FF',
+    color: colors.secondary,
+    glowColor: colors.secondaryDim,
+    shadowColor: colors.secondary,
   },
-};
+});
 
 /* ── Soft Glow Tab Icon ── */
 const TabIcon: React.FC<{ routeName: string; focused: boolean }> = ({
   routeName,
   focused,
 }) => {
-  const config = TAB_ICON_CONFIG[routeName];
+  const config = getTabIconConfig()[routeName];
   if (!config) return null;
 
   if (!focused) {
@@ -76,12 +78,12 @@ const TabIcon: React.FC<{ routeName: string; focused: boolean }> = ({
   );
 };
 
-/* ── Tab color map for labels ── */
-const TAB_COLORS: Record<string, string> = {
-  ManagerAnalytics: '#1CB0F6',
-  ManagerCoaches: '#58CC02',
-  ManagerProfile: '#CE82FF',
-};
+/* ── Tab color map for labels (render-time for branding) ── */
+const getTabColors = (): Record<string, string> => ({
+  ManagerAnalytics: colors.primary,
+  ManagerCoaches: colors.swimmer,
+  ManagerProfile: colors.secondary,
+});
 
 export const ManagerAppNavigator: React.FC = () => {
   return (
@@ -90,7 +92,7 @@ export const ManagerAppNavigator: React.FC = () => {
         tabBarIcon: ({ focused }) => (
           <TabIcon routeName={route.name} focused={focused} />
         ),
-        tabBarActiveTintColor: TAB_COLORS[route.name] ?? colors.primary,
+        tabBarActiveTintColor: getTabColors()[route.name] ?? colors.primary,
         tabBarInactiveTintColor: colors.textDim,
         tabBarLabelStyle: {
           fontSize: 11,

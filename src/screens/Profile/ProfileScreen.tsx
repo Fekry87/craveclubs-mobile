@@ -255,7 +255,7 @@ export const ProfileScreen: React.FC = () => {
             iconColor={colors.teal}
             iconBg={colors.tealDim}
             label="Club Name"
-            value={user.club.name}
+            value={user.club?.name ?? '—'}
             isLast
           />
         </Card>
