@@ -11,7 +11,12 @@
       "distribution": "internal"
     },
     "production": {
-      "distribution": "store"
+      "distribution": "store",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.craveclubs.com",
+        "EXPO_PUBLIC_REVERB_SCHEME": "https",
+        "EXPO_PUBLIC_REVERB_PORT": "443"
+      }
     },
     "future-academy": {
       "extends": "production",

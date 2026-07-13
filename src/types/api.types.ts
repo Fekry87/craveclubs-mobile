@@ -18,6 +18,9 @@ import {
 export interface LoginRequestType {
   email: string;
   password: string;
+  // Sent when a club is resolved so the backend enforces club membership
+  // (rejects users who don't belong to this club's branded/shared build).
+  club_slug?: string;
 }
 
 export interface LoginResponseType {
@@ -130,6 +133,10 @@ export interface ReactivateAccountResponseType {
 }
 
 export type DeletionStatusValue =
+  // Backend now returns only 'pending_deletion' or a generic 'none' (privacy:
+  // active / non-existent / purged are indistinguishable). Older values kept
+  // for backward compatibility with any cached responses.
+  | 'none'
   | 'active'
   | 'pending_deletion'
   | 'permanently_deleted'

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 import { storageService } from '../services/storage.service';
 import { useBrandingStore } from '../store/branding.store';
 import { apiUrl } from '../config/club';
@@ -10,6 +11,8 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    // Tells the backend this is a mobile client → 30-day tokens (not 24h web tokens)
+    'X-Platform': Platform.OS,
   },
   timeout: 15000,
 });
@@ -52,10 +55,17 @@ export const setOnUnauthorized = (callback: () => void) => {
 
 let isLoggingOut = false;
 
+// Endpoints where a 401 means "bad credentials", not "expired session".
+// These must NOT trigger the logout cascade (which wipes club slug + branding).
+const AUTH_ATTEMPT_PATHS = ['/auth/login', '/account/reactivate'];
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401 && !isLoggingOut) {
+    const url: string = error.config?.url ?? '';
+    const isAuthAttempt = AUTH_ATTEMPT_PATHS.some((p) => url.includes(p));
+
+    if (error.response?.status === 401 && !isLoggingOut && !isAuthAttempt) {
       // Prevent multiple simultaneous logout cascades
       isLoggingOut = true;
       await storageService.clearAll();

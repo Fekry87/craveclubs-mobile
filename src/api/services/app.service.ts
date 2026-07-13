@@ -3,13 +3,15 @@ import { Platform } from 'react-native';
 import apiClient from '../client';
 
 export interface VersionCheckResponse {
-  current_version: string;
+  api_version: string;
+  client_version: string | null;
   minimum_version: string;
   latest_version: string;
   update_available: boolean;
   force_update: boolean;
-  update_url: { ios: string; android: string };
-  message: string | null;
+  // Backend resolves the correct store URL per platform (from the X-Platform header).
+  store_url: string | null;
+  platform: string | null;
 }
 
 export const checkAppVersion = async (): Promise<VersionCheckResponse> => {

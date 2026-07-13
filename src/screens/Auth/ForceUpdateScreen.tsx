@@ -1,22 +1,21 @@
 import React from 'react';
-import { View, StyleSheet, Linking, Platform } from 'react-native';
+import { View, StyleSheet, Linking } from 'react-native';
 import { Typography } from '../../components/common/Typography';
 import { Button } from '../../components/common/Button';
 import { Icon } from '../../components/common/Icon';
 import { colors, spacing, borderRadius } from '../../theme';
 
 interface ForceUpdateScreenProps {
-  updateUrl: { ios: string; android: string };
+  // Platform-resolved store URL from the backend; may be null if unconfigured.
+  storeUrl: string | null;
 }
 
-export const ForceUpdateScreen: React.FC<ForceUpdateScreenProps> = ({ updateUrl }) => {
+export const ForceUpdateScreen: React.FC<ForceUpdateScreenProps> = ({ storeUrl }) => {
   const handleUpdate = async () => {
-    const url = Platform.OS === 'ios' ? updateUrl.ios : updateUrl.android;
-    if (url) {
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        Linking.openURL(url);
-      }
+    if (!storeUrl) return;
+    const canOpen = await Linking.canOpenURL(storeUrl);
+    if (canOpen) {
+      Linking.openURL(storeUrl);
     }
   };
 

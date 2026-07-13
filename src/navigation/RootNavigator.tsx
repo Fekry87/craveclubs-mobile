@@ -47,7 +47,7 @@ export const RootNavigator: React.FC = () => {
   const { availableModules, currentModule, fetchAndInitModules } =
     useSportModuleStore();
   const [forceUpdate, setForceUpdate] = useState(false);
-  const [updateUrl, setUpdateUrl] = useState<VersionCheckResponse['update_url']>({ ios: '', android: '' });
+  const [storeUrl, setStoreUrl] = useState<VersionCheckResponse['store_url']>(null);
 
   const needsSportSelect =
     availableModules.length > 1 && !currentModule;
@@ -79,7 +79,7 @@ export const RootNavigator: React.FC = () => {
     checkAppVersion()
       .then((result) => {
         if (result.force_update) {
-          setUpdateUrl(result.update_url);
+          setStoreUrl(result.store_url ?? null);
           setForceUpdate(true);
         }
       })
@@ -107,12 +107,15 @@ export const RootNavigator: React.FC = () => {
   }
 
   if (forceUpdate) {
-    return <ForceUpdateScreen updateUrl={updateUrl} />;
+    return <ForceUpdateScreen storeUrl={storeUrl} />;
   }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {isAuthenticated && needsSportSelect ? (
+      {!isAuthenticated && !isResolved ? (
+        /* Shared build with no club chosen yet — pick a club before login */
+        <Stack.Screen name="ClubEntry" component={ClubEntryScreen} />
+      ) : isAuthenticated && needsSportSelect ? (
         /* Multi-sport club — user must pick a sport module first */
         <Stack.Screen name="SportSelect" component={SportSelectScreen} />
       ) : isAuthenticated ? (
