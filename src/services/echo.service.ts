@@ -37,17 +37,24 @@ export const initializeEcho = (token: string): Echo<'reverb'> | null => {
     connectionState = 'connecting';
 
     const reverbScheme = process.env.EXPO_PUBLIC_REVERB_SCHEME ?? 'http';
+    const reverbHost = process.env.EXPO_PUBLIC_REVERB_HOST;
+    if (!reverbHost) {
+      // No host configured → can't connect; stay gracefully disconnected.
+      connectionState = 'disconnected';
+      return null;
+    }
 
     echoInstance = new Echo({
       broadcaster: 'reverb',
       key: appKey,
-      wsHost: process.env.EXPO_PUBLIC_REVERB_HOST || 'web-production-c3c32.up.railway.app',
+      wsHost: reverbHost,
       wsPort: Number(process.env.EXPO_PUBLIC_REVERB_PORT) || 8080,
       wssPort: Number(process.env.EXPO_PUBLIC_REVERB_PORT) || 443,
       forceTLS: reverbScheme === 'https',
       disableStats: true,
       enabledTransports: ['ws', 'wss'],
-      authEndpoint: `${apiUrl}/broadcasting/auth`,
+      // Broadcasting auth lives under the versioned API prefix.
+      authEndpoint: `${apiUrl}/api/v1/broadcasting/auth`,
       auth: {
         headers: {
           Authorization: `Bearer ${token}`,

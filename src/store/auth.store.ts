@@ -48,7 +48,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email: string, password: string) => {
     set({ isLoginLoading: true, error: null });
     try {
-      const response = await authService.login({ email, password });
+      // Include the resolved club slug so the backend enforces club membership
+      // (branded builds + shared builds that have picked a club).
+      const clubSlug = useBrandingStore.getState().slug ?? undefined;
+      const response = await authService.login({ email, password, club_slug: clubSlug });
       await storageService.setToken(response.token);
       await storageService.setUserData(response.user);
       Sentry.setUser({ id: String(response.user.id), email: response.user.email });
