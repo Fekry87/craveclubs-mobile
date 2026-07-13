@@ -48,7 +48,7 @@ async function fetchBranding(slug: string, forceRefresh = false): Promise<ClubBr
 
   // 2. Fetch from API
   try {
-    const baseUrl = apiUrl || 'https://api.craveclubs.com';
+    const baseUrl = apiUrl || 'https://web-production-c3c32.up.railway.app';
     const res = await fetch(`${baseUrl}/api/v1/branding/${slug}`);
 
     if (!res.ok) {
@@ -94,7 +94,7 @@ export function toHex(color: string | null | undefined): string {
  */
 function fixAssetUrl(url: string | null | undefined): string | null {
   if (!url || typeof url !== 'string') return null;
-  const baseUrl = apiUrl || 'https://api.craveclubs.com';
+  const baseUrl = apiUrl || 'https://web-production-c3c32.up.railway.app';
   // Replace http://localhost:PORT or http://127.0.0.1:PORT with actual API base
   return url.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, baseUrl);
 }
