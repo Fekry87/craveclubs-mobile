@@ -13,7 +13,7 @@
     "production": {
       "distribution": "store",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.craveclubs.com",
+        "EXPO_PUBLIC_API_URL": "https://web-production-c3c32.up.railway.app",
         "EXPO_PUBLIC_REVERB_SCHEME": "https",
         "EXPO_PUBLIC_REVERB_PORT": "443"
       }

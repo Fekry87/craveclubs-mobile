@@ -27,9 +27,9 @@ export const bakedPrimaryColor: string = (() => {
   return raw.startsWith('#') ? raw : `#${raw}`;
 })();
 
-/** API base URL — required for both tiers */
+/** API base URL — required for both tiers. Falls back to the live backend. */
 export const apiUrl: string =
-  process.env.EXPO_PUBLIC_API_URL || 'https://api.craveclubs.com';
+  process.env.EXPO_PUBLIC_API_URL || 'https://web-production-c3c32.up.railway.app';
 
 /**
  * Legacy clubConfig — kept for backward compatibility.
