@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { Icon } from '../../components/common/Icon';
 import { useRegistrationStore } from '../../store/registration.store';
@@ -41,7 +42,8 @@ const ClubCard = React.memo(
   }: {
     club: Club;
     index: number;
-    onSelect: (club: Club) => void;
+    /** Async: the club's slug is persisted before the wizard is allowed to start. */
+    onSelect: (club: Club) => void | Promise<void>;
   }) => {
     const entry = useAnimatedEntry(Math.min(index, 10));
     const press = useAnimatedPress();
@@ -88,22 +90,29 @@ export const ClubSelectionScreen: React.FC<Props> = ({ navigation }) => {
   const backPress = useAnimatedPress();
 
   // ── Fetch clubs ────────────────────────────────────────────────
-  useEffect(() => {
-    const fetchClubs = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await getClubs();
-        setClubs(data);
-        setFilteredClubs(data);
-      } catch {
-        setError('Failed to load clubs. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchClubs();
+  const fetchClubs = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await getClubs();
+      setClubs(data);
+      setFilteredClubs(data);
+    } catch {
+      setError('Failed to load clubs. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  // On focus, not once on mount. Navigation keeps this screen mounted, so a
+  // mount-only fetch leaves a club that has since been deleted or deactivated sitting
+  // in the list, still tappable — and the API then rejects it with a 404 the user
+  // cannot explain.
+  useFocusEffect(
+    useCallback(() => {
+      fetchClubs();
+    }, [fetchClubs]),
+  );
 
   // ── Search filter ──────────────────────────────────────────────
   useEffect(() => {
@@ -117,10 +126,22 @@ export const ClubSelectionScreen: React.FC<Props> = ({ navigation }) => {
 
   // ── Select club ────────────────────────────────────────────────
   const handleSelect = useCallback(
-    (club: Club) => {
+    async (club: Club) => {
       setClub(club.slug, club.display_name || club.name);
-      // Set branding slug so X-Club-Slug header is correct for registration API calls
-      setSlug(club.slug);
+
+      // AWAIT this. setSlug persists to AsyncStorage and only then updates the store,
+      // and that store is what the X-Club-Slug interceptor reads — the header that
+      // decides which club a registration is filed under. Navigating without waiting
+      // let the wizard start, and in the worst case submit, still carrying the
+      // PREVIOUSLY selected club's slug.
+      try {
+        await setSlug(club.slug);
+      } catch {
+        setError('Could not select that club. Please try again.');
+
+        return;
+      }
+
       navigation.navigate('Step1_BasicProfile');
     },
     [navigation, setClub, setSlug],
