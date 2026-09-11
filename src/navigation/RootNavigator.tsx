@@ -51,7 +51,7 @@ export const RootNavigator: React.FC = () => {
   const [forceUpdate, setForceUpdate] = useState(false);
   const [storeUrl, setStoreUrl] = useState<VersionCheckResponse['store_url']>(null);
   const [splash, setSplash] = useState<PlatformBranding | null>(null);
-  const [minSplashDone, setMinSplashDone] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
 
   const needsSportSelect =
     availableModules.length > 1 && !currentModule;
@@ -65,13 +65,28 @@ export const RootNavigator: React.FC = () => {
     });
   }, []);
 
-  // Fetch the launch splash config + keep it on screen a minimum time
+  // Fetch the launch splash config FIRST, then hold the splash for 3s so the
+  // admin-set color/logo is what shows (never a default-color flash).
   useEffect(() => {
-    getPlatformBranding().then(setSplash).catch(() => {
-      // Non-critical — splash falls back to defaults
-    });
-    const timer = setTimeout(() => setMinSplashDone(true), 1300);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    let holdTimer: ReturnType<typeof setTimeout>;
+    getPlatformBranding()
+      .then((cfg) => {
+        if (!cancelled) setSplash(cfg);
+      })
+      .catch(() => {
+        // Non-critical — splash falls back to defaults
+      })
+      .finally(() => {
+        if (cancelled) return;
+        holdTimer = setTimeout(() => {
+          if (!cancelled) setSplashDone(true);
+        }, 3000);
+      });
+    return () => {
+      cancelled = true;
+      clearTimeout(holdTimer);
+    };
   }, []);
 
   // Refresh branding when app returns to foreground
@@ -115,7 +130,7 @@ export const RootNavigator: React.FC = () => {
     }
   }, [isAuthenticated]);
 
-  if (isLoading || !minSplashDone) {
+  if (isLoading || !splashDone) {
     return <SplashScreen config={splash} />;
   }
 
