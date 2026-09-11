@@ -53,6 +53,7 @@ export const ENDPOINTS = {
   PUBLIC: {
     SPORTS: '/public/sports',
     CLUBS: '/clubs',
+    BRANDING: '/public/branding',
   },
   REGISTRATION: {
     BRANCHES: '/branches',

@@ -18,8 +18,9 @@ import { useNotificationStore } from '../store/notification.store';
 import { setOnUnauthorized } from '../api/client';
 // Note: store functions are accessed via getState() to avoid dependency instability
 import { checkAppVersion, VersionCheckResponse } from '../api/services/app.service';
+import { getPlatformBranding, PlatformBranding } from '../api/services/platform.service';
 import { registerForPushNotifications } from '../services/pushNotifications';
-import { Loader } from '../components/common/Loader';
+import { SplashScreen } from '../components/common/SplashScreen';
 import { RootStackParamList } from './types';
 import { colors, fontFamily } from '../theme';
 
@@ -49,6 +50,8 @@ export const RootNavigator: React.FC = () => {
     useSportModuleStore();
   const [forceUpdate, setForceUpdate] = useState(false);
   const [storeUrl, setStoreUrl] = useState<VersionCheckResponse['store_url']>(null);
+  const [splash, setSplash] = useState<PlatformBranding | null>(null);
+  const [minSplashDone, setMinSplashDone] = useState(false);
 
   const needsSportSelect =
     availableModules.length > 1 && !currentModule;
@@ -60,6 +63,15 @@ export const RootNavigator: React.FC = () => {
       restoreSession();
       fetchAndInitModules();
     });
+  }, []);
+
+  // Fetch the launch splash config + keep it on screen a minimum time
+  useEffect(() => {
+    getPlatformBranding().then(setSplash).catch(() => {
+      // Non-critical — splash falls back to defaults
+    });
+    const timer = setTimeout(() => setMinSplashDone(true), 1300);
+    return () => clearTimeout(timer);
   }, []);
 
   // Refresh branding when app returns to foreground
@@ -103,8 +115,8 @@ export const RootNavigator: React.FC = () => {
     }
   }, [isAuthenticated]);
 
-  if (isLoading) {
-    return <Loader message="Loading..." />;
+  if (isLoading || !minSplashDone) {
+    return <SplashScreen config={splash} />;
   }
 
   if (forceUpdate) {
