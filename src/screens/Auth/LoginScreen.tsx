@@ -192,6 +192,18 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <View style={s.root}>
+      {hasClub && !pendingDeletion && (
+        <TouchableOpacity
+          onPress={handleChangeClub}
+          style={s.backBtn}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Change club"
+        >
+          <Icon name="arrow-left-s-line" size={24} color={colors.text} />
+        </TouchableOpacity>
+      )}
       <KeyboardAvoidingView
         style={s.flex1}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -226,17 +238,6 @@ export const LoginScreen: React.FC = () => {
                 {heroName}
               </Text>
               <Text style={s.heroSubtitle}>{PLATFORM_TAGLINE}</Text>
-              {hasClub && (
-                <TouchableOpacity
-                  onPress={handleChangeClub}
-                  style={s.changeClubLink}
-                  activeOpacity={0.6}
-                  accessibilityRole="button"
-                >
-                  <Icon name="arrow-left-s-line" size={16} color={colors.textMuted} />
-                  <Text style={s.changeClubText}>Change club</Text>
-                </TouchableOpacity>
-              )}
             </Animated.View>
           </View>
 
@@ -383,17 +384,19 @@ const s = StyleSheet.create({
     height: '100%',
     borderRadius: 24,
   },
-  changeClubLink: {
-    flexDirection: 'row',
+  backBtn: {
+    position: 'absolute',
+    top: 56,
+    left: spacing.lg,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 2,
-    marginTop: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  changeClubText: {
-    fontSize: 13,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.textMuted,
   },
   heroTitle: {
     fontSize: 30,
