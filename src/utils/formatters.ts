@@ -73,3 +73,36 @@ export const getRelativeDate = (dateStr: string): string => {
 export const getInitials = (firstName: string, lastName: string): string => {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 };
+
+/**
+ * Currency for the whole app. The market is Saudi Arabia, so prices are SAR.
+ * Two screens used to hardcode "EGP", which is simply the wrong country.
+ */
+export const CURRENCY = 'SAR';
+
+export const formatMoney = (value: number | string | null | undefined): string => {
+  const amount = typeof value === 'string' ? parseFloat(value) : value;
+  if (amount === null || amount === undefined || Number.isNaN(amount)) return `0 ${CURRENCY}`;
+
+  return `${amount.toLocaleString()} ${CURRENCY}`;
+};
+
+/**
+ * The price a member actually pays for a plan.
+ *
+ * `price` is the list price and `discount_percent` is a real reduction on it. The server
+ * sends `final_price` already computed — never re-derive it here, or this screen drifts
+ * from the portal and from what the member is billed. The fallback only covers an older
+ * API that predates the field.
+ */
+export const planPrice = (plan: {
+  price: string | number;
+  discount_percent?: number;
+  final_price?: number | null;
+}): number => {
+  if (plan.final_price !== null && plan.final_price !== undefined) return Number(plan.final_price);
+
+  const list = typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price;
+
+  return (list || 0) * (1 - (plan.discount_percent || 0) / 100);
+};

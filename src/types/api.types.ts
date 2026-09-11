@@ -179,7 +179,16 @@ export type SubscriptionStatus = 'active' | 'expiring' | 'expired';
 export interface SwimmerSubscriptionInterface {
   plan_name: string;
   duration_months: number;
+  /** The plan's list price today. */
   price: number;
+  discount_percent: number;
+  /** The plan's price after discount, today. */
+  final_price: number;
+  /**
+   * What THIS member was billed on their own registration. Show this to the member:
+   * it is a historical record, so a later change to the plan's price cannot rewrite it.
+   */
+  amount_paid: number;
   started_at: string;
   ends_at: string;
   /** Negative when expired */

@@ -40,9 +40,12 @@ export interface Branch {
 export interface SubscriptionPlan {
   id: number;
   name: string;
+  /** List price before the discount. */
   price: string;
   duration_months: number;
   discount_percent: number;
+  /** Price after discount_percent, computed server-side. Render this, not `price`. */
+  final_price: number;
   is_popular: boolean;
 }
 

@@ -26,6 +26,7 @@ import {
   typography,
   fontFamily,
 } from '../../theme';
+import { formatMoney, planPrice } from '../../utils/formatters';
 
 type Props = NativeStackScreenProps<
   RegistrationStackParamList,
@@ -109,7 +110,9 @@ function PlanCard({
             )}
           </View>
 
-          {/* Price */}
+          {/* Price — the amount actually charged, not the list price. This used to render
+              plan.price beside a "N% off" badge, so the app quoted 500 while the portal
+              quoted 450 for the same plan and the registration was billed 450. */}
           <View style={styles.priceRow}>
             <Text
               style={[
@@ -117,8 +120,11 @@ function PlanCard({
                 isSelected && { color: colorSet.accent },
               ]}
             >
-              {(parseFloat(plan.price) || 0).toLocaleString()} EGP
+              {formatMoney(planPrice(plan))}
             </Text>
+            {plan.discount_percent > 0 && (
+              <Text style={styles.priceStrikethrough}>{formatMoney(plan.price)}</Text>
+            )}
             <Text style={styles.pricePeriod}>
               / {plan.duration_months} {plan.duration_months === 1 ? 'mo' : 'mos'}
             </Text>
@@ -208,7 +214,7 @@ export const Step6_SubscriptionPlan: React.FC<Props> = ({ navigation }) => {
     }
     const plan = plans.find((p) => p.id === selectedId);
     if (plan) {
-      setPlan(plan.id, plan.name, parseFloat(plan.price));
+      setPlan(plan.id, plan.name, planPrice(plan));
     }
     setStep(7);
     navigation.navigate('Step7_CoachSelection');
@@ -333,6 +339,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: fontFamily.headingBold,
     color: colors.text,
+  },
+  priceStrikethrough: {
+    fontSize: 13,
+    marginLeft: 8,
+    textDecorationLine: 'line-through',
+    opacity: 0.55,
   },
   pricePeriod: {
     ...typography.caption,
