@@ -77,6 +77,7 @@ export type RootStackParamList = {
   SportSelect: undefined;
   App: NavigatorScreenParams<AppTabParamList> | undefined;
   NotificationCenter: undefined;
+  ChangePassword: undefined;
   Evaluations: undefined;
   Registration: NavigatorScreenParams<RegistrationStackParamList> | undefined;
 };

@@ -9,6 +9,7 @@ import { CoachAppNavigator } from './CoachAppNavigator';
 import { ManagerAppNavigator } from './ManagerAppNavigator';
 import { RegistrationNavigator } from './RegistrationNavigator';
 import { NotificationCenterScreen } from '../screens/Notifications';
+import { ChangePasswordScreen } from '../screens/Profile';
 import { EvaluationsScreen } from '../screens/Progress';
 import { useAuthStore } from '../store/auth.store';
 import { useBrandingStore } from '../store/branding.store';
@@ -130,6 +131,25 @@ export const RootNavigator: React.FC = () => {
         options={{
           headerShown: true,
           title: 'Notifications',
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerTitleStyle: {
+            fontFamily: fontFamily.headingBold,
+            color: colors.text,
+            fontSize: 18,
+          },
+          headerShadowVisible: false,
+          headerBackTitle: '',
+        }}
+      />
+      {/* Change password — from Profile */}
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{
+          headerShown: true,
+          title: 'Change password',
           headerStyle: {
             backgroundColor: colors.background,
           },

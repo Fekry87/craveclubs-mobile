@@ -228,3 +228,15 @@ export interface SwimmerProfileResponseType {
   xp: SwimmerXpSummaryInterface;
   stats: SwimmerProfileStatsInterface;
 }
+
+/* ═══ Change password (POST /auth/change-password) ═══ */
+
+export interface ChangePasswordRequestType {
+  current_password: string;
+  new_password: string;
+  new_password_confirmation: string;
+}
+
+export interface ChangePasswordResponseType {
+  message: string;
+}

@@ -27,6 +27,7 @@ interface AuthState {
   deleteAccount: () => Promise<void>;
   reactivateAccount: (email: string, password: string) => Promise<void>;
   restoreSession: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -205,6 +206,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
     }
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    await authService.changePassword({
+      current_password: currentPassword,
+      new_password: newPassword,
+      new_password_confirmation: newPassword,
+    });
   },
 
   clearError: () => set({ error: null }),

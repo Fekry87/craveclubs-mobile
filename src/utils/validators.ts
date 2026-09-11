@@ -7,6 +7,13 @@ export const isNotEmpty = (value: string): boolean => {
   return value.trim().length > 0;
 };
 
+/** Login accepts either an email or a phone number (>= 7 digits). */
+export const isValidLoginIdentifier = (value: string): boolean => {
+  const v = value.trim();
+  if (isValidEmail(v)) return true;
+  return v.replace(/\D/g, '').length >= 7;
+};
+
 export const validateLoginForm = (
   email: string,
   password: string,
@@ -14,9 +21,9 @@ export const validateLoginForm = (
   const errors: Record<string, string> = {};
 
   if (!isNotEmpty(email)) {
-    errors.email = 'Email is required';
-  } else if (!isValidEmail(email)) {
-    errors.email = 'Please enter a valid email';
+    errors.email = 'Email or phone is required';
+  } else if (!isValidLoginIdentifier(email)) {
+    errors.email = 'Enter a valid email or phone number';
   }
 
   if (!isNotEmpty(password)) {

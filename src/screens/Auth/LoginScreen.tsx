@@ -6,6 +6,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
+  Linking,
   Animated,
   Easing,
   TouchableOpacity,
@@ -17,7 +19,8 @@ import { Button } from '../../components/common/Button';
 import { Icon } from '../../components/common/Icon';
 import { useAuthStore } from '../../store/auth.store';
 import { authService } from '../../api/services/auth.service';
-import { validateLoginForm } from '../../utils/validators';
+import { validateLoginForm, isValidEmail } from '../../utils/validators';
+import { useBrandingStore } from '../../store/branding.store';
 import { RootStackParamList } from '../../types/navigation.types';
 import { colors, spacing, borderRadius, fontFamily } from '../../theme';
 
@@ -85,6 +88,22 @@ export const LoginScreen: React.FC = () => {
     ]).start();
   }, [markScale, heroOpacity, heroTranslateY, formOpacity, formTranslateY]);
 
+  const handleForgotPassword = () => {
+    const supportPhone = useBrandingStore.getState().branding?.supportPhone;
+    Alert.alert(
+      'Forgot your password?',
+      supportPhone
+        ? `Contact your club to reset it:\n${supportPhone}`
+        : 'Please contact your club manager to reset your password.',
+      supportPhone
+        ? [
+            { text: 'Close', style: 'cancel' },
+            { text: 'Call club', onPress: () => Linking.openURL(`tel:${supportPhone}`) },
+          ]
+        : [{ text: 'OK' }],
+    );
+  };
+
   const handleLogin = async () => {
     clearError();
     setPendingDeletion(false);
@@ -95,7 +114,9 @@ export const LoginScreen: React.FC = () => {
     }
     setErrors({});
 
-    // Check deletion status before login
+    // Check deletion status before login (email accounts only — the endpoint
+    // keys on email, and swimmers may log in with a phone number)
+    if (isValidEmail(email.trim())) {
     try {
       const status = await authService.getDeletionStatus(email);
       if (status.status === 'pending_deletion') {
@@ -111,6 +132,7 @@ export const LoginScreen: React.FC = () => {
       }
     } catch {
       // If status check fails (network), proceed with normal login
+    }
     }
 
     try {
@@ -214,14 +236,14 @@ export const LoginScreen: React.FC = () => {
                 {errorBanner}
 
                 <Input
-                  label="Email"
+                  label="Email or phone"
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
                     if (errors.email) setErrors((e) => ({ ...e, email: '' }));
                   }}
-                  placeholder="you@example.com"
-                  keyboardType="email-address"
+                  placeholder="you@example.com or 01xxxxxxxxx"
+                  keyboardType="default"
                   autoCapitalize="none"
                   error={errors.email}
                 />
@@ -237,6 +259,15 @@ export const LoginScreen: React.FC = () => {
                   secureTextEntry
                   error={errors.password}
                 />
+
+                <TouchableOpacity
+                  onPress={handleForgotPassword}
+                  style={s.forgotLink}
+                  activeOpacity={0.6}
+                  accessibilityRole="button"
+                >
+                  <Text style={[s.forgotText, { color: colors.primary }]}>Forgot password?</Text>
+                </TouchableOpacity>
 
                 <Button
                   title="Log in"
@@ -324,6 +355,15 @@ const s = StyleSheet.create({
     fontFamily: fontFamily.headingBold,
     color: colors.text,
     marginBottom: spacing.xs,
+  },
+  forgotLink: {
+    alignSelf: 'flex-end',
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  forgotText: {
+    fontSize: 13,
+    fontFamily: fontFamily.bodySemiBold,
   },
   formSubtitle: {
     fontSize: 15,

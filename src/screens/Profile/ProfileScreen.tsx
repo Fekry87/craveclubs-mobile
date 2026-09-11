@@ -11,6 +11,8 @@ import {
   Linking,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../types/navigation.types';
 import { Card } from '../../components/common/Card';
 import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
@@ -111,7 +113,8 @@ const titleCase = (v: string) =>
   v.replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 export const ProfileScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, logout } = useAuthStore();
   const { data, isLoading, error, fetchProfile } = useProfileStore();
   const branding = useBrandingStore((st) => st.branding);
@@ -484,6 +487,12 @@ export const ProfileScreen: React.FC = () => {
               icon="user-3-fill"
               label="Account email"
               value={user.email}
+            />
+            <InfoRow
+              icon="lock-line"
+              label="Password"
+              value="Change password"
+              onPress={() => navigation.navigate('ChangePassword')}
               isLast
             />
           </Card>

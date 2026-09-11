@@ -8,6 +8,8 @@ import {
   ReactivateAccountRequestType,
   ReactivateAccountResponseType,
   DeletionStatusResponseType,
+  ChangePasswordRequestType,
+  ChangePasswordResponseType,
 } from '../../types/api.types';
 
 export const authService = {
@@ -15,6 +17,16 @@ export const authService = {
     const { data } = await apiClient.post<LoginResponseType>(
       ENDPOINTS.AUTH.LOGIN,
       credentials,
+    );
+    return data;
+  },
+
+  async changePassword(
+    payload: ChangePasswordRequestType,
+  ): Promise<ChangePasswordResponseType> {
+    const { data } = await apiClient.post<ChangePasswordResponseType>(
+      ENDPOINTS.AUTH.CHANGE_PASSWORD,
+      payload,
     );
     return data;
   },
