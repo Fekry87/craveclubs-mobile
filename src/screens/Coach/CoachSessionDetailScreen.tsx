@@ -403,8 +403,6 @@ const s = StyleSheet.create({
   statusText: {
     fontSize: 11,
     fontFamily: fontFamily.bodySemiBold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
 
   /* Type badge */

@@ -29,6 +29,5 @@ export const styles = StyleSheet.create({
   label: {
     ...typography.label,
     color: colors.textDim,
-    textTransform: 'uppercase',
   },
 });

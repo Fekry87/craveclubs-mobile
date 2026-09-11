@@ -36,7 +36,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <Animated.View style={[styles.container, { opacity }]}>
       <Animated.View style={[styles.iconContainer, { transform: [{ scale: iconScale }] }]}>
-        <Icon name={icon} size={48} color={colors.textMuted} />
+        <Icon name={icon} size={36} color={colors.textMuted} />
       </Animated.View>
       <Text style={styles.title}>{title}</Text>
       {message && <Text style={styles.message}>{message}</Text>}

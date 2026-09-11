@@ -9,33 +9,19 @@ interface CardProps {
   style?: StyleProp<ViewStyle>;
   /** @deprecated No longer renders — kept for API compat */
   accentColor?: string;
+  /** @deprecated No longer renders — kept for API compat */
   glowColor?: string;
 }
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-export const Card: React.FC<CardProps> = ({
-  children,
-  onPress,
-  style,
-  glowColor,
-}) => {
+export const Card: React.FC<CardProps> = ({ children, onPress, style }) => {
   const { animatedStyle, onPressIn, onPressOut } = useAnimatedPress();
-
-  const glowShadow = glowColor
-    ? {
-        shadowColor: glowColor,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
-        elevation: 3,
-      }
-    : undefined;
 
   if (onPress) {
     return (
       <AnimatedTouchable
-        style={[styles.card, glowShadow, animatedStyle, style]}
+        style={[styles.card, animatedStyle, style]}
         onPress={onPress}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
@@ -47,7 +33,7 @@ export const Card: React.FC<CardProps> = ({
   }
 
   return (
-    <View style={[styles.card, glowShadow, style]}>
+    <View style={[styles.card, style]}>
       <View style={styles.cardInner}>{children}</View>
     </View>
   );

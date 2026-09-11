@@ -1,12 +1,17 @@
-import React, { useRef, useState } from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, ViewStyle, Animated, View } from 'react-native';
-import { colors } from '../../../theme';
-import { styles, BUTTON_COLORS } from './styles';
+import React, { useRef } from 'react';
+import {
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+  ViewStyle,
+  Animated,
+} from 'react-native';
+import { styles, getButtonColors, ButtonVariant } from './styles';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'danger' | 'blue';
+  variant?: ButtonVariant;
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
@@ -23,32 +28,32 @@ export const Button: React.FC<ButtonProps> = ({
   style,
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
-  const [pressed, setPressed] = useState(false);
-
-  const colorSet = BUTTON_COLORS[variant];
+  const colorSet = getButtonColors(variant);
 
   const onPressIn = () => {
-    setPressed(true);
     Animated.spring(scale, {
-      toValue: 0.95,
+      toValue: 0.97,
+      speed: 40,
+      bounciness: 0,
       useNativeDriver: true,
     }).start();
   };
 
   const onPressOut = () => {
-    setPressed(false);
     Animated.spring(scale, {
       toValue: 1,
+      speed: 30,
+      bounciness: 6,
       useNativeDriver: true,
     }).start();
   };
 
-  const loaderColor = variant === 'secondary' ? colors.text : colors.white;
-
   return (
     <AnimatedTouchable
       style={[
-        { transform: [{ scale }] },
+        styles.base,
+        { backgroundColor: colorSet.bg, transform: [{ scale }] },
+        colorSet.border ? [styles.bordered, { borderColor: colorSet.border }] : null,
         disabled && styles.disabled,
         style,
       ]}
@@ -56,25 +61,14 @@ export const Button: React.FC<ButtonProps> = ({
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       disabled={disabled || loading}
-      activeOpacity={1}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
     >
-      <View
-        style={[
-          styles.base,
-          {
-            backgroundColor: colorSet.bg,
-            borderColor: colorSet.border,
-            borderBottomWidth: pressed ? 2 : 4,
-            marginTop: pressed ? 2 : 0,
-          },
-          variant === 'secondary' && styles.secondaryBorder,
-        ]}
-      >
-        {loading && (
-          <ActivityIndicator color={loaderColor} size="small" style={styles.loader} />
-        )}
-        <Text style={[styles.text, { color: colorSet.text }]}>{title}</Text>
-      </View>
+      {loading && (
+        <ActivityIndicator color={colorSet.text} size="small" style={styles.loader} />
+      )}
+      <Text style={[styles.text, { color: colorSet.text }]}>{title}</Text>
     </AnimatedTouchable>
   );
 };

@@ -145,7 +145,7 @@ export const SessionsScreen: React.FC = () => {
               key={seg.key}
               style={[
                 screenStyles.segmentTab,
-                isActive && screenStyles.segmentTabActive,
+                isActive && { backgroundColor: colors.primaryDim },
               ]}
               onPress={() => setActiveSegment(seg.key)}
               activeOpacity={0.7}
@@ -153,12 +153,12 @@ export const SessionsScreen: React.FC = () => {
               <Icon
                 name={seg.icon}
                 size={16}
-                color={isActive ? colors.white : colors.textMuted}
+                color={isActive ? colors.primary : colors.textMuted}
               />
               <Text
                 style={[
                   screenStyles.segmentLabel,
-                  isActive && screenStyles.segmentLabelActive,
+                  isActive && { color: colors.primary },
                 ]}
               >
                 {seg.label}
@@ -167,7 +167,7 @@ export const SessionsScreen: React.FC = () => {
               <View
                 style={[
                   screenStyles.countBadge,
-                  isActive && screenStyles.countBadgeActive,
+                  isActive && { backgroundColor: colors.primary },
                 ]}
               >
                 <Text
@@ -226,14 +226,15 @@ const screenStyles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
-  // Segment tabs
+  // Segment chips
   segmentScroll: {
     flexGrow: 0,
   },
   segmentBar: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm + 4,
     gap: spacing.sm,
     backgroundColor: colors.background,
   },
@@ -241,35 +242,26 @@ const screenStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    paddingVertical: spacing.sm,
+    gap: 6,
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.pill,
     backgroundColor: colors.surfaceLight,
     flexShrink: 0,
   },
-  segmentTabActive: {
-    backgroundColor: colors.primary,
-  },
   segmentLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: fontFamily.bodySemiBold,
     color: colors.textMuted,
   },
-  segmentLabelActive: {
-    color: colors.white,
-  },
   countBadge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 5,
-  },
-  countBadgeActive: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 6,
   },
   countText: {
     fontSize: 11,
@@ -282,9 +274,9 @@ const screenStyles = StyleSheet.create({
 
   // List
   listContent: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xxl,
   },
   listContentEmpty: {
     flex: 1,

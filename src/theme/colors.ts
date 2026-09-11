@@ -18,62 +18,67 @@ function dim(hex: string): string {
   return `rgba(${r}, ${g}, ${b}, 0.12)`;
 }
 
+/**
+ * Design language: calm, premium, single-accent (Ahead-inspired).
+ * One primary drives buttons, active states, links and progress.
+ * Everything else is neutral or a soft tint of a semantic color.
+ */
 /* eslint-disable prefer-const */
 export let colors = {
-  // Backgrounds (light, bright)
-  background: '#F6F7FB',
+  // Canvas — soft lavender-white, pure white surfaces
+  background: '#F7F6FB',
   backgroundAlt: '#FFFFFF',
   surface: '#FFFFFF',
-  surfaceLight: '#F0F2F8',
-  surfaceHover: '#E8EBF2',
+  surfaceLight: '#F1F0F7',
+  surfaceHover: '#E9E7F3',
 
-  // Primary — Pool Blue
-  primary: '#1CB0F6',
-  primaryDark: '#1899D6',
-  primaryDim: 'rgba(28, 176, 246, 0.12)',
+  // Primary — violet platform default (overridden per club by branding)
+  primary: '#6C4CF5',
+  primaryDark: '#5A3EE0',
+  primaryDim: 'rgba(108, 76, 245, 0.12)',
 
-  // Swimmer — Bright Green (Duolingo green)
-  swimmer: '#58CC02',
-  swimmerDark: '#46A302',
-  swimmerDim: 'rgba(88, 204, 2, 0.12)',
+  // Swimmer — calm green (attendance / completed)
+  swimmer: '#2FBF71',
+  swimmerDark: '#27A360',
+  swimmerDim: 'rgba(47, 191, 113, 0.12)',
 
-  // Secondary — Purple Fun
-  secondary: '#CE82FF',
-  secondaryDark: '#B066E3',
-  secondaryDim: 'rgba(206, 130, 255, 0.12)',
+  // Secondary — coral accent (overridden per club by branding)
+  secondary: '#FF6F91',
+  secondaryDark: '#E05E7C',
+  secondaryDim: 'rgba(255, 111, 145, 0.12)',
 
-  // Text (dark on light)
-  text: '#3C3C3C',
-  textMuted: '#777777',
-  textDim: '#AFAFAF',
+  // Text — near-black navy on light
+  text: '#1B1B2F',
+  textMuted: '#6F6F84',
+  textDim: '#A8A8BC',
 
   // Semantic
-  success: '#58CC02',
-  successDim: 'rgba(88, 204, 2, 0.12)',
-  warning: '#FFC800',
-  warningDark: '#E5B400',
-  warningDim: 'rgba(255, 200, 0, 0.15)',
-  error: '#FF4B4B',
-  errorDark: '#E53E3E',
-  errorDim: 'rgba(255, 75, 75, 0.1)',
+  success: '#2FBF71',
+  successDim: 'rgba(47, 191, 113, 0.12)',
+  warning: '#FFB020',
+  warningDark: '#E29A12',
+  warningDim: 'rgba(255, 176, 32, 0.14)',
+  error: '#F04A5E',
+  errorDark: '#D63C50',
+  errorDim: 'rgba(240, 74, 94, 0.10)',
 
-  // Borders
-  border: '#E5E5E5',
-  borderLight: '#F0F0F0',
+  // Borders — hairlines only
+  border: '#E6E5EF',
+  borderLight: '#EFEEF5',
 
   // Utility
   white: '#FFFFFF',
   black: '#000000',
   transparent: 'transparent',
 
-  // Fun accent colors
-  orange: '#FF9600',
-  orangeDark: '#E08600',
-  orangeDim: 'rgba(255, 150, 0, 0.12)',
-  pink: '#FF86D0',
-  pinkDim: 'rgba(255, 134, 208, 0.12)',
-  teal: '#2DD4BF',
-  tealDim: 'rgba(45, 212, 191, 0.12)',
+  // Accents — illustration, hero cards, streaks (not brand-dependent)
+  orange: '#FF8A4C',
+  orangeDark: '#E6763D',
+  orangeDim: 'rgba(255, 138, 76, 0.12)',
+  pink: '#F472B6',
+  pinkDim: 'rgba(244, 114, 182, 0.12)',
+  teal: '#2CC4B0',
+  tealDim: 'rgba(44, 196, 176, 0.12)',
 };
 
 type BrandingListener = () => void;

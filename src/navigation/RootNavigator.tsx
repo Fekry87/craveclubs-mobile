@@ -131,12 +131,12 @@ export const RootNavigator: React.FC = () => {
           headerShown: true,
           title: 'Notifications',
           headerStyle: {
-            backgroundColor: colors.white,
+            backgroundColor: colors.background,
           },
           headerTitleStyle: {
             fontFamily: fontFamily.headingBold,
             color: colors.text,
-            fontSize: 20,
+            fontSize: 18,
           },
           headerShadowVisible: false,
           headerBackTitle: '',
@@ -150,12 +150,12 @@ export const RootNavigator: React.FC = () => {
           headerShown: true,
           title: 'All Evaluations',
           headerStyle: {
-            backgroundColor: colors.white,
+            backgroundColor: colors.background,
           },
           headerTitleStyle: {
             fontFamily: fontFamily.headingBold,
             color: colors.text,
-            fontSize: 20,
+            fontSize: 18,
           },
           headerShadowVisible: false,
           headerBackTitle: '',

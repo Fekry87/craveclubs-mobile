@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useLayoutEffect, useRef } from 'react';
+import React, { useState, useCallback, useLayoutEffect } from 'react';
 import {
   ScrollView,
   View,
@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Animated,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Card } from '../../components/common/Card';
@@ -17,57 +18,114 @@ import { Icon, IconName } from '../../components/common/Icon';
 import { NotificationBell } from '../../components/common/NotificationBell';
 import { ProfileHeader } from '../../components/features/profile/ProfileHeader';
 import { DeleteAccountSheet } from '../../components/features/profile/DeleteAccountSheet';
+import { StatCard } from '../../components/features/progress/StatCard';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { useAuthStore } from '../../store/auth.store';
-import { progressService } from '../../api/services/progress.service';
-import { DashboardResponseType } from '../../types/api.types';
-import { formatDate } from '../../utils/formatters';
-import { colors, spacing, fontFamily, borderRadius, shadows } from '../../theme';
+import { useProfileStore } from '../../store/profile.store';
+import { useBrandingStore } from '../../store/branding.store';
+import { SwimmerSubscriptionInterface } from '../../types/api.types';
+import { formatMediumDate, formatPercentage, formatRating, getInitials } from '../../utils/formatters';
+import { colors, spacing, fontFamily, borderRadius } from '../../theme';
 
-/* ─── Info row with icon ─── */
+/* ─── Settings-style row ─── */
 interface InfoRowProps {
   icon: IconName;
-  iconColor: string;
-  iconBg: string;
   label: string;
   value: string;
+  hint?: string;
+  onPress?: () => void;
   isLast?: boolean;
 }
 
 const InfoRow: React.FC<InfoRowProps> = ({
   icon,
-  iconColor,
-  iconBg,
   label,
   value,
+  hint,
+  onPress,
   isLast = false,
-}) => (
-  <View style={[s.infoRow, isLast && s.infoRowLast]}>
-    <View style={[s.infoIcon, { backgroundColor: iconBg }]}>
-      <Icon name={icon} size={16} color={iconColor} />
-    </View>
-    <View style={s.infoContent}>
-      <Text style={s.infoLabel}>{label}</Text>
-      <Text style={s.infoValue}>{value}</Text>
-    </View>
-  </View>
+}) => {
+  const content = (
+    <>
+      <View style={s.infoIcon}>
+        <Icon name={icon} size={18} color={colors.textMuted} />
+      </View>
+      <View style={s.infoContent}>
+        <Text style={s.infoLabel}>{label}</Text>
+        <Text style={s.infoValue} numberOfLines={2}>{value}</Text>
+        {hint ? <Text style={s.infoHint} numberOfLines={2}>{hint}</Text> : null}
+      </View>
+      {onPress && (
+        <Icon name="arrow-right-s-line" size={20} color={colors.textDim} />
+      )}
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        style={[s.infoRow, isLast && s.infoRowLast]}
+        onPress={onPress}
+        activeOpacity={0.6}
+        accessibilityRole="button"
+        accessibilityLabel={`${label}: ${value}`}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+  return <View style={[s.infoRow, isLast && s.infoRowLast]}>{content}</View>;
+};
+
+/* ─── Section title ─── */
+const SectionTitle: React.FC<{ children: string }> = ({ children }) => (
+  <Text style={s.sectionTitle}>{children}</Text>
 );
+
+/* ─── Subscription helpers ─── */
+const subscriptionTone = (status: SwimmerSubscriptionInterface['status']) => {
+  switch (status) {
+    case 'expired':
+      return { bg: colors.errorDim, fg: colors.error, label: 'Expired' };
+    case 'expiring':
+      return { bg: colors.warningDim, fg: colors.warningDark, label: 'Expiring soon' };
+    default:
+      return { bg: colors.swimmerDim, fg: colors.swimmerDark, label: 'Active' };
+  }
+};
+
+const daysLeftLabel = (days: number): string => {
+  if (days < 0) return `Expired ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} ago`;
+  if (days === 0) return 'Ends today';
+  if (days === 1) return '1 day left';
+  return `${days} days left`;
+};
+
+const openUrl = (url: string) => {
+  Linking.openURL(url).catch(() => {
+    Alert.alert('Unavailable', 'This action is not supported on your device.');
+  });
+};
+
+const titleCase = (v: string) =>
+  v.replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuthStore();
-  const [dashboard, setDashboard] = useState<DashboardResponseType | null>(
-    null,
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error, fetchProfile } = useProfileStore();
+  const branding = useBrandingStore((st) => st.branding);
   const [refreshing, setRefreshing] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
 
-  const personalEntry = useAnimatedEntry(1);
-  const guardianEntry = useAnimatedEntry(2);
-  const clubEntry = useAnimatedEntry(3);
+  const subscriptionEntry = useAnimatedEntry(1);
+  const statsEntry = useAnimatedEntry(2);
+  const coachEntry = useAnimatedEntry(3);
+  const trainingEntry = useAnimatedEntry(4);
+  const personalEntry = useAnimatedEntry(5);
+  const guardianEntry = useAnimatedEntry(6);
+  const clubEntry = useAnimatedEntry(7);
 
   const handleLogout = useCallback(() => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -83,7 +141,6 @@ export const ProfileScreen: React.FC = () => {
     ]);
   }, [logout]);
 
-  // Header right: bell + delete + logout
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -93,6 +150,8 @@ export const ProfileScreen: React.FC = () => {
             onPress={() => setDeleteSheetVisible(true)}
             style={s.headerIconBtn}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Delete account"
           >
             <Icon name="delete-bin-6-line" size={22} color={colors.textMuted} />
           </TouchableOpacity>
@@ -101,172 +160,341 @@ export const ProfileScreen: React.FC = () => {
             style={s.headerIconBtn}
             activeOpacity={0.7}
             disabled={loggingOut}
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
           >
-            <Icon
-              name="logout-box-r-line"
-              size={22}
-              color={colors.textMuted}
-            />
+            <Icon name="logout-box-r-line" size={22} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
       ),
     });
   }, [navigation, handleLogout, loggingOut]);
 
-  const hasDataRef = useRef(false);
-
-  const fetchProfile = useCallback(async () => {
-    try {
-      const data = await progressService.getDashboard();
-      setDashboard(data);
-      setError(null);
-      hasDataRef.current = true;
-    } catch {
-      if (!hasDataRef.current) {
-        setError('Failed to load profile.');
-      }
-    } finally {
-      setIsLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
       fetchProfile();
-      // eslint-disable-next-line -- run on focus only
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- store action is stable
     }, []),
   );
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    fetchProfile();
+    await fetchProfile();
+    setRefreshing(false);
   }, [fetchProfile]);
 
-  if (isLoading) return <Loader message="Loading profile..." />;
-  if (error || !user)
-    return (
-      <ErrorView
-        message={error || 'User not found.'}
-        onRetry={fetchProfile}
-      />
-    );
+  if (isLoading && !data) return <Loader message="Loading profile..." />;
+  if ((error && !data) || !user) {
+    return <ErrorView message={error || 'User not found.'} onRetry={fetchProfile} />;
+  }
+  if (!data) return <ErrorView message="No profile data." onRetry={fetchProfile} />;
 
-  const profile = dashboard?.profile;
+  const { profile, subscription, coach, groups, branch, signup, xp, stats } = data;
+  const tone = subscription ? subscriptionTone(subscription.status) : null;
+  const groupNames = groups.map((g) => g.name).join(', ');
+  const scheduleParts = [signup?.preferred_time, signup?.weekly_frequency].filter(Boolean);
 
   return (
-  <>
-    <ScrollView
-      style={s.container}
-      contentContainerStyle={s.content}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[colors.primary]}
-          tintColor={colors.primary}
-        />
-      }
-    >
-      <ProfileHeader user={user} profile={profile} />
+    <>
+      <ScrollView
+        style={s.container}
+        contentContainerStyle={s.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
+        <ProfileHeader user={user} profile={profile} />
 
-      {/* ═══ Personal Info ═══ */}
-      {profile && (
-        <Animated.View style={personalEntry}>
-          <View style={s.sectionHeader}>
-            <Icon name="user-fill" size={16} color={colors.primary} />
-            <Text style={s.sectionTitle}>Personal Info</Text>
+        {/* ═══ Subscription ═══ */}
+        {subscription && tone && (
+          <Animated.View style={[s.section, subscriptionEntry]}>
+            <Card>
+              <View style={s.subHeader}>
+                <View style={s.subTitleRow}>
+                  <View style={[s.subIcon, { backgroundColor: colors.primaryDim }]}>
+                    <Icon name="vip-crown-fill" size={18} color={colors.primary} />
+                  </View>
+                  <View style={s.flex1}>
+                    <Text style={s.subPlan} numberOfLines={1}>
+                      {subscription.plan_name}
+                    </Text>
+                    <Text style={s.subMeta}>
+                      {subscription.duration_months}-month plan · ends{' '}
+                      {formatMediumDate(subscription.ends_at)}
+                    </Text>
+                  </View>
+                </View>
+                <View style={[s.pill, { backgroundColor: tone.bg }]}>
+                  <Text style={[s.pillText, { color: tone.fg }]}>{tone.label}</Text>
+                </View>
+              </View>
+
+              <View style={s.progressTrack}>
+                <View
+                  style={[
+                    s.progressFill,
+                    {
+                      width: `${Math.min(100, Math.max(0, subscription.progress))}%`,
+                      backgroundColor: subscription.status === 'active' ? colors.primary : tone.fg,
+                    },
+                  ]}
+                />
+              </View>
+
+              <View style={s.subFooter}>
+                <Text style={[s.subDays, { color: tone.fg }]}>
+                  {daysLeftLabel(subscription.days_left)}
+                </Text>
+                <Text style={s.subStarted}>
+                  Since {formatMediumDate(subscription.started_at)}
+                </Text>
+              </View>
+
+              {subscription.status !== 'active' && (
+                <View style={[s.subNotice, { backgroundColor: tone.bg }]}>
+                  <Icon name="information-line" size={16} color={tone.fg} />
+                  <Text style={[s.subNoticeText, { color: tone.fg }]}>
+                    {subscription.status === 'expired'
+                      ? 'Your plan has ended — contact your club to renew and keep training.'
+                      : 'Renew with your club before it ends to avoid a break in training.'}
+                  </Text>
+                </View>
+              )}
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* ═══ Progress snapshot ═══ */}
+        <Animated.View style={[s.section, statsEntry]}>
+          <SectionTitle>My progress</SectionTitle>
+          <View style={s.statsRow}>
+            <StatCard
+              icon="flashlight-fill"
+              value={xp.total_xp.toLocaleString()}
+              label={`XP · Rank #${xp.rank} of ${xp.total_swimmers}`}
+              color="primary"
+              index={0}
+            />
+            <StatCard
+              icon="checkbox-circle-fill"
+              value={formatPercentage(stats.attendance_rate)}
+              label={`Attendance · ${stats.sessions_attended}/${stats.total_sessions}`}
+              color="success"
+              index={1}
+            />
           </View>
-          <Card style={s.infoCard}>
-            {profile.date_of_birth && (
+          <View style={s.statsRow}>
+            <StatCard
+              icon="star-fill"
+              value={formatRating(stats.average_rating)}
+              label={`Avg rating · ${stats.evaluation_count} reviews`}
+              color="warning"
+              index={2}
+            />
+            <StatCard
+              icon="fire-fill"
+              value={xp.current_streak.toString()}
+              label={xp.current_streak === 1 ? 'Session streak' : 'Sessions streak'}
+              color="swimmer"
+              index={3}
+            />
+          </View>
+          <View style={s.levelRow}>
+            <View style={[s.levelDot, { backgroundColor: xp.level.color }]} />
+            <Text style={s.levelText}>
+              Level {xp.level.level} · {xp.level.name}
+              {xp.level.next_level_name
+                ? ` · ${xp.level.xp_to_next} XP to ${xp.level.next_level_name}`
+                : ' · Max level'}
+            </Text>
+          </View>
+        </Animated.View>
+
+        {/* ═══ My coach ═══ */}
+        {coach && (
+          <Animated.View style={[s.section, coachEntry]}>
+            <SectionTitle>My coach</SectionTitle>
+            <Card>
+              <View style={s.coachRow}>
+                <View style={[s.coachAvatar, { backgroundColor: colors.primaryDim }]}>
+                  <Text style={[s.coachInitials, { color: colors.primary }]}>
+                    {getInitials(coach.name.split(' ')[0], coach.name.split(' ')[1] ?? 'C')}
+                  </Text>
+                </View>
+                <View style={s.flex1}>
+                  <Text style={s.coachName} numberOfLines={1}>{coach.name}</Text>
+                  <Text style={s.coachMeta} numberOfLines={2}>
+                    {[
+                      coach.specialization,
+                      coach.experience_years ? `${coach.experience_years} yrs experience` : null,
+                      groupNames ? `Coaches ${groupNames}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || 'Your assigned coach'}
+                  </Text>
+                  {coach.rating !== null && (
+                    <View style={s.coachRating}>
+                      <Icon name="star-fill" size={13} color={colors.warning} />
+                      <Text style={s.coachRatingText}>{coach.rating.toFixed(1)}</Text>
+                    </View>
+                  )}
+                </View>
+                {coach.phone && (
+                  <TouchableOpacity
+                    style={[s.callBtn, { backgroundColor: colors.primary }]}
+                    onPress={() => openUrl(`tel:${coach.phone}`)}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Call ${coach.name}`}
+                  >
+                    <Icon name="phone-fill" size={18} color={colors.white} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* ═══ Training ═══ */}
+        <Animated.View style={[s.section, trainingEntry]}>
+          <SectionTitle>Training</SectionTitle>
+          <Card>
+            {groupNames ? (
+              <InfoRow icon="group-fill" label="Group" value={groupNames} />
+            ) : null}
+            {branch && (
               <InfoRow
-                icon="cake-2-fill"
-                iconColor={colors.orange}
-                iconBg={colors.orangeDim}
-                label="Date of Birth"
-                value={formatDate(profile.date_of_birth)}
+                icon="map-pin-fill"
+                label="Branch"
+                value={branch.name}
+                hint={[branch.address, branch.city].filter(Boolean).join(', ')}
+                onPress={() =>
+                  openUrl(
+                    `https://maps.apple.com/?q=${encodeURIComponent(`${branch.name}, ${branch.address}, ${branch.city}`)}`,
+                  )
+                }
               />
             )}
+            {branch?.working_hours ? (
+              <InfoRow icon="time-fill" label="Pool hours" value={branch.working_hours} />
+            ) : null}
             {profile.level && (
-              <InfoRow
-                icon="shield-user-fill"
-                iconColor={colors.swimmer}
-                iconBg={colors.swimmerDim}
-                label="Level"
-                value={profile.level}
-                isLast={!profile.date_of_birth}
-              />
+              <InfoRow icon="shield-user-fill" label="Level" value={profile.level} />
             )}
-            {/* Mark the actual last item */}
-            {profile.level && profile.date_of_birth && (
-              <View />
+            {scheduleParts.length > 0 && (
+              <InfoRow icon="calendar-event-fill" label="My schedule" value={scheduleParts.join(' · ')} />
             )}
+            {signup?.primary_goal && (
+              <InfoRow icon="flag-fill" label="My goal" value={signup.primary_goal} />
+            )}
+            <InfoRow
+              icon="medal-fill"
+              label="Member since"
+              value={data.member_since ? formatMediumDate(data.member_since) : '—'}
+              isLast
+            />
           </Card>
         </Animated.View>
-      )}
 
-      {/* ═══ Guardian Info ═══ */}
-      {profile?.guardian_name && (
-        <Animated.View style={guardianEntry}>
-          <View style={s.sectionHeader}>
-            <Icon name="hand-heart-fill" size={16} color={colors.secondary} />
-            <Text style={s.sectionTitle}>Guardian Info</Text>
-          </View>
-          <Card style={s.infoCard}>
+        {/* ═══ Personal ═══ */}
+        <Animated.View style={[s.section, personalEntry]}>
+          <SectionTitle>Personal</SectionTitle>
+          <Card>
+            {profile.date_of_birth && (
+              <InfoRow icon="cake-2-fill" label="Date of birth" value={formatMediumDate(profile.date_of_birth)} />
+            )}
+            {signup?.gender && (
+              <InfoRow icon="user-fill" label="Gender" value={titleCase(signup.gender)} />
+            )}
+            {(signup?.height_cm || signup?.weight_kg) && (
+              <InfoRow
+                icon="run-fill"
+                label="Height · weight"
+                value={[
+                  signup?.height_cm ? `${signup.height_cm} cm` : null,
+                  signup?.weight_kg ? `${signup.weight_kg} kg` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              />
+            )}
             <InfoRow
-              icon="user-fill"
-              iconColor={colors.secondary}
-              iconBg={colors.secondaryDim}
-              label="Name"
-              value={profile.guardian_name}
+              icon="heart-pulse-fill"
+              label="Medical notes"
+              value={profile.medical_notes || 'None on file'}
+              isLast
             />
-            {profile.guardian_phone && (
+          </Card>
+        </Animated.View>
+
+        {/* ═══ Guardian ═══ */}
+        {profile.guardian_name && (
+          <Animated.View style={[s.section, guardianEntry]}>
+            <SectionTitle>Guardian</SectionTitle>
+            <Card>
+              <InfoRow icon="hand-heart-fill" label="Name" value={profile.guardian_name} />
+              {profile.guardian_phone && (
+                <InfoRow
+                  icon="phone-fill"
+                  label="Phone"
+                  value={profile.guardian_phone}
+                  onPress={() => openUrl(`tel:${profile.guardian_phone}`)}
+                />
+              )}
+              {profile.guardian_email && (
+                <InfoRow
+                  icon="mail-fill"
+                  label="Email"
+                  value={profile.guardian_email}
+                  onPress={() => openUrl(`mailto:${profile.guardian_email}`)}
+                  isLast
+                />
+              )}
+            </Card>
+          </Animated.View>
+        )}
+
+        {/* ═══ Club & support ═══ */}
+        <Animated.View style={[s.section, clubEntry]}>
+          <SectionTitle>Club</SectionTitle>
+          <Card>
+            <InfoRow icon="building-2-fill" label="Club" value={user.club?.name ?? '—'} />
+            {branding?.supportPhone && (
               <InfoRow
                 icon="phone-fill"
-                iconColor={colors.swimmer}
-                iconBg={colors.swimmerDim}
-                label="Phone"
-                value={profile.guardian_phone}
+                label="Call the club"
+                value={branding.supportPhone}
+                onPress={() => openUrl(`tel:${branding.supportPhone}`)}
               />
             )}
-            {profile.guardian_email && (
+            {branding?.supportEmail && (
               <InfoRow
                 icon="mail-fill"
-                iconColor={colors.primary}
-                iconBg={colors.primaryDim}
-                label="Email"
-                value={profile.guardian_email}
-                isLast
+                label="Email the club"
+                value={branding.supportEmail}
+                onPress={() => openUrl(`mailto:${branding.supportEmail}`)}
               />
             )}
+            <InfoRow
+              icon="user-3-fill"
+              label="Account email"
+              value={user.email}
+              isLast
+            />
           </Card>
         </Animated.View>
-      )}
+      </ScrollView>
 
-      {/* ═══ Club Info ═══ */}
-      <Animated.View style={clubEntry}>
-        <View style={s.sectionHeader}>
-          <Icon name="building-2-fill" size={16} color={colors.teal} />
-          <Text style={s.sectionTitle}>Club</Text>
-        </View>
-        <Card style={s.infoCard}>
-          <InfoRow
-            icon="building-2-fill"
-            iconColor={colors.teal}
-            iconBg={colors.tealDim}
-            label="Club Name"
-            value={user.club?.name ?? '—'}
-            isLast
-          />
-        </Card>
-      </Animated.View>
-    </ScrollView>
-
-    <DeleteAccountSheet
-      visible={deleteSheetVisible}
-      onClose={() => setDeleteSheetVisible(false)}
-    />
-  </>
+      <DeleteAccountSheet
+        visible={deleteSheetVisible}
+        onClose={() => setDeleteSheetVisible(false)}
+      />
+    </>
   );
 };
 
@@ -277,16 +505,28 @@ const s = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  flex1: {
+    flex: 1,
+  },
+  section: {
+    marginTop: spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.textMuted,
+    letterSpacing: 0.4,
+    marginBottom: spacing.sm + 2,
   },
 
-  /* Header right row — bell + delete + logout */
+  /* Header right row */
   headerRightRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  /* Header icon button — matches NotificationBell sizing */
   headerIconBtn: {
     marginRight: spacing.sm,
     width: 32,
@@ -295,29 +535,169 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
 
-  /* Section headers */
-  sectionHeader: {
+  /* Subscription */
+  subHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: spacing.sm,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
-  sectionTitle: {
-    fontSize: 16,
+  subTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm + 4,
+    flex: 1,
+  },
+  subIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  subPlan: {
+    fontSize: 17,
+    lineHeight: 22,
     fontFamily: fontFamily.headingBold,
     color: colors.text,
   },
+  subMeta: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fontFamily.bodyRegular,
+    color: colors.textMuted,
+    marginTop: 1,
+  },
+  pill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: borderRadius.pill,
+  },
+  pillText: {
+    fontSize: 12,
+    fontFamily: fontFamily.bodySemiBold,
+  },
+  progressTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.surfaceLight,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+  subFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.sm + 2,
+  },
+  subDays: {
+    fontSize: 15,
+    fontFamily: fontFamily.headingBold,
+  },
+  subStarted: {
+    fontSize: 12,
+    fontFamily: fontFamily.bodyRegular,
+    color: colors.textDim,
+  },
+  subNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    padding: spacing.sm + 4,
+    borderRadius: borderRadius.sm,
+  },
+  subNoticeText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fontFamily.bodyMedium,
+  },
 
-  /* Info cards */
-  infoCard: {},
+  /* Stats */
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm + 2,
+    marginBottom: spacing.sm + 2,
+  },
+  levelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  levelDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  levelText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
+  },
 
-  /* Info row with icon */
+  /* Coach */
+  coachRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm + 4,
+  },
+  coachAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  coachInitials: {
+    fontSize: 18,
+    fontFamily: fontFamily.headingBold,
+  },
+  coachName: {
+    fontSize: 16,
+    lineHeight: 22,
+    fontFamily: fontFamily.headingBold,
+    color: colors.text,
+  },
+  coachMeta: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fontFamily.bodyRegular,
+    color: colors.textMuted,
+    marginTop: 1,
+  },
+  coachRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  coachRatingText: {
+    fontSize: 13,
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.text,
+  },
+  callBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  /* Info rows */
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 4,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
   },
@@ -325,9 +705,10 @@ const s = StyleSheet.create({
     borderBottomWidth: 0,
   },
   infoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: colors.surfaceLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -342,7 +723,15 @@ const s = StyleSheet.create({
   },
   infoValue: {
     fontSize: 15,
+    lineHeight: 20,
     fontFamily: fontFamily.bodySemiBold,
     color: colors.text,
+  },
+  infoHint: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: fontFamily.bodyRegular,
+    color: colors.textDim,
+    marginTop: 2,
   },
 });

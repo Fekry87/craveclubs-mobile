@@ -27,11 +27,15 @@ export const ErrorView: React.FC<ErrorViewProps> = ({
   return (
     <Animated.View style={[styles.container, { opacity }]}>
       <View style={styles.iconContainer}>
-        <Icon name="error-warning-line" size={48} color={colors.error} />
+        <Icon name="error-warning-line" size={36} color={colors.error} />
       </View>
       <Text style={styles.title}>Oops!</Text>
       <Text style={styles.message}>{message}</Text>
-      {onRetry && <Button title="Try Again" onPress={onRetry} />}
+      {onRetry && (
+        <View style={{ alignSelf: 'stretch' }}>
+          <Button title="Try again" onPress={onRetry} />
+        </View>
+      )}
     </Animated.View>
   );
 };

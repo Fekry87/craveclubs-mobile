@@ -6,21 +6,21 @@ import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   useFonts,
-  Fredoka_600SemiBold,
-  Fredoka_700Bold,
-} from '@expo-google-fonts/fredoka';
+  Outfit_500Medium,
+  Outfit_600SemiBold,
+  Outfit_700Bold,
+} from '@expo-google-fonts/outfit';
 import {
-  Nunito_400Regular,
-  Nunito_500Medium,
-  Nunito_600SemiBold,
-  Nunito_700Bold,
-} from '@expo-google-fonts/nunito';
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme';
 
-// Fail fast if EXPO_PUBLIC_CLUB_SLUG is missing — the import throws
 import { clubConfig } from './src/config/club';
-console.log('App starting for club:', clubConfig.name);
+console.log('App starting for club:', clubConfig.name || '(shared build)');
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -31,12 +31,13 @@ Sentry.init({
 
 function App() {
   const [fontsLoaded] = useFonts({
-    Fredoka_600SemiBold,
-    Fredoka_700Bold,
-    Nunito_400Regular,
-    Nunito_500Medium,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
+    Outfit_500Medium,
+    Outfit_600SemiBold,
+    Outfit_700Bold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
     remixicon: require('./assets/fonts/remixicon.ttf'),
   });
 

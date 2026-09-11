@@ -34,10 +34,10 @@ import { DashboardResponseType, LeaderboardResponseType } from '../../types/api.
 import { TrainingSessionInterface } from '../../types/models.types';
 import { AppTabParamList } from '../../navigation/types';
 import { formatRating } from '../../utils/formatters';
-import { colors, spacing, fontFamily, borderRadius, shadows } from '../../theme';
+import { colors, spacing, fontFamily } from '../../theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SESSION_CARD_WIDTH = SCREEN_WIDTH - spacing.md * 2 - spacing.lg;
+const SESSION_CARD_WIDTH = SCREEN_WIDTH - spacing.lg * 2 - spacing.lg;
 
 type HomeNavProp = CompositeNavigationProp<
   BottomTabNavigationProp<AppTabParamList, 'Home'>,
@@ -241,7 +241,7 @@ export const HomeScreen: React.FC = () => {
       <View style={screenStyles.statsRow}>
         {leaderboard ? (
           <Animated.View style={[{ flex: 1 }, levelStatEntry]}>
-            <Card glowColor={leaderboard.my_level.color}>
+            <Card>
               <View style={screenStyles.levelContent}>
                 <View
                   style={[
@@ -253,7 +253,7 @@ export const HomeScreen: React.FC = () => {
                 >
                   <LevelCharacter
                     levelName={leaderboard.my_level.name}
-                    size={32}
+                    size={26}
                   />
                 </View>
                 <Text
@@ -383,11 +383,7 @@ export const HomeScreen: React.FC = () => {
               year: 'numeric',
             });
             return (
-              <Card
-                key={evaluation.id}
-                style={screenStyles.evalCard}
-                accentColor={colors.warning}
-              >
+              <Card key={evaluation.id} style={screenStyles.evalCard}>
                 <View style={screenStyles.evalRow}>
                   <View style={screenStyles.evalStarCircle}>
                     <Icon name="star-fill" size={22} color={colors.warning} />
@@ -455,26 +451,28 @@ const screenStyles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxl,
   },
 
-  /* ═══ Greeting — no icon, clean layout ═══ */
+  /* ═══ Greeting ═══ */
   greetingSection: {
     marginBottom: spacing.lg,
   },
   greeting: {
     fontSize: 28,
+    lineHeight: 34,
     fontFamily: fontFamily.headingBold,
     color: colors.text,
-    lineHeight: 34,
   },
   greetingName: {
     color: colors.primary,
   },
   greetingSub: {
-    fontSize: 16,
-    fontFamily: fontFamily.bodyMedium,
+    fontSize: 15,
+    lineHeight: 22,
+    fontFamily: fontFamily.bodyRegular,
     color: colors.textMuted,
     marginTop: spacing.xs,
   },
@@ -482,35 +480,36 @@ const screenStyles = StyleSheet.create({
   /* ═══ Stats ═══ */
   statsRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
+    gap: spacing.sm + 2,
+    marginBottom: spacing.xl,
   },
   levelContent: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   levelIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 4,
   },
   levelXpValue: {
-    fontSize: 24,
+    fontSize: 22,
+    lineHeight: 26,
     fontFamily: fontFamily.headingBold,
-    marginBottom: spacing.xs,
   },
   levelStatLabel: {
     fontSize: 12,
-    fontFamily: fontFamily.bodyRegular,
+    lineHeight: 16,
+    fontFamily: fontFamily.bodyMedium,
     color: colors.textMuted,
-    textAlign: 'center',
+    marginTop: 2,
   },
 
   /* ═══ Sections ═══ */
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -519,7 +518,8 @@ const screenStyles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
+    lineHeight: 26,
     fontFamily: fontFamily.headingBold,
     color: colors.text,
   },
@@ -552,22 +552,23 @@ const screenStyles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   noSessionsIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.surfaceLight,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 4,
   },
   noSessionsTitle: {
-    fontSize: 15,
-    fontFamily: fontFamily.bodySemiBold,
+    fontSize: 16,
+    fontFamily: fontFamily.headingBold,
     color: colors.text,
     marginBottom: spacing.xs,
   },
   noSessionsMsg: {
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 20,
     fontFamily: fontFamily.bodyRegular,
     color: colors.textMuted,
     textAlign: 'center',
@@ -585,7 +586,7 @@ const screenStyles = StyleSheet.create({
   evalStarCircle: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 12,
     backgroundColor: colors.warningDim,
     justifyContent: 'center',
     alignItems: 'center',
@@ -602,24 +603,24 @@ const screenStyles = StyleSheet.create({
   evalRatingText: {
     fontSize: 14,
     fontFamily: fontFamily.headingBold,
-    color: colors.warning,
+    color: colors.text,
     marginLeft: 6,
   },
   evalGroupName: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: fontFamily.bodySemiBold,
     color: colors.text,
   },
   evalNotes: {
     fontSize: 13,
+    lineHeight: 18,
     fontFamily: fontFamily.bodyRegular,
     color: colors.textMuted,
-    lineHeight: 18,
     marginTop: 2,
   },
   evalDate: {
-    fontSize: 11,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.primary,
+    fontSize: 12,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
   },
 });

@@ -75,11 +75,9 @@ export const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: 12,
     fontFamily: fontFamily.bodySemiBold,
     color: colors.white,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
 
   /* Detail rows */

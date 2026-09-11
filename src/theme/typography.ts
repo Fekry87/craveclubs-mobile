@@ -3,32 +3,36 @@ import { TextStyle } from 'react-native';
 /**
  * Typography System
  *
- * Heading: Fredoka — rounded, bold, playful (Feather Bold style)
- *   → Use for large, brief headlines, section titles, and bold callouts
+ * Heading: Outfit — geometric, calm, medium-weight (Ahead-style)
+ *   → Screen titles, section headers, big numbers
  *
- * Body: Nunito — clean rounded sans-serif (Din Next Rounded style)
- *   → Use for longer text, paragraphs, labels, and descriptions
+ * Body: DM Sans — clean, highly legible at small sizes
+ *   → Paragraphs, labels, buttons, captions
+ *
+ * Key names are stable across redesigns — consumers reference roles,
+ * never font names.
  */
 export const fontFamily = {
-  headingSemiBold: 'Fredoka_600SemiBold',
-  headingBold: 'Fredoka_700Bold',
-  headingHeavy: 'Fredoka_700Bold',
-  bodyRegular: 'Nunito_400Regular',
-  bodyMedium: 'Nunito_500Medium',
-  bodySemiBold: 'Nunito_600SemiBold',
-  bodyBold: 'Nunito_700Bold',
+  headingSemiBold: 'Outfit_500Medium',
+  headingBold: 'Outfit_600SemiBold',
+  headingHeavy: 'Outfit_700Bold',
+  bodyRegular: 'DMSans_400Regular',
+  bodyMedium: 'DMSans_500Medium',
+  bodySemiBold: 'DMSans_600SemiBold',
+  bodyBold: 'DMSans_700Bold',
 };
 
 export const typography: Record<string, TextStyle> = {
-  hero: { fontSize: 32, fontFamily: fontFamily.headingBold },
-  heading: { fontSize: 24, fontFamily: fontFamily.headingBold },
-  subheading: { fontSize: 18, fontFamily: fontFamily.headingSemiBold },
-  body: { fontSize: 14, fontFamily: fontFamily.bodyRegular },
-  bodyMedium: { fontSize: 14, fontFamily: fontFamily.bodyMedium },
-  caption: { fontSize: 12, fontFamily: fontFamily.bodyRegular },
+  hero: { fontSize: 32, lineHeight: 38, fontFamily: fontFamily.headingBold },
+  heading: { fontSize: 26, lineHeight: 32, fontFamily: fontFamily.headingBold },
+  subheading: { fontSize: 20, lineHeight: 26, fontFamily: fontFamily.headingSemiBold },
+  body: { fontSize: 15, lineHeight: 22, fontFamily: fontFamily.bodyRegular },
+  bodyMedium: { fontSize: 15, lineHeight: 22, fontFamily: fontFamily.bodyMedium },
+  caption: { fontSize: 13, lineHeight: 18, fontFamily: fontFamily.bodyRegular },
   label: {
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
     fontFamily: fontFamily.bodyMedium,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
 };

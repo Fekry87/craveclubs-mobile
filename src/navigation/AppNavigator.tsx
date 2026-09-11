@@ -17,112 +17,61 @@ import { useSessionStore } from '../store/session.store';
 import { isEchoConnected } from '../services/echo.service';
 // Note: polling uses getState() to avoid useEffect dependency loops
 import { AppTabParamList } from './types';
-import { colors, spacing, fontFamily, shadows, borderRadius } from '../theme';
+import { colors, spacing, fontFamily, borderRadius } from '../theme';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
 /* ═══════════════════════════════════════════════════
-   Tab Icon Config
-   Each tab has: filled icon, outline icon, accent color,
-   and a translucent dim color for the soft glow
+   Tab Icon Config — swimmer tabs
    ═══════════════════════════════════════════════════ */
 
 interface TabIconConfig {
   filledIcon: IconName;
   outlineIcon: IconName;
-  color: string;
-  glowColor: string;
-  shadowColor: string;
 }
 
-// Resolved at render time so branded colors (mutated in-place by
-// applyBrandingColors) are picked up — a module-level const would
-// capture the pre-branding defaults.
-const getTabIconConfig = (): Record<string, TabIconConfig> => ({
+const TAB_ICONS: Record<string, TabIconConfig> = {
   Home: {
     filledIcon: 'home-4-fill',
     outlineIcon: 'home-4-line',
-    color: colors.primary,
-    glowColor: colors.primaryDim,
-    shadowColor: colors.primary,
   },
   Sessions: {
     filledIcon: 'calendar-event-fill',
     outlineIcon: 'calendar-event-line',
-    color: colors.orange,
-    glowColor: colors.orangeDim,
-    shadowColor: colors.orange,
   },
   MyPlan: {
     filledIcon: 'clipboard-fill',
     outlineIcon: 'clipboard-line',
-    color: colors.teal,
-    glowColor: colors.tealDim,
-    shadowColor: colors.teal,
   },
   Progress: {
     filledIcon: 'bar-chart-box-fill',
     outlineIcon: 'bar-chart-box-line',
-    color: colors.swimmer,
-    glowColor: colors.swimmerDim,
-    shadowColor: colors.swimmer,
   },
   Leaderboard: {
     filledIcon: 'trophy-fill',
     outlineIcon: 'trophy-line',
-    color: colors.warning,
-    glowColor: colors.warningDim,
-    shadowColor: colors.warning,
   },
   Profile: {
     filledIcon: 'user-fill',
     outlineIcon: 'user-line',
-    color: colors.secondary,
-    glowColor: colors.secondaryDim,
-    shadowColor: colors.secondary,
   },
-});
+};
 
-/* ── Soft Glow Tab Icon ── */
+/* ── Tab Icon — single brand color, no glow ── */
 const TabIcon: React.FC<{ routeName: string; focused: boolean }> = ({
   routeName,
   focused,
 }) => {
-  const config = getTabIconConfig()[routeName];
+  const config = TAB_ICONS[routeName];
   if (!config) return null;
-
-  if (!focused) {
-    return (
-      <Icon name={config.outlineIcon} size={24} color={colors.textDim} />
-    );
-  }
-
   return (
-    <View style={t.iconWrap}>
-      {/* Soft glow pill behind the icon */}
-      <View
-        style={[
-          t.glowPill,
-          {
-            backgroundColor: config.glowColor,
-            shadowColor: config.shadowColor,
-          },
-        ]}
-      />
-      <Icon name={config.filledIcon} size={22} color={config.color} />
-    </View>
+    <Icon
+      name={focused ? config.filledIcon : config.outlineIcon}
+      size={24}
+      color={focused ? colors.primary : colors.textDim}
+    />
   );
 };
-
-/* ── Tab color map for labels (render-time for branding) ── */
-const getTabColors = (): Record<string, string> => ({
-  Home: colors.primary,
-  Sessions: colors.orange,
-  MyPlan: colors.teal,
-  Progress: colors.swimmer,
-  Leaderboard: colors.warning,
-  Profile: colors.secondary,
-});
 
 /* ── Sport Switcher Chip (header right) ── */
 const SportSwitcherChip: React.FC = () => {
@@ -210,32 +159,34 @@ export const AppNavigator: React.FC = () => {
         tabBarIcon: ({ focused }) => (
           <TabIcon routeName={route.name} focused={focused} />
         ),
-        tabBarActiveTintColor: getTabColors()[route.name] ?? colors.primary,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDim,
         tabBarLabelStyle: {
           fontSize: 11,
-          fontFamily: fontFamily.bodySemiBold,
-          marginTop: 2,
+          fontFamily: fontFamily.bodyMedium,
+          marginTop: 4,
         },
         tabBarStyle: {
           backgroundColor: colors.white,
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: colors.borderLight,
           height: 88,
-          paddingBottom: 26,
-          paddingTop: 8,
-          ...shadows.md,
-        },
-        headerStyle: {
-          backgroundColor: colors.white,
+          paddingBottom: 28,
+          paddingTop: 10,
           elevation: 0,
           shadowOpacity: 0,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.borderLight,
         },
+        headerStyle: {
+          backgroundColor: colors.background,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
+        },
+        headerShadowVisible: false,
         headerTitleStyle: {
           fontFamily: fontFamily.headingBold,
           color: colors.text,
-          fontSize: 20,
+          fontSize: 18,
         },
         headerRight: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -294,20 +245,3 @@ export const AppNavigator: React.FC = () => {
   );
 };
 
-/* ─── Soft glow icon styles ─── */
-const t = StyleSheet.create({
-  iconWrap: {
-    width: 52,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  /* Soft pill glow behind active icon — no hard edges */
-  glowPill: {
-    position: 'absolute',
-    width: 48,
-    height: 32,
-    borderRadius: 999,
-    ...shadows.glow,
-  },
-});

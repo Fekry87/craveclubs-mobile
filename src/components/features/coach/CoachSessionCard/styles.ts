@@ -26,10 +26,8 @@ export const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: 12,
     fontFamily: fontFamily.bodySemiBold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
 
   // Meta row: date + time

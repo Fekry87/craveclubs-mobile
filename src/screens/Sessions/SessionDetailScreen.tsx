@@ -152,8 +152,6 @@ const screenStyles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontFamily: fontFamily.bodySemiBold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   typeBadge: {
     fontSize: 12,

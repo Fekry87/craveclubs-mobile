@@ -11,6 +11,7 @@ export const ENDPOINTS = {
   },
   SWIMMER: {
     DASHBOARD: '/swimmer/dashboard',
+    PROFILE: '/swimmer/profile',
     SESSIONS: '/swimmer/sessions',
     STATS: '/swimmer/stats',
     EVALUATIONS: '/swimmer/evaluations',

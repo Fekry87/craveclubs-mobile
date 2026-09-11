@@ -6,7 +6,7 @@ import { TrainingSessionInterface } from '../../../../types/models.types';
 import { formatTimeRange, getRelativeDate } from '../../../../utils/formatters';
 import { useAnimatedEntry } from '../../../../hooks/useAnimatedEntry';
 import { usePulseGlow } from '../../../../hooks/usePulseGlow';
-import { colors, spacing, fontFamily, borderRadius } from '../../../../theme';
+import { colors } from '../../../../theme';
 import { styles } from './styles';
 
 interface SessionCardProps {
@@ -15,31 +15,19 @@ interface SessionCardProps {
   index?: number;
 }
 
-const STATUS_CONFIG: Record<
-  string,
-  { color: string; textColor: string; icon: IconName }
-> = {
-  Scheduled: {
-    color: colors.primary,
-    textColor: colors.white,
-    icon: 'calendar-event-fill',
-  },
-  Live: {
-    color: colors.warning,
-    textColor: colors.text,
-    icon: 'flashlight-fill',
-  },
-  Completed: {
-    color: colors.swimmer,
-    textColor: colors.white,
-    icon: 'check-line',
-  },
-  Cancelled: {
-    color: colors.error,
-    textColor: colors.white,
-    icon: 'close-line',
-  },
-};
+interface StatusConfig {
+  color: string;
+  bg: string;
+  icon: IconName;
+}
+
+// Resolved at render time so branded colors are picked up
+const getStatusConfig = (): Record<string, StatusConfig> => ({
+  Scheduled: { color: colors.primary, bg: colors.primaryDim, icon: 'calendar-event-fill' },
+  Live: { color: colors.warningDark, bg: colors.warningDim, icon: 'flashlight-fill' },
+  Completed: { color: colors.swimmerDark, bg: colors.swimmerDim, icon: 'check-line' },
+  Cancelled: { color: colors.error, bg: colors.errorDim, icon: 'close-line' },
+});
 
 // Motivational messages to encourage attendance (upcoming)
 const MOTIVATION_MESSAGES = [
@@ -86,7 +74,8 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
 }) => {
   const entryStyle = useAnimatedEntry(Math.min(index, 10));
   const pulseStyle = usePulseGlow(session.status === 'Live');
-  const config = STATUS_CONFIG[session.status] || STATUS_CONFIG.Scheduled;
+  const statusConfig = getStatusConfig();
+  const config = statusConfig[session.status] || statusConfig.Scheduled;
   const motivation = getMotivation(session.id);
   const relativeDate = getRelativeDate(session.date);
   const isUpcoming =
@@ -100,7 +89,6 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
     <Animated.View style={entryStyle}>
       <Card
         onPress={onPress}
-        accentColor={config.color}
         style={styles.container}
       >
         {/* Top: Title + Status badge */}
@@ -111,11 +99,11 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
           <Animated.View
             style={[
               styles.statusBadge,
-              { backgroundColor: config.color },
+              { backgroundColor: config.bg },
               session.status === 'Live' ? pulseStyle : undefined,
             ]}
           >
-            <Text style={[styles.statusText, { color: config.textColor }]}>
+            <Text style={[styles.statusText, { color: config.color }]}>
               {session.status}
             </Text>
           </Animated.View>
@@ -155,7 +143,7 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
           <View style={styles.motivationBanner}>
             <View style={styles.motivationLeft}>
               <View style={styles.xpIconCircle}>
-                <Icon name="flashlight-fill" size={14} color={colors.white} />
+                <Icon name="flashlight-fill" size={14} color={colors.primary} />
               </View>
               <View>
                 <Text style={styles.xpValue}>+25 XP</Text>
@@ -179,7 +167,7 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
           <View style={styles.earnedBanner}>
             <View style={styles.motivationLeft}>
               <View style={styles.earnedIconCircle}>
-                <Icon name="check-line" size={14} color={colors.white} />
+                <Icon name="check-line" size={14} color={colors.swimmerDark} />
               </View>
               <View>
                 <Text style={styles.earnedValue}>+25 XP</Text>
@@ -203,7 +191,7 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
           <View style={styles.missedBanner}>
             <View style={styles.motivationLeft}>
               <View style={styles.missedIconCircle}>
-                <Icon name="close-line" size={14} color={colors.white} />
+                <Icon name="close-line" size={14} color={colors.error} />
               </View>
               <View>
                 <Text style={styles.missedValue}>0 XP</Text>

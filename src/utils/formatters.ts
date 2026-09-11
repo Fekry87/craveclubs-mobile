@@ -16,6 +16,16 @@ export const formatShortDate = (dateStr: string): string => {
   });
 };
 
+/** "May 11, 2014" — for dates where the year matters (DOB, plan end, member since) */
+export const formatMediumDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
 export const formatTime = (timeStr: string): string => {
   const [hours, minutes] = timeStr.split(':');
   const hour = parseInt(hours, 10);

@@ -6,12 +6,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useBrandingStore } from '../../store/branding.store';
 import { brandingService } from '../../services/branding.service';
-import { colors, spacing, fontFamily } from '../../theme';
+import { colors, spacing, fontFamily, borderRadius } from '../../theme';
 
 /**
  * ClubEntryScreen — shown ONLY in shared builds (no baked-in slug).
@@ -52,14 +51,14 @@ export const ClubEntryScreen: React.FC = () => {
   };
 
   return (
-    <LinearGradient colors={[colors.background, colors.surfaceHover]} style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.inner}
       >
         {/* Logo Area */}
         <View style={styles.logoArea}>
-          <View style={styles.logoCircle}>
+          <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
             <Text style={styles.logoText}>CC</Text>
           </View>
           <Text style={styles.title}>CraveClubs</Text>
@@ -69,6 +68,7 @@ export const ClubEntryScreen: React.FC = () => {
         {/* Input */}
         <View style={styles.form}>
           <Input
+            label="Club code"
             placeholder="e.g. future-academy"
             value={slug}
             onChangeText={(text: string) => {
@@ -80,8 +80,9 @@ export const ClubEntryScreen: React.FC = () => {
           />
 
           <Button
-            title={loading ? 'Checking...' : 'Continue'}
+            title="Continue"
             onPress={handleContinue}
+            loading={loading}
             disabled={loading}
             style={styles.button}
           />
@@ -92,59 +93,57 @@ export const ClubEntryScreen: React.FC = () => {
           It usually looks like: my-club-name
         </Text>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   inner: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.lg,
   },
   logoArea: {
     alignItems: 'center',
-    marginBottom: spacing.xl * 2,
+    marginBottom: spacing.xl,
   },
   logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
+    width: 76,
+    height: 76,
+    borderRadius: borderRadius.modal - 4,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   logoText: {
-    fontFamily: fontFamily.headingBold,
+    fontFamily: fontFamily.headingHeavy,
     fontSize: 28,
     color: colors.white,
+    letterSpacing: 1,
   },
   title: {
     fontFamily: fontFamily.headingBold,
-    fontSize: 28,
+    fontSize: 30,
+    lineHeight: 36,
     color: colors.text,
     marginBottom: spacing.xs,
   },
   subtitle: {
     fontFamily: fontFamily.bodyRegular,
-    fontSize: 15,
+    fontSize: 16,
+    lineHeight: 22,
     color: colors.textMuted,
     textAlign: 'center',
   },
   form: {
-    marginBottom: spacing.xl,
-  },
-  error: {
-    fontFamily: fontFamily.bodyMedium,
-    fontSize: 13,
-    color: colors.error,
-    marginTop: spacing.xs,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.lg,
   },
   button: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
   hint: {
     fontFamily: fontFamily.bodyRegular,

@@ -1,51 +1,64 @@
 import { StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius, fontFamily, shadows } from '../../../theme';
+import { colors, spacing, borderRadius, fontFamily } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.md,
   },
-  label: {
-    fontSize: 13,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  inputWrapper: {
+  field: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.white,
     paddingHorizontal: spacing.md,
-    height: 52,
-    ...shadows.sm,
+    minHeight: 60,
   },
-  inputWrapperFocused: {
-    borderColor: colors.primary,
+  // brand border color applied inline at render time (branding-aware)
+  fieldFocused: {
     borderWidth: 1.5,
-    ...shadows.card,
   },
-  inputWrapperError: {
+  fieldError: {
     borderColor: colors.error,
   },
-  input: {
+  fieldDisabled: {
+    backgroundColor: colors.surfaceLight,
+  },
+  fieldBody: {
     flex: 1,
+    paddingVertical: spacing.sm + 2,
+  },
+  label: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
+    marginBottom: 2,
+  },
+  input: {
     fontSize: 16,
+    lineHeight: 20,
     fontFamily: fontFamily.bodyRegular,
     color: colors.text,
-    paddingVertical: spacing.md,
+    padding: 0,
+    margin: 0,
+  },
+  trailing: {
+    marginLeft: spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  trailingText: {
+    fontSize: 14,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
   },
   errorText: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fontFamily.bodyRegular,
     color: colors.error,
     marginTop: spacing.xs,
-  },
-  eyeButton: {
-    padding: spacing.xs,
+    marginLeft: spacing.xs,
   },
 });

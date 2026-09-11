@@ -1,54 +1,47 @@
 import { StyleSheet } from 'react-native';
-import { colors, spacing, fontFamily, shadows } from '../../../../theme';
+import { colors, spacing, fontFamily, borderRadius } from '../../../../theme';
 
 export const styles = StyleSheet.create({
-  content: {
-    flexDirection: 'row',
+  container: {
     alignItems: 'center',
-    gap: spacing.md,
-  },
-  avatarWrapper: {
-    ...shadows.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: spacing.md,
   },
   avatarText: {
-    fontSize: 20,
+    fontSize: 30,
     fontFamily: fontFamily.headingBold,
     color: colors.white,
-  },
-  info: {
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: 2,
   },
   name: {
-    fontSize: 18,
+    fontSize: 22,
+    lineHeight: 28,
     fontFamily: fontFamily.headingBold,
     color: colors.text,
-  },
-  levelBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  levelText: {
-    fontSize: 11,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.white,
+    textAlign: 'center',
   },
   email: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: fontFamily.bodyRegular,
     color: colors.textMuted,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  levelBadge: {
+    marginTop: spacing.sm + 2,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: borderRadius.pill,
+  },
+  levelText: {
+    fontSize: 12,
+    fontFamily: fontFamily.bodySemiBold,
   },
 });

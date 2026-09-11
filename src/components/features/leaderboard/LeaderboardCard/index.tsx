@@ -28,9 +28,11 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = React.memo(({
       <Card
         style={[
           styles.cardSpacing,
-          entry.is_current_user && styles.currentUserCard,
+          entry.is_current_user && {
+            backgroundColor: colors.primaryDim,
+            borderColor: colors.primary,
+          },
         ]}
-        accentColor={entry.is_current_user ? colors.primary : undefined}
       >
         <View style={styles.row}>
           {/* Rank number */}
@@ -61,8 +63,8 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = React.memo(({
                 {displayName}
               </Text>
               {entry.is_current_user && (
-                <View style={styles.youBadge}>
-                  <Text style={styles.youBadgeText}>YOU</Text>
+                <View style={[styles.youBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.youBadgeText, { color: colors.white }]}>You</Text>
                 </View>
               )}
             </View>

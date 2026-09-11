@@ -147,3 +147,84 @@ export interface DeletionStatusResponseType {
   days_remaining?: number;
   scheduled_purge_at?: string;
 }
+
+/* ═══ Swimmer Profile (GET /swimmer/profile) ═══ */
+
+export interface SwimmerBranchInterface {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  phone: string | null;
+  working_hours: string | null;
+}
+
+export interface SwimmerCoachInterface {
+  id: number;
+  name: string;
+  phone: string | null;
+  specialization: string | null;
+  experience_years: number | null;
+  rating: number | null;
+}
+
+export interface SwimmerGroupSummaryInterface {
+  id: number;
+  name: string;
+  coach_name: string | null;
+}
+
+export type SubscriptionStatus = 'active' | 'expiring' | 'expired';
+
+export interface SwimmerSubscriptionInterface {
+  plan_name: string;
+  duration_months: number;
+  price: number;
+  started_at: string;
+  ends_at: string;
+  /** Negative when expired */
+  days_left: number;
+  /** 0–100, share of the plan elapsed */
+  progress: number;
+  status: SubscriptionStatus;
+}
+
+export interface SwimmerSignupInterface {
+  primary_goal: string | null;
+  weekly_frequency: string | null;
+  preferred_time: string | null;
+  experience_level: string | null;
+  fitness_level: string | null;
+  gender: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  registered_at: string | null;
+}
+
+export interface SwimmerXpSummaryInterface {
+  total_xp: number;
+  rank: number;
+  total_swimmers: number;
+  current_streak: number;
+  level: LevelInfoInterface;
+}
+
+export interface SwimmerProfileStatsInterface {
+  attendance_rate: number;
+  sessions_attended: number;
+  total_sessions: number;
+  average_rating: number | null;
+  evaluation_count: number;
+}
+
+export interface SwimmerProfileResponseType {
+  profile: SwimmerProfileInterface;
+  member_since: string | null;
+  branch: SwimmerBranchInterface | null;
+  coach: SwimmerCoachInterface | null;
+  groups: SwimmerGroupSummaryInterface[];
+  subscription: SwimmerSubscriptionInterface | null;
+  signup: SwimmerSignupInterface | null;
+  xp: SwimmerXpSummaryInterface;
+  stats: SwimmerProfileStatsInterface;
+}

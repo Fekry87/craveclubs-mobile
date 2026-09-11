@@ -1,35 +1,52 @@
 import { StyleSheet } from 'react-native';
 import { colors, spacing, borderRadius, fontFamily } from '../../../../theme';
 
+const banner = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'space-between' as const,
+  marginTop: spacing.md,
+  borderRadius: borderRadius.sm,
+  paddingVertical: spacing.sm + 2,
+  paddingHorizontal: spacing.md,
+};
+
+const iconCircle = {
+  width: 30,
+  height: 30,
+  borderRadius: 15,
+  justifyContent: 'center' as const,
+  alignItems: 'center' as const,
+};
+
 export const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 4,
   },
 
-  // Header: title + status badge
+  // Header: title + status pill
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xs + 2,
   },
   title: {
-    fontSize: 15,
-    fontFamily: fontFamily.bodySemiBold,
+    fontSize: 16,
+    lineHeight: 22,
+    fontFamily: fontFamily.headingBold,
     color: colors.text,
     flex: 1,
     marginRight: spacing.sm,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: borderRadius.pill,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: 12,
     fontFamily: fontFamily.bodySemiBold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
 
   // Meta row: date + time
@@ -37,12 +54,12 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xs + 2,
   },
   dateText: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fontFamily.bodySemiBold,
-    color: colors.primary,
+    color: colors.text,
   },
   metaDot: {
     width: 3,
@@ -51,7 +68,7 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.textDim,
   },
   timeText: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fontFamily.bodyRegular,
     color: colors.textMuted,
   },
@@ -65,127 +82,101 @@ export const styles = StyleSheet.create({
   infoChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
+    backgroundColor: colors.surfaceLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: borderRadius.pill,
   },
   infoText: {
     fontSize: 12,
-    fontFamily: fontFamily.bodyRegular,
+    fontFamily: fontFamily.bodyMedium,
     color: colors.textMuted,
   },
 
-  // Motivation banner
+  // Upcoming banner — neutral surface, brand accent
   motivationBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.md,
-    backgroundColor: colors.swimmerDim,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    ...banner,
+    backgroundColor: colors.surfaceLight,
   },
   motivationLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.sm + 2,
   },
   xpIconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.swimmer,
-    justifyContent: 'center',
-    alignItems: 'center',
+    ...iconCircle,
+    backgroundColor: colors.primaryDim,
   },
   xpValue: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: fontFamily.headingBold,
-    color: colors.swimmer,
+    color: colors.text,
   },
   xpLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: fontFamily.bodyRegular,
-    color: colors.swimmerDark,
+    color: colors.textMuted,
   },
   motivationRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     flexShrink: 1,
   },
   motivationText: {
     fontSize: 12,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.orange,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
   },
 
   // Earned banner (completed + attended)
   earnedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.md,
+    ...banner,
     backgroundColor: colors.swimmerDim,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
   },
   earnedIconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.swimmer,
-    justifyContent: 'center',
-    alignItems: 'center',
+    ...iconCircle,
+    backgroundColor: colors.white,
   },
   earnedValue: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: fontFamily.headingBold,
-    color: colors.swimmer,
+    color: colors.swimmerDark,
   },
   earnedLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: fontFamily.bodyRegular,
     color: colors.swimmerDark,
   },
   earnedText: {
     fontSize: 12,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.swimmer,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.swimmerDark,
   },
 
   // Missed banner (completed + absent)
   missedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.md,
+    ...banner,
     backgroundColor: colors.errorDim,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
   },
   missedIconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.error,
-    justifyContent: 'center',
-    alignItems: 'center',
+    ...iconCircle,
+    backgroundColor: colors.white,
   },
   missedValue: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: fontFamily.headingBold,
     color: colors.error,
   },
   missedLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: fontFamily.bodyRegular,
     color: colors.errorDark,
   },
   missedText: {
     fontSize: 12,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.orange,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
   },
 });

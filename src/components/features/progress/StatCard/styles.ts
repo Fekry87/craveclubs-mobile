@@ -1,27 +1,29 @@
 import { StyleSheet } from 'react-native';
-import { colors, spacing, fontFamily, borderRadius } from '../../../../theme';
+import { colors, spacing, fontFamily } from '../../../../theme';
 
 export const styles = StyleSheet.create({
   content: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 4,
   },
   value: {
-    fontSize: 24,
+    fontSize: 22,
+    lineHeight: 26,
     fontFamily: fontFamily.headingBold,
-    marginBottom: spacing.xs,
+    color: colors.text,
   },
   label: {
     fontSize: 12,
-    fontFamily: fontFamily.bodyRegular,
+    lineHeight: 16,
+    fontFamily: fontFamily.bodyMedium,
     color: colors.textMuted,
-    textAlign: 'center',
+    marginTop: 2,
   },
 });

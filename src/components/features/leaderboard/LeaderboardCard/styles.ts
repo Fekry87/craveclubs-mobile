@@ -1,14 +1,12 @@
 import { StyleSheet } from 'react-native';
-import { colors, spacing, fontFamily, borderRadius, shadows } from '../../../../theme';
+import { colors, spacing, fontFamily, borderRadius } from '../../../../theme';
 
 export const styles = StyleSheet.create({
   cardSpacing: {
     marginBottom: spacing.sm,
   },
   currentUserCard: {
-    backgroundColor: colors.primaryDim,
-    borderColor: 'rgba(28, 176, 246, 0.2)',
-    ...shadows.card,
+    // brand tint + border applied inline at render time (branding-aware)
   },
   row: {
     flexDirection: 'row',
@@ -20,13 +18,14 @@ export const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   rankText: {
-    fontSize: 16,
-    fontFamily: fontFamily.headingBold,
+    fontSize: 15,
+    fontFamily: fontFamily.headingSemiBold,
     color: colors.textMuted,
   },
   rankTextTop: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 17,
+    fontFamily: fontFamily.headingBold,
   },
   avatarColumn: {
     marginRight: spacing.sm,
@@ -46,17 +45,13 @@ export const styles = StyleSheet.create({
     flexShrink: 1,
   },
   youBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: borderRadius.pill,
   },
   youBadgeText: {
-    fontSize: 9,
+    fontSize: 10,
     fontFamily: fontFamily.bodySemiBold,
-    color: colors.white,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   levelRow: {
     flexDirection: 'row',
@@ -85,11 +80,11 @@ export const styles = StyleSheet.create({
   xp: {
     fontSize: 16,
     fontFamily: fontFamily.headingBold,
-    color: colors.primary,
+    color: colors.text,
   },
   xpLabel: {
     fontSize: 10,
-    fontFamily: fontFamily.bodyRegular,
+    fontFamily: fontFamily.bodyMedium,
     color: colors.textMuted,
   },
 });

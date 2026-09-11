@@ -27,12 +27,12 @@ export const ProgressNavigator: React.FC = () => {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: colors.white,
+          backgroundColor: colors.background,
         },
         headerTitleStyle: {
           fontFamily: fontFamily.headingBold,
           color: colors.text,
-          fontSize: 20,
+          fontSize: 18,
         },
         headerShadowVisible: false,
         contentStyle: { backgroundColor: colors.background },

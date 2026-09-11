@@ -24,6 +24,10 @@ interface InputProps {
   editable?: boolean;
 }
 
+/**
+ * Field with the label rendered inside the box above the value
+ * (floating-label style). Focus ring uses the brand color.
+ */
 export const Input: React.FC<InputProps> = ({
   label,
   value,
@@ -41,41 +45,53 @@ export const Input: React.FC<InputProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
       <View
         style={[
-          styles.inputWrapper,
-          focused && styles.inputWrapperFocused,
-          error ? styles.inputWrapperError : undefined,
+          styles.field,
+          focused && [styles.fieldFocused, { borderColor: colors.primary }],
+          error ? styles.fieldError : undefined,
+          !editable && styles.fieldDisabled,
         ]}
       >
-        <TextInput
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={colors.textDim}
-          secureTextEntry={secureTextEntry && !showPassword}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          editable={editable}
-        />
+        <View style={styles.fieldBody}>
+          {label && (
+            <Text style={[styles.label, focused && { color: colors.primary }]}>
+              {label}
+            </Text>
+          )}
+          <TextInput
+            style={styles.input}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor={colors.textDim}
+            secureTextEntry={secureTextEntry && !showPassword}
+            keyboardType={keyboardType}
+            autoCapitalize={autoCapitalize}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            editable={editable}
+            accessibilityLabel={label}
+          />
+        </View>
         {secureTextEntry && (
           <TouchableOpacity
-            style={styles.eyeButton}
+            style={styles.trailing}
             onPress={() => setShowPassword(!showPassword)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
           >
-            <Icon
-              name={showPassword ? 'eye-off-line' : 'eye-line'}
-              size={20}
-              color={colors.textMuted}
-            />
+            <Text style={styles.trailingText}>{showPassword ? 'Hide' : 'Show'}</Text>
           </TouchableOpacity>
         )}
+        {!!error && (
+          <View style={styles.trailing}>
+            <Icon name="error-warning-fill" size={18} color={colors.error} />
+          </View>
+        )}
       </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 };

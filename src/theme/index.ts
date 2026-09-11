@@ -9,79 +9,78 @@ export { ANIMATION } from './animations';
 
 export const borderRadius = {
   sm: 12,
-  md: 16,
+  md: 14,
   card: 20,
-  modal: 24,
+  modal: 28,
   pill: 999,
 };
 
 /**
- * Cross-platform shadow system.
+ * Cross-platform shadow system — intentionally faint.
  *
- * iOS: uses shadowColor/Offset/Opacity/Radius for soft, diffused shadows.
- * Android: uses very low elevation for subtle depth — cards rely on
- *          borders (borderWidth + borderColor) for visual definition
- *          rather than heavy Android elevation shadows.
+ * iOS: soft lavender-tinted diffusion, barely visible.
+ * Android: near-zero elevation — surfaces rely on hairline borders
+ *          for definition rather than elevation shadows.
  */
 export const shadows: Record<string, ViewStyle> = {
   sm: Platform.select({
     ios: {
-      shadowColor: '#000000',
+      shadowColor: '#3D3A6B',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.06,
+      shadowOpacity: 0.04,
       shadowRadius: 4,
     },
     android: {
       elevation: 1,
-      shadowColor: '#000000',
+      shadowColor: '#3D3A6B',
     },
   }) as ViewStyle,
 
   md: Platform.select({
     ios: {
-      shadowColor: '#000000',
+      shadowColor: '#3D3A6B',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
+      shadowOpacity: 0.06,
       shadowRadius: 8,
     },
     android: {
       elevation: 2,
-      shadowColor: '#000000',
+      shadowColor: '#3D3A6B',
     },
   }) as ViewStyle,
 
   lg: Platform.select({
     ios: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 16,
+      shadowColor: '#3D3A6B',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.10,
+      shadowRadius: 24,
     },
     android: {
-      elevation: 3,
-      shadowColor: '#000000',
+      elevation: 4,
+      shadowColor: '#3D3A6B',
     },
   }) as ViewStyle,
 
-  /** Soft card shadow — on Android relies on card border for definition */
+  /** Card shadow — hairline border does most of the work */
   card: Platform.select({
     ios: {
-      shadowColor: '#8993A4',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.12,
-      shadowRadius: 12,
+      shadowColor: '#3D3A6B',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.05,
+      shadowRadius: 14,
     },
     android: {
       elevation: 0,
-      shadowColor: '#8993A4',
+      shadowColor: '#3D3A6B',
     },
   }) as ViewStyle,
 
-  /** Tab bar active icon glow — iOS only, invisible on Android */
+  /** Legacy — kept for API compatibility; no longer used by tab bars */
   glow: Platform.select({
     ios: {
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.35,
+      shadowOpacity: 0.2,
       shadowRadius: 8,
     },
     android: {
@@ -93,43 +92,43 @@ export const shadows: Record<string, ViewStyle> = {
 export const buttonShadows = {
   primary: Platform.select({
     ios: {
-      shadowColor: '#1899D6',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 0,
+      shadowColor: colors.primaryDark,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.18,
+      shadowRadius: 14,
     },
     android: {
-      elevation: 3,
-      shadowColor: '#1899D6',
+      elevation: 2,
+      shadowColor: colors.primaryDark,
     },
   }) as ViewStyle,
   swimmer: Platform.select({
     ios: {
-      shadowColor: '#46A302',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 0,
+      shadowColor: colors.swimmerDark,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.18,
+      shadowRadius: 14,
     },
     android: {
-      elevation: 3,
-      shadowColor: '#46A302',
+      elevation: 2,
+      shadowColor: colors.swimmerDark,
     },
   }) as ViewStyle,
   danger: Platform.select({
     ios: {
-      shadowColor: '#E53E3E',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 0,
+      shadowColor: colors.errorDark,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.18,
+      shadowRadius: 14,
     },
     android: {
-      elevation: 3,
-      shadowColor: '#E53E3E',
+      elevation: 2,
+      shadowColor: colors.errorDark,
     },
   }) as ViewStyle,
 };
 
-// Keep 3D button shadows in sync with branded colors.
+// Keep button shadows in sync with branded colors.
 // danger stays on errorDark (semantic, not brand-dependent).
 onBrandingApplied(() => {
   buttonShadows.primary.shadowColor = colors.primaryDark;

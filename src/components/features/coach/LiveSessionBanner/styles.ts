@@ -18,8 +18,6 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: fontFamily.bodySemiBold,
     color: colors.warning,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   title: {
     fontSize: 16,

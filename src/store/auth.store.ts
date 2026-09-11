@@ -10,6 +10,7 @@ import { useCoachProfileStore } from './coachProfile.store';
 import { useSessionStore } from './session.store';
 import { useNotificationStore } from './notification.store';
 import { useTrainingPlanStore } from './trainingPlan.store';
+import { useProfileStore } from './profile.store';
 import { useSessionSummaryStore } from './sessionSummary.store';
 
 interface AuthState {
@@ -107,6 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useNotificationStore.getState().clearNotifications();
       useTrainingPlanStore.getState().reset();
       useSessionSummaryStore.getState().reset();
+      useProfileStore.getState().reset();
       await brandingService.clearBrandingCache();
       await useBrandingStore.getState().clearSlug();
       set({
@@ -131,6 +133,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useNotificationStore.getState().clearNotifications();
       useTrainingPlanStore.getState().reset();
       useSessionSummaryStore.getState().reset();
+      useProfileStore.getState().reset();
       await brandingService.clearBrandingCache();
       await useBrandingStore.getState().clearSlug();
       set({

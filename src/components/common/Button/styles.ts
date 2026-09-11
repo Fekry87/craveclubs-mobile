@@ -1,27 +1,36 @@
 import { StyleSheet } from 'react-native';
 import { colors, spacing, borderRadius, fontFamily } from '../../../theme';
 
-export const BUTTON_COLORS = {
-  primary: {
-    bg: colors.swimmer,
-    border: colors.swimmerDark,
-    text: colors.white,
-  },
-  blue: {
-    bg: colors.primary,
-    border: colors.primaryDark,
-    text: colors.white,
-  },
-  danger: {
-    bg: colors.error,
-    border: colors.errorDark,
-    text: colors.white,
-  },
-  secondary: {
-    bg: colors.white,
-    border: colors.border,
-    text: colors.textMuted,
-  },
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'blue';
+
+interface ButtonColorSet {
+  bg: string;
+  text: string;
+  border?: string;
+}
+
+/**
+ * Resolved at render time so branded colors (mutated in-place by
+ * applyBrandingColors) are picked up.
+ *  primary   — solid brand fill, white text
+ *  secondary — soft brand tint, brand text
+ *  ghost     — white, hairline border, dark text
+ *  danger    — solid error fill
+ *  blue      — legacy alias of primary
+ */
+export const getButtonColors = (variant: ButtonVariant): ButtonColorSet => {
+  switch (variant) {
+    case 'secondary':
+      return { bg: colors.primaryDim, text: colors.primary };
+    case 'ghost':
+      return { bg: colors.white, text: colors.text, border: colors.border };
+    case 'danger':
+      return { bg: colors.error, text: colors.white };
+    case 'blue':
+    case 'primary':
+    default:
+      return { bg: colors.primary, text: colors.white };
+  }
 };
 
 export const styles = StyleSheet.create({
@@ -29,23 +38,19 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    height: 56,
     borderRadius: borderRadius.md,
-    borderWidth: 2,
-    borderBottomWidth: 4,
-    height: 52,
     paddingHorizontal: spacing.lg,
   },
-  secondaryBorder: {
-    borderWidth: 2,
+  bordered: {
+    borderWidth: 1,
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
   text: {
     fontSize: 16,
     fontFamily: fontFamily.bodySemiBold,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   loader: {
     marginRight: spacing.sm,

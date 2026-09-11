@@ -8,11 +8,18 @@ import { styles } from './styles';
 
 type AccentColor = 'primary' | 'warning' | 'success' | 'swimmer';
 
-const COLOR_MAP: Record<AccentColor, { accent: string; dim: string }> = {
-  primary: { accent: colors.primary, dim: colors.primaryDim },
-  warning: { accent: colors.warning, dim: colors.warningDim },
-  success: { accent: colors.success, dim: colors.successDim },
-  swimmer: { accent: colors.swimmer, dim: colors.swimmerDim },
+// Resolved at render time so branded colors are picked up
+const getColorSet = (color: AccentColor): { accent: string; dim: string } => {
+  switch (color) {
+    case 'warning':
+      return { accent: colors.warningDark, dim: colors.warningDim };
+    case 'success':
+      return { accent: colors.success, dim: colors.successDim };
+    case 'swimmer':
+      return { accent: colors.swimmer, dim: colors.swimmerDim };
+    default:
+      return { accent: colors.primary, dim: colors.primaryDim };
+  }
 };
 
 interface StatCardProps {
@@ -33,17 +40,21 @@ export const StatCard: React.FC<StatCardProps> = React.memo(({
   style,
 }) => {
   const entryStyle = useAnimatedEntry(Math.min(index, 10));
-  const { accent, dim } = COLOR_MAP[color];
+  const { accent, dim } = getColorSet(color);
 
   return (
     <Animated.View style={[{ flex: 1 }, entryStyle, style]}>
-      <Card glowColor={accent}>
+      <Card>
         <View style={styles.content}>
           <View style={[styles.iconBox, { backgroundColor: dim }]}>
-            <Icon name={icon} size={24} color={accent} />
+            <Icon name={icon} size={18} color={accent} />
           </View>
-          <Text style={[styles.value, { color: accent }]}>{value}</Text>
-          <Text style={styles.label}>{label}</Text>
+          <Text style={styles.value} numberOfLines={1}>
+            {value}
+          </Text>
+          <Text style={styles.label} numberOfLines={1}>
+            {label}
+          </Text>
         </View>
       </Card>
     </Animated.View>
