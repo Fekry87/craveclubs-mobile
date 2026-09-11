@@ -1,6 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RegistrationStackParamList } from './types';
+import { useBrandingStore } from '../store/branding.store';
 import { ClubSelectionScreen } from '../screens/Registration/ClubSelectionScreen';
 import {
   Step1_BasicProfile,
@@ -17,8 +18,15 @@ import {
 const Stack = createNativeStackNavigator<RegistrationStackParamList>();
 
 export const RegistrationNavigator: React.FC = () => {
+  // If a club is already selected (the new flow picks it before login), skip
+  // the in-wizard club selection and start at Step 1.
+  const hasClub = useBrandingStore((s) => !!s.slug);
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{ headerShown: false }}
+      initialRouteName={hasClub ? 'Step1_BasicProfile' : 'ClubSelection'}
+    >
       <Stack.Screen name="ClubSelection" component={ClubSelectionScreen} />
       <Stack.Screen name="Step1_BasicProfile" component={Step1_BasicProfile} />
       <Stack.Screen name="Step2_PhysicalInfo" component={Step2_PhysicalInfo} />

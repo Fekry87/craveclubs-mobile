@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { LoginScreen, ClubEntryScreen } from '../screens/Auth';
+import { LoginScreen, ClubListScreen } from '../screens/Auth';
 import { ForceUpdateScreen } from '../screens/Auth/ForceUpdateScreen';
 import { SportSelectScreen } from '../screens/SportSelect';
 import { AppNavigator } from './AppNavigator';
@@ -115,7 +115,7 @@ export const RootNavigator: React.FC = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!isAuthenticated && !isResolved ? (
         /* Shared build with no club chosen yet — pick a club before login */
-        <Stack.Screen name="ClubEntry" component={ClubEntryScreen} />
+        <Stack.Screen name="ClubEntry" component={ClubListScreen} />
       ) : isAuthenticated && needsSportSelect ? (
         /* Multi-sport club — user must pick a sport module first */
         <Stack.Screen name="SportSelect" component={SportSelectScreen} />

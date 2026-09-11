@@ -10,6 +10,7 @@ import {
   Linking,
   Animated,
   Easing,
+  Image,
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -21,10 +22,11 @@ import { useAuthStore } from '../../store/auth.store';
 import { authService } from '../../api/services/auth.service';
 import { validateLoginForm, isValidEmail } from '../../utils/validators';
 import { useBrandingStore } from '../../store/branding.store';
+import { useRegistrationStore } from '../../store/registration.store';
 import { RootStackParamList } from '../../types/navigation.types';
 import { colors, spacing, borderRadius, fontFamily } from '../../theme';
 
-/* ── Platform branding (always shown on login — not club-specific) ── */
+/* ── Fallback platform branding (used only when no club is selected) ── */
 const PLATFORM_NAME = 'CraveClubs';
 const PLATFORM_TAGLINE = 'Your sports club, in your pocket';
 const PLATFORM_INITIALS = 'CC';
@@ -39,6 +41,35 @@ export const LoginScreen: React.FC = () => {
   const [deletionDaysLeft, setDeletionDaysLeft] = useState(0);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  /* ── Selected-club branding ── */
+  const clubName = useBrandingStore((st) => st.appName);
+  const clubSlug = useBrandingStore((st) => st.slug);
+  const clubLogo = useBrandingStore((st) => st.branding?.logoUrl ?? null);
+  const clearSlug = useBrandingStore((st) => st.clearSlug);
+  const hasClub = !!clubSlug;
+  const heroName = hasClub ? clubName : PLATFORM_NAME;
+  const heroInitials = hasClub
+    ? (clubName || '?').trim().charAt(0).toUpperCase()
+    : PLATFORM_INITIALS;
+
+  const handleChangeClub = () => {
+    clearError();
+    clearSlug();
+  };
+
+  const handleCreateAccount = () => {
+    // The club is already chosen (this screen is club-branded), so start the
+    // wizard fresh at Step 1 carrying that club.
+    const reg = useRegistrationStore.getState();
+    reg.resetRegistration();
+    if (clubSlug) {
+      reg.setClub(clubSlug, clubName);
+      navigation.navigate('Registration', { screen: 'Step1_BasicProfile' });
+    } else {
+      navigation.navigate('Registration');
+    }
+  };
 
   /* ── Animations ── */
   const markScale = useRef(new Animated.Value(0.7)).current;
@@ -170,7 +201,7 @@ export const LoginScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Hero (platform branding) ── */}
+          {/* ── Hero (selected club branding) ── */}
           <View style={s.hero}>
             <Animated.View
               style={[
@@ -178,7 +209,11 @@ export const LoginScreen: React.FC = () => {
                 { backgroundColor: colors.primary, transform: [{ scale: markScale }] },
               ]}
             >
-              <Text style={s.markText}>{PLATFORM_INITIALS}</Text>
+              {clubLogo ? (
+                <Image source={{ uri: clubLogo }} style={s.markLogo} resizeMode="cover" />
+              ) : (
+                <Text style={s.markText}>{heroInitials}</Text>
+              )}
             </Animated.View>
             <Animated.View
               style={{
@@ -187,8 +222,21 @@ export const LoginScreen: React.FC = () => {
                 alignItems: 'center',
               }}
             >
-              <Text style={[s.heroTitle, { color: colors.primary }]}>{PLATFORM_NAME}</Text>
+              <Text style={[s.heroTitle, { color: colors.primary }]} numberOfLines={2}>
+                {heroName}
+              </Text>
               <Text style={s.heroSubtitle}>{PLATFORM_TAGLINE}</Text>
+              {hasClub && (
+                <TouchableOpacity
+                  onPress={handleChangeClub}
+                  style={s.changeClubLink}
+                  activeOpacity={0.6}
+                  accessibilityRole="button"
+                >
+                  <Icon name="arrow-left-s-line" size={16} color={colors.textMuted} />
+                  <Text style={s.changeClubText}>Change club</Text>
+                </TouchableOpacity>
+              )}
             </Animated.View>
           </View>
 
@@ -279,7 +327,7 @@ export const LoginScreen: React.FC = () => {
 
                 <Button
                   title="Create an account"
-                  onPress={() => navigation.navigate('Registration')}
+                  onPress={handleCreateAccount}
                   variant="secondary"
                   style={s.secondaryButton}
                 />
@@ -329,6 +377,23 @@ const s = StyleSheet.create({
     fontFamily: fontFamily.headingHeavy,
     color: colors.white,
     letterSpacing: 1,
+  },
+  markLogo: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+  },
+  changeClubLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginTop: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  changeClubText: {
+    fontSize: 13,
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.textMuted,
   },
   heroTitle: {
     fontSize: 30,
