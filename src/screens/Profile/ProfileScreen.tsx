@@ -26,7 +26,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { useProfileStore } from '../../store/profile.store';
 import { useBrandingStore } from '../../store/branding.store';
 import { SwimmerSubscriptionInterface } from '../../types/api.types';
-import { formatMediumDate, formatPercentage, formatRating, getInitials } from '../../utils/formatters';
+import { formatMediumDate, formatMoney, formatPercentage, formatRating, getInitials } from '../../utils/formatters';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
 
 /* ─── Settings-style row ─── */
@@ -229,6 +229,14 @@ export const ProfileScreen: React.FC = () => {
                     <Text style={s.subMeta}>
                       {subscription.duration_months}-month plan · ends{' '}
                       {formatMediumDate(subscription.ends_at)}
+                    </Text>
+                    {/* amount_paid, not the plan's current price: this is what this member
+                        was actually billed, so editing the plan later cannot rewrite it. */}
+                    <Text style={s.subPaid}>
+                      {formatMoney(subscription.amount_paid)}
+                      {subscription.discount_percent > 0 && (
+                        ` · ${subscription.discount_percent}% off`
+                      )}
                     </Text>
                   </View>
                 </View>
@@ -570,6 +578,12 @@ const s = StyleSheet.create({
     lineHeight: 22,
     fontFamily: fontFamily.headingBold,
     color: colors.text,
+  },
+  subPaid: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 2,
+    color: colors.primary,
   },
   subMeta: {
     fontSize: 13,

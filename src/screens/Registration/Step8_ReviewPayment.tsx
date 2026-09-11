@@ -13,6 +13,7 @@ import { Icon, IconName } from '../../components/common/Icon';
 import { useRegistrationStore } from '../../store/registration.store';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { submitRegistration } from '../../api/services/registration.service';
+import { formatMoney } from '../../utils/formatters';
 import {
   colors,
   spacing,
@@ -248,7 +249,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         label="Plan"
         value={
           store.planName
-            ? `${store.planName} (${store.planPrice ?? 0} EGP)`
+            ? `${store.planName} (${formatMoney(store.planPrice ?? 0)})`
             : '—'
         }
         index={12}
