@@ -33,6 +33,8 @@ const toHex = (c?: string | null): string => {
 export const SplashScreen: React.FC<{ config: PlatformBranding | null }> = ({
   config,
 }) => {
+  const [imgError, setImgError] = React.useState(false);
+
   // Config not loaded yet → neutral hold (no brand color guess)
   if (!config) {
     return (
@@ -49,8 +51,13 @@ export const SplashScreen: React.FC<{ config: PlatformBranding | null }> = ({
   return (
     <View style={[styles.root, { backgroundColor: bg }]}>
       <View style={styles.center}>
-        {logo ? (
-          <Image source={{ uri: logo }} style={styles.logo} resizeMode="contain" />
+        {logo && !imgError ? (
+          <Image
+            source={{ uri: logo }}
+            style={styles.logo}
+            resizeMode="contain"
+            onError={() => setImgError(true)}
+          />
         ) : (
           <Text style={styles.mark}>{fallback}</Text>
         )}
