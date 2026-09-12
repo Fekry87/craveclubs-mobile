@@ -537,7 +537,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   lockOverlayCentered: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: colors.black + '59',
     borderRadius: 20,
     justifyContent: 'center',

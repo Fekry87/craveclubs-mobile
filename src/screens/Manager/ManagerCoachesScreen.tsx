@@ -517,7 +517,7 @@ const s = StyleSheet.create({
 
   /* ── Sheet ── */
   sheetOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'flex-end',
   },
