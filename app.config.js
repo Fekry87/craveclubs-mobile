@@ -33,13 +33,17 @@ module.exports = ({ config }) => {
     fs.existsSync(clubPath) ? rel(clubPath) : fallback;
 
   return {
-    ...config.expo,
+    // `config` arrives already flattened, so the old `...config.expo` spread was
+    // always undefined and app.json never applied — it has been removed rather
+    // than revived, since every key it held is set explicitly below.
+    ...config,
     name,
     slug: 'craveclubs-' + slug,
     version: '1.0.0',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
-    newArchEnabled: true,
+    // newArchEnabled is gone: the New Architecture is the only one left from
+    // React Native 0.82 on, and the key is no longer part of the config schema.
 
     icon: resolveIcon(iconPath, './assets/icon.png'),
 
@@ -62,7 +66,8 @@ module.exports = ({ config }) => {
         ),
         backgroundColor: primaryColor,
       },
-      edgeToEdgeEnabled: true,
+      // edgeToEdgeEnabled is gone: Android 16 makes edge-to-edge mandatory, so
+      // the key is no longer a choice and newer SDKs warn on it.
       predictiveBackGestureEnabled: false,
       package: bundleId,
     },
@@ -73,7 +78,12 @@ module.exports = ({ config }) => {
 
     plugins: [
       'expo-font',
-      '@react-native-community/datetimepicker',
+      // @react-native-community/datetimepicker is deliberately not listed. Its
+      // config plugin only writes Android picker theme colors when it is given
+      // `android.datePicker` / `android.timePicker` options, and it was listed
+      // bare — a no-op. From SDK 55 on it also fails to load at all, because
+      // @expo/config-plugins moved inside the expo package and the plugin
+      // requires it as an undeclared peer.
       'expo-secure-store',
       [
         '@sentry/react-native',
