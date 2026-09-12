@@ -52,7 +52,9 @@ export const ENDPOINTS = {
   },
   PUBLIC: {
     SPORTS: '/public/sports',
-    CLUBS: '/clubs',
+    // Exact-match lookup, not a listing: the app never shows a swimmer the
+    // other clubs on the platform.
+    CLUB_LOOKUP: '/public/club-lookup',
     BRANDING: '/public/branding',
   },
   REGISTRATION: {
