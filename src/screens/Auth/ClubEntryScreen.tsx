@@ -1,36 +1,41 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useBrandingStore } from '../../store/branding.store';
-import { brandingService } from '../../services/branding.service';
+import { lookupClub } from '../../api/services/registration.service';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
 
+const PLATFORM_NAME = 'CraveClubs';
+const PLATFORM_MARK = 'CC';
+
 /**
- * ClubEntryScreen — shown ONLY in shared builds (no baked-in slug).
- * Validates slug via branding API, caches result, then navigates to login.
+ * First screen of a shared build: the swimmer types their own club's name.
+ *
+ * It deliberately does not list the clubs on the platform. A swimmer belongs to
+ * one club and has no reason to see the others, so the name is resolved by an
+ * exact-match lookup on the server instead of by filtering a list the app
+ * downloaded. Resolving sets the branding slug, which flips `isResolved` and
+ * lets RootNavigator render the club-branded login — there is no navigate()
+ * call here.
  */
 export const ClubEntryScreen: React.FC = () => {
-  const [slug, setSlug] = useState('');
+  const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const setStoreSlug = useBrandingStore((s) => s.setSlug);
-  const setBranding = useBrandingStore((s) => s.setBranding);
+  const setSlug = useBrandingStore((s) => s.setSlug);
 
-  const handleContinue = async () => {
-    const trimmed = slug.trim().toLowerCase();
+  const handleContinue = useCallback(async () => {
+    const trimmed = query.trim();
     if (!trimmed) {
-      setError('Please enter your club code');
-      return;
-    }
-    if (!/^[a-z0-9-]+$/.test(trimmed)) {
-      setError('Club code can only contain letters, numbers, and hyphens');
+      setError('Enter your club name');
       return;
     }
 
@@ -38,44 +43,50 @@ export const ClubEntryScreen: React.FC = () => {
     setError('');
 
     try {
-      // Validate slug + fetch branding (cached with TTL)
-      const branding = await brandingService.fetchBranding(trimmed);
-      setBranding(branding);
-      // Persist slug → triggers navigation to login
-      await setStoreSlug(trimmed);
+      const club = await lookupClub(trimmed);
+      if (!club) {
+        setError(
+          "We couldn't find a club with that name. Check the spelling with your club.",
+        );
+        return;
+      }
+      await setSlug(club.slug);
     } catch {
-      setError('Club not found. Please check your club code.');
+      setError('Something went wrong. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, setSlug]);
 
   return (
-    <View style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.inner}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.inner}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* Logo Area */}
         <View style={styles.logoArea}>
-          <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
-            <Text style={styles.logoText}>CC</Text>
+          <View style={[styles.logoMark, { backgroundColor: colors.primary }]}>
+            <Text style={styles.logoText}>{PLATFORM_MARK}</Text>
           </View>
-          <Text style={styles.title}>CraveClubs</Text>
-          <Text style={styles.subtitle}>Enter your club code to get started</Text>
+          <Text style={styles.title}>{PLATFORM_NAME}</Text>
+          <Text style={styles.subtitle}>
+            Enter your club's name to sign in or create an account.
+          </Text>
         </View>
 
-        {/* Input */}
         <View style={styles.form}>
           <Input
-            label="Club code"
-            placeholder="e.g. future-academy"
-            value={slug}
+            label="Club name"
+            placeholder="e.g. Smart Club"
+            value={query}
             onChangeText={(text: string) => {
-              setSlug(text);
-              setError('');
+              setQuery(text);
+              if (error) setError('');
             }}
-            autoCapitalize="none"
+            autoCapitalize="words"
             error={error || undefined}
           />
 
@@ -89,11 +100,11 @@ export const ClubEntryScreen: React.FC = () => {
         </View>
 
         <Text style={styles.hint}>
-          Your club admin should have given you a club code.{'\n'}
-          It usually looks like: my-club-name
+          Type the name exactly as your club wrote it. If it doesn't work, ask
+          your club which name to use.
         </Text>
-      </KeyboardAvoidingView>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -103,15 +114,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   inner: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
   },
   logoArea: {
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  logoCircle: {
+  logoMark: {
     width: 76,
     height: 76,
     borderRadius: borderRadius.modal - 4,

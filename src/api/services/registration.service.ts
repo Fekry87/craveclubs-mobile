@@ -109,9 +109,24 @@ export interface RegistrationResponse {
 
 // ── API Calls ─────────────────────────────────────────────────────
 
-export const getClubs = async (): Promise<Club[]> => {
-  const response = await apiClient.get(ENDPOINTS.PUBLIC.CLUBS);
-  return response.data.data ?? response.data;
+/**
+ * Resolve the club name a swimmer typed to exactly one club.
+ *
+ * There is deliberately no "list all clubs" call: a swimmer at one club should
+ * never be shown the others. Returns null when nothing matches — the server
+ * matches exactly, so a near miss is a miss.
+ */
+export const lookupClub = async (query: string): Promise<Club | null> => {
+  try {
+    const response = await apiClient.get(ENDPOINTS.PUBLIC.CLUB_LOOKUP, {
+      params: { q: query },
+    });
+    return response.data as Club;
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } }).response?.status;
+    if (status === 404 || status === 422) return null;
+    throw err;
+  }
 };
 
 export const getSports = async (): Promise<Sport[]> => {

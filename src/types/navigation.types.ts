@@ -52,7 +52,6 @@ export type ManagerTabParamList = {
 /* ═══ Registration Flow ═══ */
 
 export type RegistrationStackParamList = {
-  ClubSelection: undefined;
   Step1_BasicProfile: undefined;
   Step2_PhysicalInfo: undefined;
   Step3_SportType: undefined;
