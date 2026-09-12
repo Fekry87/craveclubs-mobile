@@ -1,7 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -11,10 +12,20 @@ import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useBrandingStore } from '../../store/branding.store';
 import { lookupClub } from '../../api/services/registration.service';
+import {
+  getPlatformBranding,
+  PlatformBranding,
+} from '../../api/services/platform.service';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
+import { applyBrandingColors } from '../../theme/colors';
+import { toHex } from '../../services/branding.service';
 
-const PLATFORM_NAME = 'CraveClubs';
-const PLATFORM_MARK = 'CC';
+const FALLBACK_NAME = 'CraveClubs';
+const FALLBACK_MARK = 'CC';
+
+/** Initials to show while the platform logo is missing or still loading. */
+const markFor = (name: string): string =>
+  name.trim().slice(0, 2).toUpperCase() || FALLBACK_MARK;
 
 /**
  * First screen of a shared build: the swimmer types their own club's name.
@@ -30,7 +41,34 @@ export const ClubEntryScreen: React.FC = () => {
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [platform, setPlatform] = useState<PlatformBranding | null>(null);
+  const [logoFailed, setLogoFailed] = useState(false);
   const setSlug = useBrandingStore((s) => s.setSlug);
+
+  // This screen belongs to CraveClubs, not to any club, so its identity comes
+  // from the corporate settings the platform admin controls — the same source
+  // the launch splash uses. Without this it inherits whatever club's accent was
+  // written into the global `colors` last, and shows that club's color here.
+  useEffect(() => {
+    let cancelled = false;
+    getPlatformBranding()
+      .then((cfg) => {
+        if (cancelled) return;
+        setPlatform(cfg);
+        if (cfg.primary_color) {
+          applyBrandingColors(
+            toHex(cfg.primary_color),
+            toHex(cfg.secondary_color ?? cfg.primary_color),
+          );
+        }
+      })
+      .catch(() => {
+        // Non-critical: the compiled-in platform accent is already in place.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleContinue = useCallback(async () => {
     const trimmed = query.trim();
@@ -58,6 +96,9 @@ export const ClubEntryScreen: React.FC = () => {
     }
   }, [query, setSlug]);
 
+  const platformName = platform?.platform_name?.trim() || FALLBACK_NAME;
+  const platformLogo = platform?.platform_logo_url ?? null;
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -68,10 +109,19 @@ export const ClubEntryScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.logoArea}>
-          <View style={[styles.logoMark, { backgroundColor: colors.primary }]}>
-            <Text style={styles.logoText}>{PLATFORM_MARK}</Text>
-          </View>
-          <Text style={styles.title}>{PLATFORM_NAME}</Text>
+          {platformLogo && !logoFailed ? (
+            <Image
+              source={{ uri: platformLogo }}
+              style={styles.logoImage}
+              resizeMode="contain"
+              onError={() => setLogoFailed(true)}
+            />
+          ) : (
+            <View style={[styles.logoMark, { backgroundColor: colors.primary }]}>
+              <Text style={styles.logoText}>{markFor(platformName)}</Text>
+            </View>
+          )}
+          <Text style={styles.title}>{platformName}</Text>
           <Text style={styles.subtitle}>
             Enter your club's name to sign in or create an account.
           </Text>
@@ -122,6 +172,11 @@ const styles = StyleSheet.create({
   logoArea: {
     alignItems: 'center',
     marginBottom: spacing.xl,
+  },
+  logoImage: {
+    width: 120,
+    height: 76,
+    marginBottom: spacing.lg,
   },
   logoMark: {
     width: 76,

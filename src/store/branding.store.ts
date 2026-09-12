@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import { isBrandedBuild, bakedSlug, bakedAppName, bakedPrimaryColor } from '../config/club';
 import { brandingService, ClubBranding, toHex } from '../services/branding.service';
-import { applyBrandingColors } from '../theme/colors';
+import { applyBrandingColors, resetBrandingColors, colors } from '../theme/colors';
+
+/** Shown until GET /public/branding supplies the admin-set platform name. */
+const PLATFORM_NAME = 'CraveClubs';
 
 interface BrandingState {
   /** Current club slug (baked-in for branded, user-selected for shared) */
@@ -106,13 +109,19 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
 
   clearSlug: async () => {
     await brandingService.clearSlug();
+
+    // The club's colors were written into the global `colors` object, so
+    // clearing the slug is not enough — without this the club-name entry
+    // screen keeps wearing the identity of the club just left.
+    resetBrandingColors();
+
     set({
       slug: null,
       isResolved: false,
       branding: null,
-      appName: 'CraveClubs',
-      primaryColor: '#1CB0F6',
-      secondaryColor: '#CE82FF',
+      appName: PLATFORM_NAME,
+      primaryColor: colors.primary,
+      secondaryColor: colors.secondary,
     });
   },
 }));

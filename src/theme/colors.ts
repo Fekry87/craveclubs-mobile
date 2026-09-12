@@ -81,6 +81,24 @@ export let colors = {
   tealDim: 'rgba(44, 196, 176, 0.12)',
 };
 
+/**
+ * The platform's own accent, captured before any club can overwrite it.
+ *
+ * `applyBrandingColors` mutates `colors` in place, which is what lets every
+ * screen pick up a club's color without re-rendering a provider — but it also
+ * means a club's color outlives the club unless something puts these back. Any
+ * screen that belongs to CraveClubs rather than to a club (the club-name entry
+ * screen) needs that.
+ */
+const PLATFORM_ACCENT = {
+  primary: colors.primary,
+  primaryDark: colors.primaryDark,
+  primaryDim: colors.primaryDim,
+  secondary: colors.secondary,
+  secondaryDark: colors.secondaryDark,
+  secondaryDim: colors.secondaryDim,
+} as const;
+
 type BrandingListener = () => void;
 const brandingListeners: BrandingListener[] = [];
 
@@ -107,6 +125,24 @@ export function applyBrandingColors(primary: string, secondary: string): void {
   colors.secondary = secondary;
   colors.secondaryDark = darken(secondary);
   colors.secondaryDim = dim(secondary);
+
+  applyBrandingToGradients(colors.primary, colors.swimmer, colors.secondary);
+  brandingListeners.forEach((listener) => listener());
+}
+
+/**
+ * Put the platform accent back, undoing whichever club was applied last.
+ *
+ * Called when a club is cleared, so the screens that belong to CraveClubs stop
+ * wearing the identity of the club the swimmer happened to open before.
+ */
+export function resetBrandingColors(): void {
+  colors.primary = PLATFORM_ACCENT.primary;
+  colors.primaryDark = PLATFORM_ACCENT.primaryDark;
+  colors.primaryDim = PLATFORM_ACCENT.primaryDim;
+  colors.secondary = PLATFORM_ACCENT.secondary;
+  colors.secondaryDark = PLATFORM_ACCENT.secondaryDark;
+  colors.secondaryDim = PLATFORM_ACCENT.secondaryDim;
 
   applyBrandingToGradients(colors.primary, colors.swimmer, colors.secondary);
   brandingListeners.forEach((listener) => listener());
