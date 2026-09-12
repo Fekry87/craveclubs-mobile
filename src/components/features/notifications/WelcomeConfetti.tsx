@@ -113,7 +113,7 @@ export const WelcomeConfetti: React.FC<{ trigger: boolean }> = ({
 
 const s = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 999,
   },
   dot: {
