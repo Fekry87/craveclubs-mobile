@@ -68,6 +68,11 @@ export const Input: React.FC<InputProps> = ({
             secureTextEntry={secureTextEntry && !showPassword}
             keyboardType={keyboardType}
             autoCapitalize={autoCapitalize}
+            // Tapping "Show" turns secureTextEntry off, which re-arms iOS
+            // autocorrect over the field — it would silently rewrite a password
+            // as the user typed it. Keep both off for the life of a secure field.
+            autoCorrect={secureTextEntry ? false : undefined}
+            spellCheck={secureTextEntry ? false : undefined}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             editable={editable}

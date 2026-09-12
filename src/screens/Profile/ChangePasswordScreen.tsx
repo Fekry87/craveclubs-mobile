@@ -14,15 +14,64 @@ import { Button } from '../../components/common/Button';
 import { useAuthStore } from '../../store/auth.store';
 import { colors, spacing, fontFamily } from '../../theme';
 
+type ApiError = {
+  response?: {
+    data?: { message?: string; errors?: Record<string, string[]> };
+  };
+};
+
+/**
+ * Put a server error on the field it is actually about.
+ *
+ * Every failure used to land under "Current password", so a rejected *new*
+ * password read as "the password you were given is wrong" — which is what sends
+ * people back to their club for another reset that was never needed.
+ */
+const toFieldErrors = (err: unknown): Record<string, string> => {
+  const data = (err as ApiError).response?.data;
+  const validation = data?.errors;
+
+  if (validation) {
+    const out: Record<string, string> = {};
+    if (validation.current_password?.[0]) out.current = validation.current_password[0];
+    if (validation.new_password?.[0]) out.next = validation.new_password[0];
+    if (Object.keys(out).length > 0) return out;
+  }
+
+  const message = data?.message;
+  if (!message) {
+    return { form: 'Could not change your password. Please try again.' };
+  }
+  if (/current password/i.test(message)) {
+    return {
+      current:
+        "That password doesn't match the account you're signed in as. Check the account below, or ask your club to reset it.",
+    };
+  }
+  if (/new password/i.test(message)) {
+    return { next: message };
+  }
+  return { form: message };
+};
+
 export const ChangePasswordScreen: React.FC = () => {
   const navigation = useNavigation();
   const changePassword = useAuthStore((st) => st.changePassword);
+  const account = useAuthStore((st) => st.user?.email ?? null);
 
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Any keystroke means the user is acting on the feedback — drop the field's own
+  // error and the form-level one with it, so a stale banner can't outlive the edit.
+  const clearError = useCallback((field: string) => {
+    setErrors((e) =>
+      e[field] || e.form ? { ...e, [field]: '', form: '' } : e,
+    );
+  }, []);
 
   const validate = useCallback((): boolean => {
     const e: Record<string, string> = {};
@@ -44,11 +93,7 @@ export const ChangePasswordScreen: React.FC = () => {
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { message?: string } } };
-      const message =
-        axiosErr.response?.data?.message ||
-        'Could not change your password. Please try again.';
-      setErrors({ current: message });
+      setErrors(toFieldErrors(err));
     } finally {
       setSubmitting(false);
     }
@@ -74,7 +119,7 @@ export const ChangePasswordScreen: React.FC = () => {
           value={current}
           onChangeText={(t) => {
             setCurrent(t);
-            if (errors.current) setErrors((e) => ({ ...e, current: '' }));
+            clearError('current');
           }}
           placeholder="Current password"
           secureTextEntry
@@ -87,7 +132,7 @@ export const ChangePasswordScreen: React.FC = () => {
           value={next}
           onChangeText={(t) => {
             setNext(t);
-            if (errors.next) setErrors((e) => ({ ...e, next: '' }));
+            clearError('next');
           }}
           placeholder="At least 8 characters"
           secureTextEntry
@@ -100,13 +145,29 @@ export const ChangePasswordScreen: React.FC = () => {
           value={confirm}
           onChangeText={(t) => {
             setConfirm(t);
-            if (errors.confirm) setErrors((e) => ({ ...e, confirm: '' }));
+            clearError('confirm');
           }}
           placeholder="Re-enter new password"
           secureTextEntry
           autoCapitalize="none"
           error={errors.confirm}
         />
+
+        {!!errors.form && <Text style={s.formError}>{errors.form}</Text>}
+
+        {!!account && (
+          <View style={s.account}>
+            <Text style={s.accountLabel}>Signed in as</Text>
+            <Text style={s.accountValue} selectable>
+              {account}
+            </Text>
+            <Text style={s.accountHint}>
+              Your club sees this same address when it resets your password. If it
+              doesn't match the one they gave you, sign out and sign in again with
+              those details.
+            </Text>
+          </View>
+        )}
 
         <View style={s.spacer} />
 
@@ -138,5 +199,39 @@ const s = StyleSheet.create({
   },
   spacer: {
     height: spacing.sm,
+  },
+  formError: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.error,
+    marginBottom: spacing.md,
+  },
+  account: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 14,
+    padding: spacing.md,
+    marginTop: spacing.xs,
+  },
+  accountLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
+    letterSpacing: 0.3,
+  },
+  accountValue: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.text,
+    marginTop: spacing.xs,
+  },
+  accountHint: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: fontFamily.bodyRegular,
+    color: colors.textMuted,
+    marginTop: spacing.sm,
   },
 });
