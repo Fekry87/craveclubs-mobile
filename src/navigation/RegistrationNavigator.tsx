@@ -20,7 +20,7 @@ export const RegistrationNavigator: React.FC = () => {
   // always already resolved — there is no in-wizard club picker to fall back to.
   return (
     <Stack.Navigator
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, headerBackButtonDisplayMode: 'minimal' }}
       initialRouteName="Step1_BasicProfile"
     >
       <Stack.Screen name="Step1_BasicProfile" component={Step1_BasicProfile} />

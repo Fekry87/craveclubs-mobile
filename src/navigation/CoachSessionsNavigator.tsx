@@ -42,6 +42,7 @@ export const CoachSessionsNavigator: React.FC = () => {
   return (
     <Stack.Navigator
       screenOptions={{
+        headerBackButtonDisplayMode: 'minimal',
         headerStyle: {
           backgroundColor: colors.background,
         },

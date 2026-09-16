@@ -64,6 +64,8 @@ export interface TrainingSessionInterface {
   group: GroupInterface;
   plan: TrainingPlanInterface | null;
   attendances?: AttendanceInterface[];
+  /** The club's attendance XP, sent with each row of GET /swimmer/sessions. */
+  xp_per_attendance?: number;
 }
 
 /** GET /swimmer/sessions/:id — everything the session detail page shows. */
