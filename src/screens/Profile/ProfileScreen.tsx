@@ -16,7 +16,8 @@ import { RootStackParamList } from '../../types/navigation.types';
 import { Card } from '../../components/common/Card';
 import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
-import { Icon, IconName } from '../../components/common/Icon';
+import { Icon } from '../../components/common/Icon';
+import { InfoRow } from '../../components/common/InfoRow';
 import { NotificationBell } from '../../components/common/NotificationBell';
 import { ProfileHeader } from '../../components/features/profile/ProfileHeader';
 import { DeleteAccountSheet } from '../../components/features/profile/DeleteAccountSheet';
@@ -28,56 +29,6 @@ import { useBrandingStore } from '../../store/branding.store';
 import { SwimmerSubscriptionInterface } from '../../types/api.types';
 import { formatMediumDate, formatMoney, formatPercentage, formatRating, getInitials } from '../../utils/formatters';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
-
-/* ─── Settings-style row ─── */
-interface InfoRowProps {
-  icon: IconName;
-  label: string;
-  value: string;
-  hint?: string;
-  onPress?: () => void;
-  isLast?: boolean;
-}
-
-const InfoRow: React.FC<InfoRowProps> = ({
-  icon,
-  label,
-  value,
-  hint,
-  onPress,
-  isLast = false,
-}) => {
-  const content = (
-    <>
-      <View style={s.infoIcon}>
-        <Icon name={icon} size={18} color={colors.textMuted} />
-      </View>
-      <View style={s.infoContent}>
-        <Text style={s.infoLabel}>{label}</Text>
-        <Text style={s.infoValue} numberOfLines={2}>{value}</Text>
-        {hint ? <Text style={s.infoHint} numberOfLines={2}>{hint}</Text> : null}
-      </View>
-      {onPress && (
-        <Icon name="arrow-right-s-line" size={20} color={colors.textDim} />
-      )}
-    </>
-  );
-
-  if (onPress) {
-    return (
-      <TouchableOpacity
-        style={[s.infoRow, isLast && s.infoRowLast]}
-        onPress={onPress}
-        activeOpacity={0.6}
-        accessibilityRole="button"
-        accessibilityLabel={`${label}: ${value}`}
-      >
-        {content}
-      </TouchableOpacity>
-    );
-  }
-  return <View style={[s.infoRow, isLast && s.infoRowLast]}>{content}</View>;
-};
 
 /* ─── Section title ─── */
 const SectionTitle: React.FC<{ children: string }> = ({ children }) => (
@@ -716,45 +667,4 @@ const s = StyleSheet.create({
   },
 
   /* Info rows */
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.sm + 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
-  },
-  infoRowLast: {
-    borderBottomWidth: 0,
-  },
-  infoIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: colors.surfaceLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  infoContent: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: 12,
-    fontFamily: fontFamily.bodyRegular,
-    color: colors.textMuted,
-    marginBottom: 2,
-  },
-  infoValue: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.text,
-  },
-  infoHint: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontFamily: fontFamily.bodyRegular,
-    color: colors.textDim,
-    marginTop: 2,
-  },
 });

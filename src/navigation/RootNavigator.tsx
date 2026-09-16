@@ -11,6 +11,7 @@ import { RegistrationNavigator } from './RegistrationNavigator';
 import { NotificationCenterScreen } from '../screens/Notifications';
 import { ChangePasswordScreen } from '../screens/Profile';
 import { EvaluationsScreen } from '../screens/Progress';
+import { SessionDetailScreen } from '../screens/Sessions';
 import { useAuthStore } from '../store/auth.store';
 import { useBrandingStore } from '../store/branding.store';
 import { useSportModuleStore } from '../store/sportModule.store';
@@ -177,6 +178,25 @@ export const RootNavigator: React.FC = () => {
         options={{
           headerShown: true,
           title: 'Change password',
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerTitleStyle: {
+            fontFamily: fontFamily.headingBold,
+            color: colors.text,
+            fontSize: 18,
+          },
+          headerShadowVisible: false,
+          headerBackTitle: '',
+        }}
+      />
+      {/* Session detail — from a session card on Home or the Sessions tab */}
+      <Stack.Screen
+        name="SessionDetail"
+        component={SessionDetailScreen}
+        options={{
+          headerShown: true,
+          title: 'Session',
           headerStyle: {
             backgroundColor: colors.background,
           },

@@ -1,7 +1,10 @@
 import apiClient from '../client';
 import { ENDPOINTS } from '../endpoints';
 import { PaginatedResponseType } from '../../types/api.types';
-import { TrainingSessionInterface } from '../../types/models.types';
+import {
+  SessionDetailInterface,
+  TrainingSessionInterface,
+} from '../../types/models.types';
 
 export const sessionService = {
   async getSessions(
@@ -13,6 +16,13 @@ export const sessionService = {
     >(ENDPOINTS.SWIMMER.SESSIONS, {
       params: { page, per_page: perPage },
     });
+    return data;
+  },
+
+  async getSessionDetail(id: number): Promise<SessionDetailInterface> {
+    const { data } = await apiClient.get<SessionDetailInterface>(
+      ENDPOINTS.SWIMMER.SESSION_DETAIL(id),
+    );
     return data;
   },
 };

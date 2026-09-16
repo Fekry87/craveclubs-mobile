@@ -8,7 +8,9 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../types/navigation.types';
 import { SessionCard } from '../../components/features/sessions/SessionCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ErrorView } from '../../components/common/ErrorView';
@@ -84,6 +86,8 @@ const EMPTY_CONFIG: Record<
 };
 
 export const SessionsScreen: React.FC = () => {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [activeSegment, setActiveSegment] = useState<SegmentKey>('upcoming');
 
   const {
@@ -192,6 +196,7 @@ export const SessionsScreen: React.FC = () => {
           <SessionCard
             session={item}
             index={index}
+            onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}
           />
         )}
         contentContainerStyle={[

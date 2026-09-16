@@ -38,6 +38,15 @@ export const formatTimeRange = (start: string, end: string): string => {
   return `${formatTime(start)} - ${formatTime(end)}`;
 };
 
+/** "2h", "1h 30m", "45m" — session lengths. */
+export const formatDuration = (minutes: number | null | undefined): string => {
+  if (minutes == null || minutes <= 0) return '';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}m`;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+};
+
 export const formatPercentage = (value: number | null | undefined): string => {
   if (value == null) return '0%';
   return `${Math.round(value)}%`;

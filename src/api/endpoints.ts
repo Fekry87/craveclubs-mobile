@@ -14,6 +14,7 @@ export const ENDPOINTS = {
     DASHBOARD: '/swimmer/dashboard',
     PROFILE: '/swimmer/profile',
     SESSIONS: '/swimmer/sessions',
+    SESSION_DETAIL: (id: number) => `/swimmer/sessions/${id}` as const,
     STATS: '/swimmer/stats',
     EVALUATIONS: '/swimmer/evaluations',
     LEADERBOARD: '/swimmer/leaderboard',

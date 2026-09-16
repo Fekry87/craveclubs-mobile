@@ -169,6 +169,11 @@ export const HomeScreen: React.FC = () => {
     navigation.navigate('Sessions');
   }, [navigation]);
 
+  const openSession = useCallback(
+    (sessionId: number) => navigation.navigate('SessionDetail', { sessionId }),
+    [navigation],
+  );
+
   const navigateToEvaluations = useCallback(() => {
     navigation.navigate('Evaluations');
   }, [navigation]);
@@ -317,6 +322,7 @@ export const HomeScreen: React.FC = () => {
               key={todaySessions[0].id}
               session={todaySessions[0]}
               index={0}
+              onPress={() => openSession(todaySessions[0].id)}
             />
           ) : (
             <ScrollView
@@ -328,7 +334,11 @@ export const HomeScreen: React.FC = () => {
             >
               {todaySessions.map((s, i) => (
                 <View key={s.id} style={screenStyles.sessionSwiperCard}>
-                  <SessionCard session={s} index={0} />
+                  <SessionCard
+                    session={s}
+                    index={0}
+                    onPress={() => openSession(s.id)}
+                  />
                 </View>
               ))}
             </ScrollView>

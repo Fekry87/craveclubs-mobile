@@ -66,6 +66,53 @@ export interface TrainingSessionInterface {
   attendances?: AttendanceInterface[];
 }
 
+/** GET /swimmer/sessions/:id — everything the session detail page shows. */
+export interface SessionDetailInterface {
+  id: number;
+  title: string | null;
+  type: string;
+  status: TrainingSessionInterface['status'];
+  date: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number | null;
+  location: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  /** Set by the club when scheduling the session in the portal. */
+  notes: string | null;
+  group: { id: number; name: string } | null;
+  plan: { id: number; title: string } | null;
+  branch: {
+    id: number;
+    name: string;
+    address: string | null;
+    city: string | null;
+    phone: string | null;
+  } | null;
+  coach: {
+    id: number;
+    name: string;
+    phone: string | null;
+    specialization: string | null;
+    experience_years: number | null;
+    rating: number | null;
+  } | null;
+  /** null until the coach takes attendance. */
+  my_attendance: { present: boolean } | null;
+  my_evaluation: {
+    rating: number;
+    notes: string | null;
+    created_at: string;
+  } | null;
+  group_evaluation: { rating: number; notes: string | null } | null;
+  xp: {
+    per_attendance: number;
+    /** null until attendance is taken. */
+    earned: number | null;
+  };
+}
+
 export interface AttendanceInterface {
   id: number;
   swimmer_id: number;
