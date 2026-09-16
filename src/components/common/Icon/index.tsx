@@ -44,6 +44,7 @@ const glyphMap: Record<string, number> = {
   'shield-user-line': 61708,
   'shield-user-fill': 61707,
   'clipboard-line': 60305,
+  'file-text-line': 60687,
   'clipboard-fill': 60304,
   'fire-line': 60723,
   'fire-fill': 60722,

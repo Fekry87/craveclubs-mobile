@@ -78,5 +78,6 @@ export type RootStackParamList = {
   NotificationCenter: undefined;
   ChangePassword: undefined;
   Evaluations: undefined;
+  SessionDetail: { sessionId: number };
   Registration: NavigatorScreenParams<RegistrationStackParamList> | undefined;
 };
