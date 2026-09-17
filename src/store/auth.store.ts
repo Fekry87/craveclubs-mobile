@@ -214,6 +214,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       new_password: newPassword,
       new_password_confirmation: newPassword,
     });
+    // The password is theirs now: lift the first-sign-in gate without a refetch.
+    const current = get().user;
+    if (current?.must_change_password) {
+      const user = { ...current, must_change_password: false };
+      await storageService.setUserData(user);
+      set({ user });
+    }
   },
 
   clearError: () => set({ error: null }),

@@ -79,6 +79,8 @@ export interface RegistrationPayload {
   club_slug?: string;
   full_name: string;
   phone: string;
+  /** The swimmer's own email; it becomes their login once approved. */
+  email?: string;
   guardian_name?: string;
   guardian_phone?: string;
   guardian_email?: string;

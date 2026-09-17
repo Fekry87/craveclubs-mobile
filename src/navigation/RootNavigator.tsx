@@ -9,7 +9,7 @@ import { CoachAppNavigator } from './CoachAppNavigator';
 import { ManagerAppNavigator } from './ManagerAppNavigator';
 import { RegistrationNavigator } from './RegistrationNavigator';
 import { NotificationCenterScreen } from '../screens/Notifications';
-import { ChangePasswordScreen } from '../screens/Profile';
+import { ChangePasswordScreen, SetPasswordScreen } from '../screens/Profile';
 import { EvaluationsScreen } from '../screens/Progress';
 import { SessionDetailScreen } from '../screens/Sessions';
 import { useAuthStore } from '../store/auth.store';
@@ -153,6 +153,10 @@ export const RootNavigator: React.FC = () => {
       {!isAuthenticated && !isResolved ? (
         /* Shared build with no club chosen yet — name the club before login */
         <Stack.Screen name="ClubEntry" component={ClubEntryScreen} />
+      ) : isAuthenticated && user?.must_change_password ? (
+        /* Signed in with a password the club handed out — set their own first.
+           Nothing else in the app is reachable until the store lifts the flag. */
+        <Stack.Screen name="SetPassword" component={SetPasswordScreen} />
       ) : isAuthenticated && needsSportSelect ? (
         /* Multi-sport club — user must pick a sport module first */
         <Stack.Screen name="SportSelect" component={SportSelectScreen} />

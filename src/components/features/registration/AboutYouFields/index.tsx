@@ -104,6 +104,16 @@ export const AboutYouFields: React.FC<AboutYouFieldsProps> = ({
         keyboardType="phone-pad"
         error={errors.phone}
       />
+      {/* Becomes the login address once the club approves; the phone works too. */}
+      <Input
+        label="Email"
+        value={value.email}
+        onChangeText={(email) => onChange({ email })}
+        placeholder="name@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        error={errors.email}
+      />
 
       {/* ── Gender ─────────────────────────────────────────────── */}
       <View style={styles.section}>

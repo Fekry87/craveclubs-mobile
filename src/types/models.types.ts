@@ -18,6 +18,12 @@ export interface UserInterface {
   id: number;
   name: string;
   email: string;
+  /**
+   * True after the club approved the account or reset its password: the
+   * swimmer is signed in with a password someone else knows, so the app holds
+   * them on the change-password screen until they pick their own.
+   */
+  must_change_password?: boolean;
   role: 'SWIMMER' | 'COACH' | 'CLUB_MANAGER' | 'PLATFORM_ADMIN';
   club_id: number;
   club: ClubInterface;
