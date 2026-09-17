@@ -131,6 +131,8 @@ export interface RegistrationPayload {
   preferred_time: string;
   payment_method: 'cash';
   avatar_url?: string | null;
+  /** Step 1's optional photo as a data URL (512px square JPEG). */
+  photo?: string | null;
 }
 
 export interface RegistrationResponse {

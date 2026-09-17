@@ -300,6 +300,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         group_id: store.groupId,
         preferred_time: store.preferredTime ?? 'flexible',
         payment_method: 'cash',
+        photo: store.basicProfile.photoData ?? undefined,
       });
 
       navigation.navigate('RegistrationSuccess', {

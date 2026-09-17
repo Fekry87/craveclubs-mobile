@@ -13,6 +13,8 @@ export const ENDPOINTS = {
   SWIMMER: {
     DASHBOARD: '/swimmer/dashboard',
     PROFILE: '/swimmer/profile',
+    // Upload (POST, base64 data URL) or remove (DELETE) the swimmer's own photo.
+    PROFILE_PHOTO: '/swimmer/profile/photo',
     SESSIONS: '/swimmer/sessions',
     SESSION_DETAIL: (id: number) => `/swimmer/sessions/${id}` as const,
     STATS: '/swimmer/stats',

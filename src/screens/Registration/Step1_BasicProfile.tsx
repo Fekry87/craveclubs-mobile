@@ -5,14 +5,10 @@ import {
   TouchableOpacity,
   Animated,
   StyleSheet,
-  Platform,
-  ActionSheetIOS,
-  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { RegistrationLayout } from '../../components/features/registration/RegistrationLayout';
 import { AboutYouFields } from '../../components/features/registration/AboutYouFields';
@@ -22,6 +18,7 @@ import { checkEmailAvailability } from '../../api/services/registration.service'
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { useFormAnswers } from '../../hooks/useFormAnswers';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
+import { pickProfilePhoto, showPhotoMenu } from '../../utils/photo';
 import {
   AboutYouValues,
   aboutFromStore,
@@ -47,6 +44,7 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
   // ── Local answers (rehydrated from the store) ──────────────────
   const { answers, errors, handleChange, validate, setFieldError, reset } = useFormAnswers<AboutYouValues>(aboutFromStore(basicProfile));
   const [avatarUrl, setAvatarUrl] = useState<string | null>(basicProfile.avatarUrl);
+  const [photoData, setPhotoData] = useState<string | null>(basicProfile.photoData);
   const [checkingEmail, setCheckingEmail] = useState(false);
 
   // The review screen can edit these answers while this step sits below it in
@@ -57,6 +55,7 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
       const saved = useRegistrationStore.getState().basicProfile;
       reset(aboutFromStore(saved));
       setAvatarUrl(saved.avatarUrl);
+      setPhotoData(saved.photoData);
     }, [reset]),
   );
 
@@ -66,71 +65,25 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
   const avatarPress = useAnimatedPress();
 
 
-  // ── Avatar picker ──────────────────────────────────────────────
-  const pickImage = async (source: 'camera' | 'gallery') => {
-    let result: ImagePicker.ImagePickerResult;
-
-    if (source === 'camera') {
-      const permission =
-        await ImagePicker.requestCameraPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          'Permission needed',
-          'Camera access is required to take a photo.',
-        );
-        return;
-      }
-      result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-    } else {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          'Permission needed',
-          'Photo library access is required to choose a photo.',
-        );
-        return;
-      }
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-    }
-
-    if (!result.canceled && result.assets[0]) {
-      setAvatarUrl(result.assets[0].uri);
-    }
-  };
+  // ── Photo ──────────────────────────────────────────────────────
+  // Picked, cropped square and shrunk to 512px here; the data URL travels
+  // with the application at Step 9 and becomes the profile photo at approval.
+  const pickPhoto = useCallback(async (source: 'camera' | 'library') => {
+    const picked = await pickProfilePhoto(source);
+    if (!picked) return;
+    setAvatarUrl(picked.uri);
+    setPhotoData(picked.dataUrl);
+  }, []);
 
   const handleAvatarPress = () => {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', 'Take Photo', 'Choose from Gallery'],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) pickImage('camera');
-          if (buttonIndex === 2) pickImage('gallery');
-        },
-      );
-    } else {
-      Alert.alert('Profile Photo', 'Choose an option', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Take Photo', onPress: () => pickImage('camera') },
-        {
-          text: 'Choose from Gallery',
-          onPress: () => pickImage('gallery'),
-        },
-      ]);
-    }
+    showPhotoMenu({
+      canRemove: avatarUrl !== null,
+      onPick: pickPhoto,
+      onRemove: () => {
+        setAvatarUrl(null);
+        setPhotoData(null);
+      },
+    });
   };
 
   // ── Submit ─────────────────────────────────────────────────────
@@ -155,7 +108,7 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
       setCheckingEmail(false);
     }
 
-    updateBasicProfile({ ...cleaned, avatarUrl });
+    updateBasicProfile({ ...cleaned, avatarUrl, photoData });
     setStep(2);
     navigation.navigate('Step2_PhysicalInfo');
   };

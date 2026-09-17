@@ -42,6 +42,8 @@ export interface SwimmerProfileInterface {
   guardian_phone: string | null;
   guardian_email: string | null;
   medical_notes: string | null;
+  /** Public URL of the swimmer's photo (`/api/v1/photos/{token}`), null without one. */
+  avatar_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -170,6 +172,7 @@ export interface LeaderboardEntryInterface {
   first_name: string;
   last_initial: string;
   full_name?: string;
+  avatar_url?: string | null;
   rank: number;
   total_xp: number;
   level: number;

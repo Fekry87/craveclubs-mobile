@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Card } from '../../../common/Card';
 import { Icon } from '../../../common/Icon';
-import { AwardAvatar } from '../AwardAvatar';
+import { SwimmerAvatar } from '../../../common/SwimmerAvatar';
 import { SwimmerAwardInterface } from '../../../../types/models.types';
 import { AWARD_SHORT_LABELS, awardIcon, awardLabel } from '../../../../utils/awards';
 import { getRelativeDate } from '../../../../utils/formatters';
@@ -20,10 +20,11 @@ const AwardRow: React.FC<AwardRowProps> = React.memo(({ award, first }) => (
     accessibilityLabel={`${award.swimmer_name}, ${awardLabel(award.award_type)}, ${award.xp_value} XP`}
   >
     <View style={styles.avatarWrap}>
-      <AwardAvatar
-        swimmerId={award.swimmer_id}
+      <SwimmerAvatar
         avatarUrl={award.swimmer_avatar_url}
+        swimmerId={award.swimmer_id}
         size={44}
+        fallback="character"
       />
     </View>
     <View style={styles.info}>

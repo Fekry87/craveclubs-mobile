@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Animated } from 'react-native';
 import { Card } from '../../../common/Card';
 import { Icon } from '../../../common/Icon';
-import { SeaCharacter } from '../SeaCharacter';
+import { SwimmerAvatar } from '../../../common/SwimmerAvatar';
 import { LeaderboardEntryInterface } from '../../../../types/models.types';
 import { useAnimatedEntry } from '../../../../hooks/useAnimatedEntry';
 import { colors } from '../../../../theme';
@@ -49,9 +49,11 @@ export const LeaderboardCard: React.FC<LeaderboardCardProps> = React.memo(({
 
           {/* Sea character avatar */}
           <View style={styles.avatarColumn}>
-            <SeaCharacter
+            <SwimmerAvatar
+              avatarUrl={entry.avatar_url}
               swimmerId={entry.swimmer_id}
               size={42}
+              fallback="character"
               showBubbles={entry.is_current_user}
             />
           </View>

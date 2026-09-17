@@ -7,7 +7,10 @@ export interface BasicProfile {
   email: string;
   gender: 'male' | 'female' | null;
   birthDate: string | null;
+  /** Local preview URI of the picked photo. */
   avatarUrl: string | null;
+  /** The same photo as a 512px JPEG data URL, sent with the application. */
+  photoData: string | null;
   guardianName: string;
   guardianPhone: string;
   guardianEmail: string;
@@ -87,6 +90,7 @@ const initialState = {
     gender: null as 'male' | 'female' | null,
     birthDate: null as string | null,
     avatarUrl: null as string | null,
+    photoData: null as string | null,
     guardianName: '',
     guardianPhone: '',
     guardianEmail: '',
