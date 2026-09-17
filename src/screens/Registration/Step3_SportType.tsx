@@ -4,56 +4,27 @@ import {
   Text,
   TouchableOpacity,
   Animated,
-  FlatList,
   StyleSheet,
-  Dimensions,
-  ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { RegistrationLayout } from '../../components/features/registration/RegistrationLayout';
+import { StepStatus } from '../../components/features/registration/StepStatus';
+import { FieldError } from '../../components/features/registration/SectionLabel';
 import { Icon, IconName } from '../../components/common/Icon';
-import { Button } from '../../components/common/Button';
 import { useRegistrationStore } from '../../store/registration.store';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { getClubSportModules, SportModule } from '../../api/services/registration.service';
-import {
-  colors,
-  spacing,
-  borderRadius,
-  typography,
-  fontFamily,
-} from '../../theme';
+import { colors, spacing, borderRadius, fontFamily } from '../../theme';
 
 type Props = NativeStackScreenProps<
   RegistrationStackParamList,
   'Step3_SportType'
 >;
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const CARD_WIDTH =
-  (SCREEN_WIDTH - spacing.lg * 2 - spacing.xs * 2 - spacing.sm) / 2;
-
-// ── Sport colors cycled by index ─────────────────────────────────
-const SPORT_COLORS = [
-  colors.primary,
-  colors.swimmer,
-  colors.orange,
-  colors.secondary,
-  colors.teal,
-  colors.warning,
-];
-
-// ── Icons cycled by index (fallback) ─────────────────────────────
-const SPORT_ICONS: IconName[] = [
-  'drop-fill',
-  'award-fill',
-  'rocket-fill',
-  'football-fill',
-  'user-smile-fill',
-  'heart-pulse-fill',
-];
+const GRID_GAP = spacing.sm + 4;
 
 // ── Keyword → icon mapping for common sport names ────────────────
 const SPORT_ICON_MAP: Record<string, IconName> = {
@@ -68,97 +39,84 @@ const SPORT_ICON_MAP: Record<string, IconName> = {
   water: 'water-flash-fill',
 };
 
+const FALLBACK_ICONS: IconName[] = [
+  'drop-fill',
+  'award-fill',
+  'rocket-fill',
+  'football-fill',
+  'user-smile-fill',
+  'heart-pulse-fill',
+];
+
 function getSportIcon(name: string, index: number): IconName {
   const lower = name.toLowerCase();
   for (const [keyword, icon] of Object.entries(SPORT_ICON_MAP)) {
     if (lower.includes(keyword)) return icon;
   }
-  return SPORT_ICONS[index % SPORT_ICONS.length];
+  return FALLBACK_ICONS[index % FALLBACK_ICONS.length];
 }
 
 // ── SportCard (inline) ──────────────────────────────────────────
+// One accent for selection — the club's — instead of a rainbow of per-card
+// colors with accent bars, so the grid reads as a single choice.
 function SportCard({
   sport,
   isSelected,
   onPress,
   index,
+  width,
 }: {
   sport: SportModule;
   isSelected: boolean;
   onPress: () => void;
   index: number;
+  width: number;
 }) {
-  const entry = useAnimatedEntry(index);
+  const entry = useAnimatedEntry(Math.min(index, 10));
   const press = useAnimatedPress();
-  const color = sport.color || SPORT_COLORS[index % SPORT_COLORS.length];
-  const iconName = getSportIcon(sport.name, index);
 
   return (
-    <Animated.View style={[{ margin: spacing.xs }, entry]}>
+    <Animated.View style={[{ width }, entry]}>
       <TouchableOpacity
         onPress={onPress}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
-        activeOpacity={0.7}
+        activeOpacity={0.85}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: isSelected }}
+        accessibilityLabel={sport.name}
       >
         <Animated.View
           style={[
             styles.card,
-            {
-              width: CARD_WIDTH,
-              backgroundColor: isSelected
-                ? `${color}15`
-                : colors.surface,
-              borderColor: isSelected ? color : colors.border,
-            },
+            isSelected && [
+              styles.cardSelected,
+              { borderColor: colors.primary, backgroundColor: colors.primaryDim },
+            ],
             press.animatedStyle,
           ]}
         >
-          {/* Color accent bar at top */}
+          <View style={styles.check}>
+            <Icon
+              name={isSelected ? 'checkbox-circle-fill' : 'checkbox-blank-circle-line'}
+              size={20}
+              color={isSelected ? colors.primary : colors.textDim}
+            />
+          </View>
           <View
             style={[
-              styles.accentBar,
-              { backgroundColor: isSelected ? color : `${color}40` },
-            ]}
-          />
-
-          {/* Checkmark overlay */}
-          {isSelected && (
-            <View style={styles.checkmark}>
-              <Icon
-                name="checkbox-circle-fill"
-                size={20}
-                color={color}
-              />
-            </View>
-          )}
-
-          {/* Icon circle */}
-          <View
-            style={[
-              styles.iconCircle,
-              {
-                backgroundColor: isSelected ? `${color}25` : `${color}12`,
-              },
+              styles.iconTile,
+              { backgroundColor: isSelected ? colors.white : colors.surfaceLight },
             ]}
           >
             <Icon
-              name={iconName}
-              size={28}
-              color={isSelected ? color : `${color}90`}
+              name={getSportIcon(sport.name, index)}
+              size={26}
+              color={isSelected ? colors.primary : colors.textMuted}
             />
           </View>
-
           <Text
-            style={[
-              styles.cardLabel,
-              {
-                color: isSelected ? color : colors.text,
-                fontFamily: isSelected
-                  ? fontFamily.bodySemiBold
-                  : fontFamily.bodyMedium,
-              },
-            ]}
+            style={[styles.cardLabel, isSelected && { color: colors.primary }]}
             numberOfLines={2}
           >
             {sport.name}
@@ -172,6 +130,8 @@ function SportCard({
 // ── Main Screen ─────────────────────────────────────────────────
 export const Step3_SportType: React.FC<Props> = ({ navigation }) => {
   const { sportIds, setSportIds, setStep } = useRegistrationStore();
+  const { width: screenWidth } = useWindowDimensions();
+  const cardWidth = (screenWidth - spacing.lg * 2 - GRID_GAP) / 2;
 
   // ── State ──────────────────────────────────────────────────────
   const [sports, setSports] = useState<SportModule[]>([]);
@@ -219,171 +179,94 @@ export const Step3_SportType: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('Step4_ExperienceLevel');
   };
 
-  const renderItem = ({ item, index }: { item: SportModule; index: number }) => (
-    <SportCard
-      sport={item}
-      isSelected={selected.includes(String(item.id))}
-      onPress={() => toggleSport(String(item.id))}
-      index={index}
-    />
-  );
-
-  // ── Loading state ──────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <RegistrationLayout
-        currentStep={3}
-        title="Choose Your Sport"
-        subtitle="You can select more than one"
-        onBack={() => {
-          setStep(2);
-          navigation.goBack();
-        }}
-      >
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading sports...</Text>
-        </View>
-      </RegistrationLayout>
-    );
-  }
-
-  // ── Error state ────────────────────────────────────────────────
-  if (error) {
-    return (
-      <RegistrationLayout
-        currentStep={3}
-        title="Choose Your Sport"
-        subtitle="You can select more than one"
-        onBack={() => {
-          setStep(2);
-          navigation.goBack();
-        }}
-      >
-        <View style={styles.centerContainer}>
-          <Icon name="error-warning-fill" size={48} color={colors.error} />
-          <Text style={styles.errorMessage}>{error}</Text>
-          <Button title="Try Again" onPress={fetchSports} variant="blue" />
-        </View>
-      </RegistrationLayout>
-    );
-  }
+  const onBack = () => {
+    setStep(2);
+    navigation.goBack();
+  };
 
   const subtitleText =
     selected.length > 0
-      ? `${selected.length} sport${selected.length > 1 ? 's' : ''} selected`
-      : 'You can select more than one';
+      ? `${selected.length} selected`
+      : 'You can choose more than one';
 
   return (
     <RegistrationLayout
       currentStep={3}
-      title="Choose Your Sport"
+      title="Choose your sport"
       subtitle={subtitleText}
-      onBack={() => {
-        setStep(2);
-        navigation.goBack();
-      }}
-      ctaTitle="Continue"
+      onBack={onBack}
+      ctaTitle={isLoading || error ? undefined : 'Continue'}
       onCtaPress={handleContinue}
     >
-      <FlatList
-        data={sports}
-        numColumns={2}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={renderItem}
-        columnWrapperStyle={styles.columnWrapper}
-        scrollEnabled={false}
-        ListEmptyComponent={
-          <View style={styles.centerContainer}>
-            <Icon name="drop-fill" size={48} color={colors.textDim} />
-            <Text style={styles.emptyText}>No sports available</Text>
-          </View>
-        }
-      />
-
-      {/* Validation error */}
-      {validationError && (
-        <Text style={styles.validationError}>{validationError}</Text>
+      {isLoading ? (
+        <StepStatus kind="loading" message="Loading sports…" />
+      ) : error ? (
+        <StepStatus kind="error" message={error} onRetry={fetchSports} />
+      ) : sports.length === 0 ? (
+        <StepStatus
+          kind="empty"
+          icon="drop-line"
+          title="No sports yet"
+          message="This club hasn't added any sports. Please check with the club."
+        />
+      ) : (
+        <View style={styles.grid}>
+          {sports.map((item, index) => (
+            <SportCard
+              key={item.id}
+              sport={item}
+              width={cardWidth}
+              isSelected={selected.includes(String(item.id))}
+              onPress={() => toggleSport(String(item.id))}
+              index={index}
+            />
+          ))}
+        </View>
       )}
 
+      <FieldError message={validationError} />
     </RegistrationLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  // ── Card ─────────────────────────────────────────────────────
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: GRID_GAP,
+  },
   card: {
-    height: 144,
+    minHeight: 132,
     borderRadius: borderRadius.md,
-    borderWidth: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.xs + 2,
-    paddingTop: spacing.sm,
-    overflow: 'hidden',
+    padding: spacing.md,
   },
-  accentBar: {
+  cardSelected: {
+    borderWidth: 1.5,
+    padding: spacing.md - 0.5,
+  },
+  check: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    borderTopLeftRadius: borderRadius.md - 2,
-    borderTopRightRadius: borderRadius.md - 2,
+    top: spacing.sm,
+    right: spacing.sm,
   },
-  iconCircle: {
+  iconTile: {
     width: 52,
     height: 52,
-    borderRadius: 26,
+    borderRadius: borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardLabel: {
-    fontSize: 12.5,
+    fontSize: 14,
+    lineHeight: 19,
     fontFamily: fontFamily.bodyMedium,
-    marginTop: spacing.sm,
-    textAlign: 'center',
-    lineHeight: 16,
-  },
-  checkmark: {
-    position: 'absolute',
-    top: spacing.sm + 2,
-    right: spacing.sm,
-    zIndex: 1,
-  },
-
-  // ── Grid ─────────────────────────────────────────────────────
-  columnWrapper: {
-    justifyContent: 'space-between',
-  },
-
-  // ── States ───────────────────────────────────────────────────
-  centerContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-    gap: spacing.md,
-  },
-  loadingText: {
-    ...typography.body,
-    color: colors.textMuted,
-  },
-  errorMessage: {
-    ...typography.body,
-    color: colors.error,
+    color: colors.text,
+    marginTop: spacing.sm + 2,
     textAlign: 'center',
   },
-  emptyText: {
-    ...typography.body,
-    color: colors.textMuted,
-  },
-
-  // ── Validation ───────────────────────────────────────────────
-  validationError: {
-    ...typography.caption,
-    color: colors.error,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-
 });

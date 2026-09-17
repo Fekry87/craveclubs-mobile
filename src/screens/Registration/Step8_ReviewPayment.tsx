@@ -1,78 +1,58 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  Animated,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Animated, StyleSheet, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { RegistrationLayout } from '../../components/features/registration/RegistrationLayout';
-import { Icon, IconName } from '../../components/common/Icon';
+import { Card } from '../../components/common/Card';
+import { InfoRow, InfoRowProps } from '../../components/common/InfoRow';
 import { useRegistrationStore } from '../../store/registration.store';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { submitRegistration } from '../../api/services/registration.service';
 import { formatMoney } from '../../utils/formatters';
-import {
-  colors,
-  spacing,
-  borderRadius,
-  typography,
-  fontFamily,
-} from '../../theme';
+import { colors, spacing, fontFamily } from '../../theme';
 
 type Props = NativeStackScreenProps<
   RegistrationStackParamList,
   'Step8_ReviewPayment'
 >;
 
-// ── ReviewRow (inline) ───────────────────────────────────────────
-function ReviewRow({
-  icon,
-  label,
-  value,
-  index,
-  iconColor,
-}: {
-  icon: IconName;
-  label: string;
-  value: string;
-  index: number;
-  iconColor?: string;
-}) {
-  const entry = useAnimatedEntry(index);
+type Row = Omit<InfoRowProps, 'isLast'>;
 
-  return (
-    <Animated.View style={[styles.reviewRow, entry]}>
-      <View
-        style={[
-          styles.reviewIconCircle,
-          { backgroundColor: (iconColor ?? colors.primary) + '18' },
-        ]}
-      >
-        <Icon name={icon} size={18} color={iconColor ?? colors.primary} />
-      </View>
-      <View style={styles.reviewTextCol}>
-        <Text style={styles.reviewLabel}>{label}</Text>
-        <Text style={styles.reviewValue}>{value}</Text>
-      </View>
-    </Animated.View>
-  );
-}
+const capitalize = (value: string | null | undefined) =>
+  value ? value.charAt(0).toUpperCase() + value.slice(1) : '—';
 
-// ── Section Header (inline) ─────────────────────────────────────
-function SectionHeader({
+// ── ReviewSection (inline) ──────────────────────────────────────
+// A titled card of rows with an "Edit" link back to the step that owns them.
+function ReviewSection({
   title,
+  rows,
+  onEdit,
   index,
 }: {
   title: string;
+  rows: Row[];
+  onEdit: () => void;
   index: number;
 }) {
   const entry = useAnimatedEntry(index);
   return (
-    <Animated.View style={[styles.sectionHeader, entry]}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <Animated.View style={[styles.section, entry]}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <TouchableOpacity
+          onPress={onEdit}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel={`Edit ${title.toLowerCase()}`}
+        >
+          <Text style={[styles.editLink, { color: colors.primary }]}>Edit</Text>
+        </TouchableOpacity>
+      </View>
+      <Card>
+        {rows.map((row, i) => (
+          <InfoRow key={row.label} {...row} isLast={i === rows.length - 1} />
+        ))}
+      </Card>
     </Animated.View>
   );
 }
@@ -81,26 +61,19 @@ function SectionHeader({
 export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
   const store = useRegistrationStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { basicProfile, physicalInfo, experience } = store;
 
-  // ── Derived display values ────────────────────────────────────
-  const genderLabel =
-    store.basicProfile.gender === 'male'
-      ? 'Male'
-      : store.basicProfile.gender === 'female'
-        ? 'Female'
-        : '—';
+  const birthDate = basicProfile.birthDate ? new Date(basicProfile.birthDate) : null;
+  const age = birthDate
+    ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+    : null;
 
-  const fitnessLabel =
-    store.physicalInfo.fitnessLevel
-      ? store.physicalInfo.fitnessLevel.charAt(0).toUpperCase() +
-        store.physicalInfo.fitnessLevel.slice(1)
-      : '—';
-
-  const experienceLabel =
-    store.experience.level
-      ? store.experience.level.charAt(0).toUpperCase() +
-        store.experience.level.slice(1)
-      : '—';
+  // Going back to a step pops every screen after it; the answers stay in the
+  // store, so the swimmer only changes what they came back for.
+  const editStep = (step: number, route: keyof RegistrationStackParamList) => {
+    store.setStep(step);
+    navigation.navigate(route as never);
+  };
 
   // ── Submit ────────────────────────────────────────────────────
   const handleSubmit = async () => {
@@ -165,151 +138,101 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const aboutRows: Row[] = [
+    { icon: 'user-line', label: 'Full name', value: basicProfile.fullName || '—' },
+    { icon: 'phone-line', label: 'Phone', value: basicProfile.phone || '—' },
+    { icon: 'user-smile-line', label: 'Gender', value: capitalize(basicProfile.gender) },
+    {
+      icon: 'cake-2-line',
+      label: 'Date of birth',
+      value: birthDate
+        ? birthDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '—',
+      hint: age !== null ? `${age} years old` : undefined,
+    },
+  ];
+  if (basicProfile.guardianName || basicProfile.guardianPhone) {
+    aboutRows.push({
+      icon: 'hand-heart-line',
+      label: 'Parent or guardian',
+      value: basicProfile.guardianName || '—',
+      hint: [basicProfile.guardianPhone, basicProfile.guardianEmail].filter(Boolean).join(' · ') || undefined,
+    });
+  }
+
+  const bodyRows: Row[] = [
+    {
+      icon: 'run-line',
+      label: 'Height and weight',
+      value: `${physicalInfo.heightCm} cm · ${physicalInfo.weightKg} kg`,
+    },
+    { icon: 'heart-pulse-line', label: 'Fitness level', value: capitalize(physicalInfo.fitnessLevel) },
+  ];
+  if (physicalInfo.medicalNotes?.trim()) {
+    bodyRows.push({ icon: 'first-aid-kit-line', label: 'Medical notes', value: physicalInfo.medicalNotes.trim() });
+  }
+
+  const experienceRows: Row[] = [
+    { icon: 'trophy-line', label: 'Skill level', value: capitalize(experience.level) },
+    { icon: 'flag-line', label: 'Main goal', value: experience.primaryGoal ?? '—' },
+    { icon: 'calendar-event-line', label: 'How often', value: experience.weeklyFrequency ?? '—' },
+  ];
+
+  const trainingRows: Row[] = [
+    { icon: 'building-2-line', label: 'Branch', value: store.branchName ?? '—' },
+    {
+      icon: 'gift-line',
+      label: 'Plan',
+      value: store.planName ?? '—',
+      hint: store.planName ? formatMoney(store.planPrice ?? 0) : undefined,
+    },
+    { icon: 'user-star-line', label: 'Coach', value: store.coachName ?? '—' },
+    // What the registration is sent with; nothing is charged in the app.
+    { icon: 'hand-coin-line', label: 'Payment', value: 'Cash, at the club' },
+  ];
+
   return (
     <RegistrationLayout
       currentStep={8}
-      title="Review & Payment"
-      subtitle="Review your registration details"
+      title="Review and submit"
+      subtitle="Check your details before you send them"
       onBack={() => {
         store.setStep(7);
         navigation.goBack();
       }}
-      ctaTitle={isSubmitting ? 'Submitting...' : 'Submit Registration'}
+      ctaTitle={isSubmitting ? 'Submitting…' : 'Submit registration'}
       onCtaPress={handleSubmit}
       ctaLoading={isSubmitting}
       ctaDisabled={isSubmitting}
     >
-      {/* ── Personal Info Section ──────────────────────────────── */}
-      <SectionHeader title="Personal Info" index={0} />
-      <ReviewRow
-        icon="user-fill"
-        label="Full Name"
-        value={store.basicProfile.fullName || '—'}
-        index={1}
-      />
-      <ReviewRow
-        icon="phone-fill"
-        label="Phone"
-        value={store.basicProfile.phone || '—'}
-        index={2}
-        iconColor={colors.teal}
-      />
-      <ReviewRow
-        icon={store.basicProfile.gender === 'male' ? 'men-fill' : 'women-fill'}
-        label="Gender"
-        value={genderLabel}
-        index={3}
-        iconColor={colors.secondary}
-      />
-
-      {/* ── Physical Info Section ──────────────────────────────── */}
-      <SectionHeader title="Physical Info" index={4} />
-      <ReviewRow
-        icon="run-fill"
-        label="Height / Weight"
-        value={`${store.physicalInfo.heightCm} cm • ${store.physicalInfo.weightKg} kg`}
-        index={5}
-        iconColor={colors.orange}
-      />
-      <ReviewRow
-        icon="heart-pulse-fill"
-        label="Fitness Level"
-        value={fitnessLabel}
-        index={6}
-        iconColor={colors.error}
-      />
-
-      {/* ── Experience Section ─────────────────────────────────── */}
-      <SectionHeader title="Experience" index={7} />
-      <ReviewRow
-        icon="trophy-fill"
-        label="Skill Level"
-        value={experienceLabel}
-        index={8}
-        iconColor={colors.warning}
-      />
-      <ReviewRow
-        icon="flag-fill"
-        label="Goal"
-        value={store.experience.primaryGoal ?? '—'}
-        index={9}
-        iconColor={colors.swimmer}
-      />
-
-      {/* ── Selections Section ─────────────────────────────────── */}
-      <SectionHeader title="Your Selections" index={10} />
-      <ReviewRow
-        icon="building-2-fill"
-        label="Branch"
-        value={store.branchName ?? '—'}
-        index={11}
-      />
-      <ReviewRow
-        icon="gift-fill"
-        label="Plan"
-        value={
-          store.planName
-            ? `${store.planName} (${formatMoney(store.planPrice ?? 0)})`
-            : '—'
-        }
-        index={12}
-        iconColor={colors.swimmer}
-      />
-      <ReviewRow
-        icon="user-settings-fill"
-        label="Coach"
-        value={store.coachName ?? '—'}
-        index={13}
-        iconColor={colors.secondary}
-      />
-
+      <ReviewSection title="About you" rows={aboutRows} index={0} onEdit={() => editStep(1, 'Step1_BasicProfile')} />
+      <ReviewSection title="Body and fitness" rows={bodyRows} index={1} onEdit={() => editStep(2, 'Step2_PhysicalInfo')} />
+      <ReviewSection title="Experience" rows={experienceRows} index={2} onEdit={() => editStep(4, 'Step4_ExperienceLevel')} />
+      <ReviewSection title="Training" rows={trainingRows} index={3} onEdit={() => editStep(5, 'Step5_BranchSelection')} />
     </RegistrationLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  // ── Section Header ────────────────────────────────────────────
+  section: {
+    marginBottom: spacing.lg,
+  },
   sectionHeader: {
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
-    paddingBottom: spacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-
-  // ── Review Row ────────────────────────────────────────────────
-  reviewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
-  },
-  reviewIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reviewTextCol: {
-    flex: 1,
-  },
-  reviewLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  reviewValue: {
-    ...typography.bodyMedium,
-    fontFamily: fontFamily.bodySemiBold,
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: fontFamily.bodyMedium,
     color: colors.text,
-    marginTop: 1,
   },
-
+  editLink: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: fontFamily.bodySemiBold,
+  },
 });

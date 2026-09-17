@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   Animated,
   StyleSheet,
 } from 'react-native';
@@ -11,8 +10,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Slider from '@react-native-community/slider';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { RegistrationLayout } from '../../components/features/registration/RegistrationLayout';
+import { ChoiceChipGroup } from '../../components/features/registration/ChoiceChip';
+import { SectionLabel, FieldError } from '../../components/features/registration/SectionLabel';
 import { useRegistrationStore } from '../../store/registration.store';
-import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import {
   colors,
@@ -29,12 +29,15 @@ type Props = NativeStackScreenProps<
 
 type FitnessLevel = 'excellent' | 'good' | 'average' | 'beginner';
 
-const FITNESS_OPTIONS: { value: FitnessLevel; label: string }[] = [
-  { value: 'excellent', label: 'Excellent' },
-  { value: 'good', label: 'Good' },
-  { value: 'average', label: 'Average' },
+// Least to most, the order people think in.
+const FITNESS_OPTIONS = [
   { value: 'beginner', label: 'Beginner' },
-];
+  { value: 'average', label: 'Average' },
+  { value: 'good', label: 'Good' },
+  { value: 'excellent', label: 'Excellent' },
+] as const satisfies readonly { value: FitnessLevel; label: string }[];
+
+const MEDICAL_MAX = 300;
 
 export const Step2_PhysicalInfo: React.FC<Props> = ({ navigation }) => {
   const { physicalInfo, updatePhysicalInfo, setStep } =
@@ -60,18 +63,6 @@ export const Step2_PhysicalInfo: React.FC<Props> = ({ navigation }) => {
   const weightEntry = useAnimatedEntry(1);
   const fitnessEntry = useAnimatedEntry(2);
   const medicalEntry = useAnimatedEntry(3);
-
-  const excellentPress = useAnimatedPress();
-  const goodPress = useAnimatedPress();
-  const averagePress = useAnimatedPress();
-  const beginnerPress = useAnimatedPress();
-
-  const chipPressMap: Record<FitnessLevel, ReturnType<typeof useAnimatedPress>> = {
-    excellent: excellentPress,
-    good: goodPress,
-    average: averagePress,
-    beginner: beginnerPress,
-  };
 
   // ── Clear field error on change ──────────────────────────────
   const clearError = (field: string) => {
@@ -113,7 +104,7 @@ export const Step2_PhysicalInfo: React.FC<Props> = ({ navigation }) => {
   return (
     <RegistrationLayout
       currentStep={2}
-      title="Physical Information"
+      title="Physical information"
       subtitle="Helps your coach build the right plan"
       onBack={() => {
         setStep(1);
@@ -122,11 +113,14 @@ export const Step2_PhysicalInfo: React.FC<Props> = ({ navigation }) => {
       ctaTitle="Continue"
       onCtaPress={handleContinue}
     >
-      {/* ── Height Slider ────────────────────────────────────────── */}
-      <Animated.View style={[styles.sliderSection, heightEntry]}>
-        <View style={styles.sliderLabelRow}>
-          <Text style={styles.fieldLabel}>Height</Text>
-          <Text style={styles.heightValue}>{heightCm} cm</Text>
+      {/* ── Height & weight ──────────────────────────────────────── */}
+      <Animated.View style={[styles.measureCard, heightEntry]}>
+        <View style={styles.measureHeader}>
+          <Text style={styles.measureLabel}>Height</Text>
+          <Text style={styles.measureValue}>
+            {heightCm}
+            <Text style={styles.measureUnit}> cm</Text>
+          </Text>
         </View>
         <Slider
           style={styles.slider}
@@ -136,16 +130,23 @@ export const Step2_PhysicalInfo: React.FC<Props> = ({ navigation }) => {
           value={heightCm}
           onValueChange={(v) => setHeightCm(Math.round(v))}
           minimumTrackTintColor={colors.primary}
-          maximumTrackTintColor={colors.surfaceLight}
+          maximumTrackTintColor={colors.border}
           thumbTintColor={colors.primary}
+          accessibilityLabel="Height in centimetres"
         />
+        <View style={styles.rangeRow}>
+          <Text style={styles.rangeText}>100</Text>
+          <Text style={styles.rangeText}>220</Text>
+        </View>
       </Animated.View>
 
-      {/* ── Weight Slider ────────────────────────────────────────── */}
-      <Animated.View style={[styles.sliderSection, weightEntry]}>
-        <View style={styles.sliderLabelRow}>
-          <Text style={styles.fieldLabel}>Weight</Text>
-          <Text style={styles.weightValue}>{weightKg} kg</Text>
+      <Animated.View style={[styles.measureCard, weightEntry]}>
+        <View style={styles.measureHeader}>
+          <Text style={styles.measureLabel}>Weight</Text>
+          <Text style={styles.measureValue}>
+            {weightKg}
+            <Text style={styles.measureUnit}> kg</Text>
+          </Text>
         </View>
         <Slider
           style={styles.slider}
@@ -154,161 +155,121 @@ export const Step2_PhysicalInfo: React.FC<Props> = ({ navigation }) => {
           step={1}
           value={weightKg}
           onValueChange={(v) => setWeightKg(Math.round(v))}
-          minimumTrackTintColor={colors.swimmer}
-          maximumTrackTintColor={colors.surfaceLight}
-          thumbTintColor={colors.swimmer}
+          minimumTrackTintColor={colors.primary}
+          maximumTrackTintColor={colors.border}
+          thumbTintColor={colors.primary}
+          accessibilityLabel="Weight in kilograms"
         />
-      </Animated.View>
-
-      {/* ── Fitness Level Chips ──────────────────────────────────── */}
-      <Animated.View style={[styles.chipsSection, fitnessEntry]}>
-        <Text style={styles.fieldLabel}>Fitness Level</Text>
-        <View style={styles.chipsRow}>
-          {FITNESS_OPTIONS.map((option) => {
-            const press = chipPressMap[option.value];
-            const isSelected = fitnessLevel === option.value;
-            return (
-              <TouchableOpacity
-                key={option.value}
-                onPress={() => {
-                  setFitnessLevel(option.value);
-                  clearError('fitnessLevel');
-                }}
-                onPressIn={press.onPressIn}
-                onPressOut={press.onPressOut}
-                activeOpacity={0.7}
-              >
-                <Animated.View
-                  style={[
-                    styles.chip,
-                    isSelected ? styles.chipSelected : styles.chipUnselected,
-                    press.animatedStyle,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      isSelected && styles.chipTextSelected,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </Animated.View>
-              </TouchableOpacity>
-            );
-          })}
+        <View style={styles.rangeRow}>
+          <Text style={styles.rangeText}>30</Text>
+          <Text style={styles.rangeText}>200</Text>
         </View>
-        {errors.fitnessLevel && (
-          <Text style={styles.errorText}>{errors.fitnessLevel}</Text>
-        )}
       </Animated.View>
 
-      {/* ── Medical Notes ────────────────────────────────────────── */}
-      <Animated.View style={[styles.medicalSection, medicalEntry]}>
-        <Text style={styles.fieldLabel}>Medical Notes</Text>
+      {/* ── Fitness level ────────────────────────────────────────── */}
+      <Animated.View style={[styles.section, fitnessEntry]}>
+        <SectionLabel>Fitness level</SectionLabel>
+        <ChoiceChipGroup
+          options={FITNESS_OPTIONS}
+          value={fitnessLevel}
+          onChange={(value) => {
+            setFitnessLevel(value);
+            clearError('fitnessLevel');
+          }}
+          hasError={!!errors.fitnessLevel}
+        />
+        <FieldError message={errors.fitnessLevel} />
+      </Animated.View>
+
+      {/* ── Medical notes ────────────────────────────────────────── */}
+      <Animated.View style={[styles.section, medicalEntry]}>
+        <SectionLabel hint="Optional">Medical notes</SectionLabel>
         <TextInput
           style={styles.textArea}
-          placeholder={
-            'Any health conditions your coach\nshould know about? (optional)'
-          }
+          placeholder="Anything your coach should know, e.g. asthma or a recent injury"
           placeholderTextColor={colors.textDim}
           multiline
-          numberOfLines={3}
-          maxLength={300}
+          maxLength={MEDICAL_MAX}
           value={medicalNotes}
           onChangeText={setMedicalNotes}
           textAlignVertical="top"
+          accessibilityLabel="Medical notes"
         />
         <Text style={styles.charCounter}>
-          {medicalNotes.length}/300
+          {medicalNotes.length}/{MEDICAL_MAX}
         </Text>
       </Animated.View>
-
     </RegistrationLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  // ── Slider sections ──────────────────────────────────────────
-  sliderSection: {
-    marginBottom: spacing.lg,
+  // ── Height & weight ─────────────────────────────────────────
+  measureCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    marginBottom: spacing.sm + 4,
   },
-  sliderLabelRow: {
+  measureHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
+    alignItems: 'baseline',
   },
-  heightValue: {
-    ...typography.heading,
-    color: colors.primary,
+  measureLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.text,
   },
-  weightValue: {
-    ...typography.heading,
-    color: colors.swimmer,
+  measureValue: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontFamily: fontFamily.headingBold,
+    color: colors.text,
+  },
+  measureUnit: {
+    fontSize: 14,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
   },
   slider: {
     width: '100%',
     height: 40,
   },
-
-  // ── Field label ──────────────────────────────────────────────
-  fieldLabel: {
-    fontSize: 13,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-
-  // ── Fitness chips ────────────────────────────────────────────
-  chipsSection: {
-    marginBottom: spacing.lg,
-  },
-  chipsRow: {
+  rangeRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
+    justifyContent: 'space-between',
   },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.pill,
-  },
-  chipUnselected: {
-    backgroundColor: colors.surfaceLight,
-  },
-  chipSelected: {
-    backgroundColor: colors.swimmer,
-  },
-  chipText: {
-    fontSize: 14,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.textMuted,
-  },
-  chipTextSelected: {
-    color: colors.white,
+  rangeText: {
+    ...typography.caption,
+    color: colors.textDim,
   },
 
-  // ── Medical notes ────────────────────────────────────────────
-  medicalSection: {
-    marginBottom: spacing.md,
+  // ── Sections ────────────────────────────────────────────────
+  section: {
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
   },
+
+  // ── Medical notes ───────────────────────────────────────────
   textArea: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.md,
     backgroundColor: colors.white,
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-    minHeight: 80,
-    fontSize: 14,
+    paddingTop: spacing.sm + 4,
+    paddingBottom: spacing.sm + 4,
+    minHeight: 104,
+    fontSize: 16,
+    lineHeight: 22,
     fontFamily: fontFamily.bodyRegular,
     color: colors.text,
-    marginTop: spacing.xs,
   },
   charCounter: {
     ...typography.caption,
@@ -316,12 +277,4 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: spacing.xs,
   },
-
-  // ── Error text ───────────────────────────────────────────────
-  errorText: {
-    ...typography.caption,
-    color: colors.error,
-    marginTop: spacing.xs,
-  },
-
 });
