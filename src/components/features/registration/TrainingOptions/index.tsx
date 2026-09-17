@@ -3,7 +3,8 @@ import { View, Text } from 'react-native';
 import { SelectCard } from '../SelectCard';
 import { Icon } from '../../../common/Icon';
 import { Branch, Coach, Group, SubscriptionPlan } from '../../../../api/services/registration.service';
-import { formatMoney, planPrice, groupSchedule } from '../../../../utils/formatters';
+import { formatMoney, planPrice, formatTime, formatDuration } from '../../../../utils/formatters';
+import { trainingTypeTab } from '../../../../utils/trainingTypes';
 import { colors } from '../../../../theme';
 import { styles } from './styles';
 
@@ -128,24 +129,44 @@ export const CoachOption: React.FC<OptionProps<Coach>> = ({ item, selected, onPr
   </SelectCard>
 );
 
+/** Chip labels in days_of_week order (0 = Sunday). */
+const DAY_CHIPS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const minutesOf = (time: string) => {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+};
+
 /**
- * A coach's group: its schedule as the subtitle and the spots left underneath.
- * A full group is drawn but can't be chosen — hiding it would make the coach
- * look as if they had fewer groups than the club advertises.
+ * A coach's group as a small schedule card: the training type as a pill under
+ * the name, the week as seven chips with the training days lit, and a strip
+ * with when it starts and ends. Reading "Sun, Mon, Tue, Wed, Thu, Fri, Sat ·
+ * 6:00 PM - 8:00 PM" as one line took a second look; the chips and the strip
+ * don't. A full group is drawn but can't be chosen — hiding it would make the
+ * coach look as if they had fewer groups than the club advertises.
  */
 export const GroupOption: React.FC<OptionProps<Group>> = ({ item, selected, onPress, index }) => {
+  const days = new Set(item.days_of_week ?? []);
+  const hasTimes = !!(item.start_time && item.end_time);
+  const duration = hasTimes
+    ? formatDuration(minutesOf(item.end_time as string) - minutesOf(item.start_time as string))
+    : '';
   const spots =
     item.capacity === null
       ? null
       : item.is_full
         ? 'Full'
         : `${item.remaining_spots} ${item.remaining_spots === 1 ? 'spot' : 'spots'} left`;
+  // Plenty is calm green; the last few are a nudge; none is red.
+  const spotsColor = item.is_full
+    ? colors.error
+    : (item.remaining_spots ?? 0) <= 3
+      ? colors.warningDark
+      : colors.swimmerDark;
 
   return (
     <SelectCard
       title={item.name}
-      subtitle={groupSchedule(item) || null}
-      badge={item.is_full ? 'Full' : undefined}
       selected={selected}
       onPress={onPress}
       index={index}
@@ -158,10 +179,68 @@ export const GroupOption: React.FC<OptionProps<Group>> = ({ item, selected, onPr
         </View>
       }
     >
+      {/* Type (and Full) pills under the name */}
+      <View style={styles.pillRow}>
+        <View style={[styles.pill, { backgroundColor: selected ? colors.white : colors.primaryDim }]}>
+          <Text style={[styles.pillText, { color: colors.primary }]}>{trainingTypeTab(item.group_type)}</Text>
+        </View>
+        {item.is_full ? (
+          <View style={[styles.pill, { backgroundColor: colors.errorDim }]}>
+            <Text style={[styles.pillText, { color: colors.errorDark }]}>Full</Text>
+          </View>
+        ) : null}
+      </View>
+
+      {/* The week, training days lit */}
+      {days.size > 0 ? (
+        <View style={styles.dayRow}>
+          {DAY_CHIPS.map((label, day) => {
+            const on = days.has(day);
+            return (
+              <View
+                key={label}
+                style={[
+                  styles.dayChip,
+                  on
+                    ? { backgroundColor: selected ? colors.primary : colors.primaryDim }
+                    : { backgroundColor: selected ? colors.white : colors.background },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.dayChipText,
+                    on ? { color: selected ? colors.white : colors.primary } : styles.dayChipOff,
+                  ]}
+                >
+                  {label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      ) : null}
+
+      {/* Starts / ends, on one line */}
+      {hasTimes ? (
+        <View style={[styles.timeStrip, { backgroundColor: selected ? colors.white : colors.background }]}>
+          <Icon name="time-line" size={16} color={colors.textMuted} />
+          <View>
+            <Text style={styles.timeLabel}>Starts</Text>
+            <Text style={styles.timeValue}>{formatTime(item.start_time as string)}</Text>
+          </View>
+          <View style={styles.timeDivider} />
+          <View>
+            <Text style={styles.timeLabel}>Ends</Text>
+            <Text style={styles.timeValue}>{formatTime(item.end_time as string)}</Text>
+          </View>
+          {duration ? <Text style={styles.timeDuration}>{duration}</Text> : null}
+        </View>
+      ) : null}
+
       {spots ? (
         <View style={styles.metaRow}>
-          <Icon name="user-line" size={14} color={item.is_full ? colors.error : colors.textMuted} />
-          <Text style={[styles.metaText, item.is_full && { color: colors.error }]}>{spots}</Text>
+          <Icon name="user-line" size={14} color={spotsColor} />
+          <Text style={[styles.metaText, { color: spotsColor }]}>{spots}</Text>
         </View>
       ) : null}
     </SelectCard>

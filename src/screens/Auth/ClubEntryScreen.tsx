@@ -212,33 +212,36 @@ export const ClubEntryScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Brand, centred at the top ── */}
-          <View style={styles.brand}>
-            {showImageMark ? (
-              logoAspect ? (
-                <Image
-                  source={{ uri: brand.uri }}
-                  style={[
-                    logoSize(logoAspect),
-                    brand.tint && { tintColor: colors.white },
-                  ]}
-                  resizeMode="contain"
-                  onError={() => setLogoFailed(true)}
-                  accessibilityLabel={platformName}
-                />
-              ) : (
-                // Hold the mark's slot while it is measured, so nothing jumps.
-                <View style={styles.logoPlaceholder} />
-              )
-            ) : (
-              <Text style={styles.wordmark} numberOfLines={1}>
-                {platformName}
-              </Text>
-            )}
-          </View>
+          {/* The photo alone fills the top; the brand joined the words below
+              (moved 2026-09-17 — centred at the top it floated on its own,
+              cut off from what it introduces). */}
+          <View />
 
-          {/* ── The task, anchored to the bottom ── */}
+          {/* ── The task, anchored to the bottom, the brand right above it ── */}
           <View>
+            <View style={styles.brand}>
+              {showImageMark ? (
+                logoAspect ? (
+                  <Image
+                    source={{ uri: brand.uri }}
+                    style={[
+                      logoSize(logoAspect),
+                      brand.tint && { tintColor: colors.white },
+                    ]}
+                    resizeMode="contain"
+                    onError={() => setLogoFailed(true)}
+                    accessibilityLabel={platformName}
+                  />
+                ) : (
+                  // Hold the mark's slot while it is measured, so nothing jumps.
+                  <View style={styles.logoPlaceholder} />
+                )
+              ) : (
+                <Text style={styles.wordmark} numberOfLines={1}>
+                  {platformName}
+                </Text>
+              )}
+            </View>
             {showImageMark ? (
               <Text style={styles.eyebrow}>{platformName}</Text>
             ) : null}
@@ -281,14 +284,15 @@ export const ClubEntryScreen: React.FC = () => {
 
 /**
  * On the 8pt grid:
+ *   brand → eyebrow          8
  *   eyebrow → headline       8
  *   headline → instruction   8
  *   instruction → field     24
  *   field → button          16  (Input leaves it below itself)
  *   button → help           16
- * The brand pins to the top and the task to the bottom (space-between), so the
- * photo shows through the middle on any screen height, and the form rises with
- * the keyboard.
+ * The task (brand included) pins to the bottom (space-between against an empty
+ * top), so the photo shows through above it on any screen height, and the form
+ * rises with the keyboard.
  */
 const styles = StyleSheet.create({
   container: {
@@ -304,10 +308,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
   },
+  // Left-aligned with the headline it now sits above.
   brand: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     minHeight: LOGO_MAX_HEIGHT,
     justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
   logoPlaceholder: {
     height: LOGO_MAX_HEIGHT,
