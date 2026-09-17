@@ -5,7 +5,34 @@ import { RegistrationStackParamList } from '../../navigation/types';
 import { RegistrationLayout } from '../../components/features/registration/RegistrationLayout';
 import { Card } from '../../components/common/Card';
 import { InfoRow, InfoRowProps } from '../../components/common/InfoRow';
+import { FormSheet } from '../../components/common/FormSheet';
+import { AboutYouFields } from '../../components/features/registration/AboutYouFields';
+import { BodyFields } from '../../components/features/registration/BodyFields';
+import { ExperienceFields } from '../../components/features/registration/ExperienceFields';
+import {
+  BranchOption,
+  CoachOption,
+  PlanOption,
+} from '../../components/features/registration/TrainingOptions';
+import { SectionLabel, FieldError } from '../../components/features/registration/SectionLabel';
+import { StepStatus } from '../../components/features/registration/StepStatus';
 import { useRegistrationStore } from '../../store/registration.store';
+import { useFormAnswers } from '../../hooks/useFormAnswers';
+import { useTrainingOptions } from '../../hooks/useTrainingOptions';
+import {
+  AboutYouValues,
+  BodyValues,
+  ExperienceValues,
+  aboutFromStore,
+  ageFromBirthDate,
+  bodyFromStore,
+  experienceFromStore,
+  cleanAboutYou,
+  validateAboutYou,
+  validateBody,
+  validateExperience,
+} from '../../utils/registrationValidation';
+import { planPrice } from '../../utils/formatters';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { submitRegistration } from '../../api/services/registration.service';
 import { formatMoney } from '../../utils/formatters';
@@ -17,6 +44,9 @@ type Props = NativeStackScreenProps<
 >;
 
 type Row = Omit<InfoRowProps, 'isLast'>;
+
+type Section = 'about' | 'body' | 'experience' | 'training';
+
 
 const capitalize = (value: string | null | undefined) =>
   value ? value.charAt(0).toUpperCase() + value.slice(1) : '—';
@@ -64,15 +94,70 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
   const { basicProfile, physicalInfo, experience } = store;
 
   const birthDate = basicProfile.birthDate ? new Date(basicProfile.birthDate) : null;
-  const age = birthDate
-    ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-    : null;
+  const age = basicProfile.birthDate ? ageFromBirthDate(basicProfile.birthDate) : null;
 
-  // Going back to a step pops every screen after it; the answers stay in the
-  // store, so the swimmer only changes what they came back for.
-  const editStep = (step: number, route: keyof RegistrationStackParamList) => {
-    store.setStep(step);
-    navigation.navigate(route as never);
+  // ── Editing in place ──────────────────────────────────────────
+  // Edit opens a sheet with that section's fields, pre-filled. Saving validates
+  // with the step's own rules, writes to the store and closes — the swimmer
+  // stays here instead of walking back through every step to reach Submit.
+  const [editing, setEditing] = useState<Section | null>(null);
+
+  const aboutForm = useFormAnswers<AboutYouValues>(aboutFromStore(basicProfile));
+  const bodyForm = useFormAnswers<BodyValues>(bodyFromStore(physicalInfo));
+  const experienceForm = useFormAnswers<ExperienceValues>(experienceFromStore(experience));
+  const training = useTrainingOptions();
+  const [trainingDraft, setTrainingDraft] = useState({
+    branchId: store.branchId,
+    planId: store.planId,
+    coachId: store.coachId,
+  });
+  const [trainingError, setTrainingError] = useState<string | null>(null);
+
+  const openEditor = (section: Section) => {
+    if (section === 'about') aboutForm.reset(aboutFromStore(basicProfile));
+    if (section === 'body') bodyForm.reset(bodyFromStore(physicalInfo));
+    if (section === 'experience') experienceForm.reset(experienceFromStore(experience));
+    if (section === 'training') {
+      setTrainingDraft({ branchId: store.branchId, planId: store.planId, coachId: store.coachId });
+      setTrainingError(null);
+      if (!training.options) training.load();
+    }
+    setEditing(section);
+  };
+
+  const saveEdit = () => {
+    switch (editing) {
+      case 'about':
+        if (!aboutForm.validate(validateAboutYou)) return;
+        store.updateBasicProfile(cleanAboutYou(aboutForm.answers));
+        break;
+      case 'body':
+        if (!bodyForm.validate(validateBody)) return;
+        store.updatePhysicalInfo(bodyForm.answers);
+        break;
+      case 'experience':
+        if (!experienceForm.validate(validateExperience)) return;
+        store.updateExperience(experienceForm.answers);
+        break;
+      case 'training': {
+        const options = training.options;
+        if (!options) return;
+        const branch = options.branches.find((b) => b.id === trainingDraft.branchId);
+        const plan = options.plans.find((p) => p.id === trainingDraft.planId);
+        const coach = options.coaches.find((c) => c.id === trainingDraft.coachId);
+        if (!branch || !plan || !coach) {
+          setTrainingError('Choose a branch, a plan and a coach.');
+          return;
+        }
+        store.setBranch(branch.id, branch.name);
+        store.setPlan(plan.id, plan.name, planPrice(plan));
+        store.setCoach(coach.id, coach.name);
+        break;
+      }
+      default:
+        return;
+    }
+    setEditing(null);
   };
 
   // ── Submit ────────────────────────────────────────────────────
@@ -205,10 +290,95 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
       ctaLoading={isSubmitting}
       ctaDisabled={isSubmitting}
     >
-      <ReviewSection title="About you" rows={aboutRows} index={0} onEdit={() => editStep(1, 'Step1_BasicProfile')} />
-      <ReviewSection title="Body and fitness" rows={bodyRows} index={1} onEdit={() => editStep(2, 'Step2_PhysicalInfo')} />
-      <ReviewSection title="Experience" rows={experienceRows} index={2} onEdit={() => editStep(4, 'Step4_ExperienceLevel')} />
-      <ReviewSection title="Training" rows={trainingRows} index={3} onEdit={() => editStep(5, 'Step5_BranchSelection')} />
+      <ReviewSection title="About you" rows={aboutRows} index={0} onEdit={() => openEditor('about')} />
+      <ReviewSection title="Body and fitness" rows={bodyRows} index={1} onEdit={() => openEditor('body')} />
+      <ReviewSection title="Experience" rows={experienceRows} index={2} onEdit={() => openEditor('experience')} />
+      <ReviewSection title="Training" rows={trainingRows} index={3} onEdit={() => openEditor('training')} />
+
+      {/* ── Edit sheets ─────────────────────────────────────────── */}
+      <FormSheet
+        visible={editing === 'about'}
+        title="Edit your details"
+        onClose={() => setEditing(null)}
+        onSave={saveEdit}
+      >
+        <AboutYouFields
+          value={aboutForm.answers}
+          onChange={aboutForm.handleChange}
+          errors={aboutForm.errors}
+        />
+      </FormSheet>
+
+      <FormSheet
+        visible={editing === 'body'}
+        title="Edit body and fitness"
+        onClose={() => setEditing(null)}
+        onSave={saveEdit}
+      >
+        <BodyFields value={bodyForm.answers} onChange={bodyForm.handleChange} errors={bodyForm.errors} />
+      </FormSheet>
+
+      <FormSheet
+        visible={editing === 'experience'}
+        title="Edit experience"
+        onClose={() => setEditing(null)}
+        onSave={saveEdit}
+      >
+        <ExperienceFields
+          value={experienceForm.answers}
+          onChange={experienceForm.handleChange}
+          errors={experienceForm.errors}
+        />
+      </FormSheet>
+
+      <FormSheet
+        visible={editing === 'training'}
+        title="Edit training"
+        onClose={() => setEditing(null)}
+        onSave={saveEdit}
+        saveDisabled={!training.options}
+      >
+        {training.isLoading || (!training.options && !training.error) ? (
+          <StepStatus kind="loading" message="Loading the club's options…" />
+        ) : training.error || !training.options ? (
+          <StepStatus kind="error" message={training.error ?? ''} onRetry={training.load} />
+        ) : (
+          <>
+            <SectionLabel>Branch</SectionLabel>
+            {training.options.branches.map((item) => (
+              <BranchOption
+                key={item.id}
+                item={item}
+                selected={trainingDraft.branchId === item.id}
+                onPress={() => setTrainingDraft((d) => ({ ...d, branchId: item.id }))}
+              />
+            ))}
+            <View style={styles.sheetSection}>
+              <SectionLabel>Plan</SectionLabel>
+              {training.options.plans.map((item) => (
+                <PlanOption
+                  key={item.id}
+                  item={item}
+                  selected={trainingDraft.planId === item.id}
+                  onPress={() => setTrainingDraft((d) => ({ ...d, planId: item.id }))}
+                />
+              ))}
+            </View>
+            <View style={styles.sheetSection}>
+              <SectionLabel>Coach</SectionLabel>
+              {training.options.coaches.map((item) => (
+                <CoachOption
+                  key={item.id}
+                  item={item}
+                  selected={trainingDraft.coachId === item.id}
+                  onPress={() => setTrainingDraft((d) => ({ ...d, coachId: item.id }))}
+                />
+              ))}
+            </View>
+            <FieldError message={trainingError} />
+          </>
+        )}
+      </FormSheet>
     </RegistrationLayout>
   );
 };
@@ -229,6 +399,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontFamily: fontFamily.bodyMedium,
     color: colors.text,
+  },
+  sheetSection: {
+    marginTop: spacing.lg,
   },
   editLink: {
     fontSize: 14,

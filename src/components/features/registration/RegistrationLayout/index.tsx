@@ -14,6 +14,7 @@ import { Icon } from '../../../common/Icon';
 import { Button } from '../../../common/Button';
 import { RegistrationProgressBar } from '../RegistrationProgressBar';
 import { useAnimatedPress } from '../../../../hooks/useAnimatedPress';
+import { useCancelRegistration } from '../../../../hooks/useCancelRegistration';
 import { colors } from '../../../../theme';
 import { styles } from './styles';
 
@@ -50,6 +51,7 @@ export const RegistrationLayout: React.FC<RegistrationLayoutProps> = ({
   ctaVariant = 'primary',
 }) => {
   const { animatedStyle, onPressIn, onPressOut } = useAnimatedPress();
+  const cancelRegistration = useCancelRegistration();
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -77,7 +79,17 @@ export const RegistrationLayout: React.FC<RegistrationLayoutProps> = ({
           <Text style={styles.stepLabel}>
             Step {currentStep} of {TOTAL_STEPS}
           </Text>
-          <View style={styles.backPlaceholder} />
+          {/* Leave the whole flow — confirms first, since it discards every answer. */}
+          <TouchableOpacity
+            onPress={cancelRegistration}
+            activeOpacity={0.7}
+            style={styles.backButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Cancel registration"
+          >
+            <Icon name="close-line" size={20} color={colors.text} />
+          </TouchableOpacity>
         </View>
 
         {/* ── Progress bar ──────────────────────────────────────── */}

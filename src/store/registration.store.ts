@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-interface BasicProfile {
+export interface BasicProfile {
   fullName: string;
   phone: string;
   gender: 'male' | 'female' | null;
@@ -11,7 +11,7 @@ interface BasicProfile {
   guardianEmail: string;
 }
 
-interface PhysicalInfo {
+export interface PhysicalInfo {
   heightCm: number;
   weightKg: number;
   fitnessLevel: 'excellent' | 'good' | 'average' | 'beginner' | null;
@@ -19,7 +19,7 @@ interface PhysicalInfo {
   medicalNotes: string;
 }
 
-interface Experience {
+export interface Experience {
   level: 'beginner' | 'intermediate' | 'advanced' | 'professional' | null;
   yearsExperience: string | null;
   competed: boolean | null;
