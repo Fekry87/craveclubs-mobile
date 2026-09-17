@@ -6,6 +6,9 @@ export const styles = StyleSheet.create({
   wrapper: {
     marginBottom: spacing.sm + 4,
   },
+  disabled: {
+    opacity: 0.55,
+  },
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',

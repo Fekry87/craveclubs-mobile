@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, Animated, StyleSheet, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RegistrationStackParamList } from '../../navigation/types';
@@ -33,7 +33,8 @@ import {
   validateExperience,
 } from '../../utils/registrationValidation';
 import { planPrice } from '../../utils/formatters';
-import { trainingTypeLabel } from '../../utils/trainingTypes';
+import { trainingTypeLabel, trainingTypesIn } from '../../utils/trainingTypes';
+import { coachesWithOpenGroups, typesWithOpenGroups } from '../../utils/groupAvailability';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import {
   checkEmailAvailability,
@@ -134,13 +135,31 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
   const aboutForm = useFormAnswers<AboutYouValues>(aboutFromStore(basicProfile));
   const bodyForm = useFormAnswers<BodyValues>(bodyFromStore(physicalInfo));
   const experienceForm = useFormAnswers<ExperienceValues>(experienceFromStore(experience));
-  const training = useTrainingOptions();
+  const training = useTrainingOptions(store.clubSlug);
   const [trainingDraft, setTrainingDraft] = useState({
     branchId: store.branchId,
     planId: store.planId,
     coachId: store.coachId,
   });
   const [trainingError, setTrainingError] = useState<string | null>(null);
+
+  // The sheet follows the same rule as the steps: the draft plan's type
+  // decides which coaches are offered, and a type with no open group can't
+  // be chosen at all.
+  const draftPlanType =
+    training.options?.plans.find((p) => p.id === trainingDraft.planId)?.training_type ?? null;
+  const unavailableTypes = useMemo(() => {
+    if (!training.options) return new Set<string>();
+    const open = typesWithOpenGroups(training.options.groups);
+    return new Set(trainingTypesIn(training.options.plans).filter((t) => !open.has(t)));
+  }, [training.options]);
+  const availableCoaches = useMemo(
+    () =>
+      training.options
+        ? coachesWithOpenGroups(training.options.coaches, training.options.groups, draftPlanType)
+        : [],
+    [training.options, draftPlanType],
+  );
 
   const openEditor = (section: Section) => {
     if (section === 'group') {
@@ -201,17 +220,25 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         if (!options) return;
         const branch = options.branches.find((b) => b.id === trainingDraft.branchId);
         const plan = options.plans.find((p) => p.id === trainingDraft.planId);
-        const coach = options.coaches.find((c) => c.id === trainingDraft.coachId);
+        const coach = availableCoaches.find((c) => c.id === trainingDraft.coachId);
         if (!branch || !plan || !coach) {
           setTrainingError('Choose a branch, a plan and a coach.');
           return;
         }
-        const coachChanged = coach.id !== store.coachId;
+        if (unavailableTypes.has(plan.training_type)) {
+          setTrainingError(
+            `All ${trainingTypeLabel(plan.training_type).toLowerCase()} groups are full right now. Choose a plan of another type.`,
+          );
+          return;
+        }
+        // A new coach or a new type both need a new group: groups belong to a
+        // coach and are of one type.
+        const needsGroup = coach.id !== store.coachId || plan.training_type !== store.planTrainingType;
         store.setBranch(branch.id, branch.name);
         store.setPlan(plan.id, plan.name, planPrice(plan), plan.training_type);
-        // Drops the group when the coach changes: groups belong to a coach.
         store.setCoach(coach.id, coach.name, coach.user_id ?? null);
-        if (coachChanged) {
+        if (needsGroup) {
+          store.clearGroup();
           setEditing(null);
           openEditor('group');
           return;
@@ -458,19 +485,37 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
               <PlanPicker
                 plans={training.options.plans}
                 selectedId={trainingDraft.planId}
-                onSelect={(item) => setTrainingDraft((d) => ({ ...d, planId: item.id }))}
+                onSelect={(item) => {
+                  if (unavailableTypes.has(item.training_type)) return;
+                  // A new type means a new set of coaches; don't carry one over.
+                  setTrainingDraft((d) => ({
+                    ...d,
+                    planId: item.id,
+                    coachId: item.training_type === draftPlanType ? d.coachId : null,
+                  }));
+                  setTrainingError(null);
+                }}
+                unavailableTypes={unavailableTypes}
               />
             </View>
             <View style={styles.sheetSection}>
-              <SectionLabel>Coach</SectionLabel>
-              {training.options.coaches.map((item) => (
-                <CoachOption
-                  key={item.id}
-                  item={item}
-                  selected={trainingDraft.coachId === item.id}
-                  onPress={() => setTrainingDraft((d) => ({ ...d, coachId: item.id }))}
-                />
-              ))}
+              <SectionLabel hint={draftPlanType ? `With an open ${trainingTypeLabel(draftPlanType).toLowerCase()} group` : undefined}>
+                Coach
+              </SectionLabel>
+              {availableCoaches.length === 0 ? (
+                <Text style={styles.sheetEmpty}>
+                  No coach has an open group of this type right now. Pick a plan of another type.
+                </Text>
+              ) : (
+                availableCoaches.map((item) => (
+                  <CoachOption
+                    key={item.id}
+                    item={item}
+                    selected={trainingDraft.coachId === item.id}
+                    onPress={() => setTrainingDraft((d) => ({ ...d, coachId: item.id }))}
+                  />
+                ))
+              )}
             </View>
             <FieldError message={trainingError} />
           </>
@@ -499,6 +544,12 @@ const styles = StyleSheet.create({
   },
   sheetSection: {
     marginTop: spacing.lg,
+  },
+  sheetEmpty: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fontFamily.bodyRegular,
+    color: colors.textMuted,
   },
   editLink: {
     fontSize: 14,
