@@ -12,6 +12,10 @@ export type ExperienceValues = Pick<Experience, 'level' | 'primaryGoal'>;
 
 const YEAR_MS = 365.25 * 24 * 60 * 60 * 1000;
 
+// Shape only; the server validates properly. Enough to catch a phone number
+// or a missing "@" before the swimmer gets to the review.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 export const ageFromBirthDate = (iso: string): number =>
   Math.floor((Date.now() - new Date(iso).getTime()) / YEAR_MS);
 
@@ -28,6 +32,9 @@ export const validateAboutYou = (v: AboutYouValues): FieldErrors => {
   }
   if (v.phone.replace(/\D/g, '').length < 10) {
     errs.phone = 'Valid phone number is required';
+  }
+  if (!EMAIL_RE.test(v.email.trim())) {
+    errs.email = 'Enter a valid email address';
   }
   if (!v.gender) {
     errs.gender = 'Please select your gender';
@@ -54,6 +61,7 @@ export const validateExperience = (v: ExperienceValues): FieldErrors => {
 export const cleanAboutYou = (v: AboutYouValues): AboutYouValues => ({
   ...v,
   fullName: v.fullName.trim(),
+  email: v.email.trim().toLowerCase(),
   guardianName: v.guardianName.trim(),
   guardianPhone: v.guardianPhone.trim(),
   guardianEmail: v.guardianEmail.trim(),

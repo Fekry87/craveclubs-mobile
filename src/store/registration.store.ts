@@ -3,6 +3,8 @@ import { create } from 'zustand';
 export interface BasicProfile {
   fullName: string;
   phone: string;
+  /** Becomes the account's login address once the club approves. */
+  email: string;
   gender: 'male' | 'female' | null;
   birthDate: string | null;
   avatarUrl: string | null;
@@ -72,6 +74,7 @@ const initialState = {
   basicProfile: {
     fullName: '',
     phone: '',
+    email: '',
     gender: null as 'male' | 'female' | null,
     birthDate: null as string | null,
     avatarUrl: null as string | null,

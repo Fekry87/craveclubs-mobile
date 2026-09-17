@@ -1,2 +1,2 @@
 export { ProfileScreen } from './ProfileScreen';
-export { ChangePasswordScreen } from './ChangePasswordScreen';
+export { ChangePasswordScreen, SetPasswordScreen } from './ChangePasswordScreen';

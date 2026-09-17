@@ -185,6 +185,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         club_slug: store.clubSlug || undefined,
         full_name: store.basicProfile.fullName,
         phone: store.basicProfile.phone,
+        email: store.basicProfile.email || undefined,
         guardian_name: store.basicProfile.guardianName || undefined,
         guardian_phone: store.basicProfile.guardianPhone || undefined,
         guardian_email: store.basicProfile.guardianEmail || undefined,
@@ -228,6 +229,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
   const aboutRows: Row[] = [
     { icon: 'user-line', label: 'Full name', value: basicProfile.fullName || '—' },
     { icon: 'phone-line', label: 'Phone', value: basicProfile.phone || '—' },
+    { icon: 'mail-line', label: 'Email', value: basicProfile.email || '—' },
     { icon: 'user-smile-line', label: 'Gender', value: capitalize(basicProfile.gender) },
     {
       icon: 'cake-2-line',

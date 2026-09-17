@@ -77,6 +77,8 @@ export type RootStackParamList = {
   App: NavigatorScreenParams<AppTabParamList> | undefined;
   NotificationCenter: undefined;
   ChangePassword: undefined;
+  /** Forced on first sign-in after approval or a reset; replaces the whole app until done. */
+  SetPassword: undefined;
   Evaluations: undefined;
   SessionDetail: { sessionId: number };
   Registration: NavigatorScreenParams<RegistrationStackParamList> | undefined;
