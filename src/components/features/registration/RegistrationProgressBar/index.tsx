@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { View, Animated, Easing, LayoutChangeEvent } from 'react-native';
+import { colors } from '../../../../theme';
 import { styles } from './styles';
 
 interface RegistrationProgressBarProps {
@@ -35,7 +36,11 @@ export const RegistrationProgressBar: React.FC<RegistrationProgressBarProps> = (
     <View style={styles.container}>
       <View style={styles.track} onLayout={onLayout}>
         {containerWidth > 0 && (
-          <Animated.View style={[styles.fill, { width: animatedWidth }]} />
+          // Brand color read at render time: captured in StyleSheet.create it
+          // stayed the platform violet while the rest of the flow wore the club's.
+          <Animated.View
+            style={[styles.fill, { width: animatedWidth, backgroundColor: colors.primary }]}
+          />
         )}
       </View>
     </View>

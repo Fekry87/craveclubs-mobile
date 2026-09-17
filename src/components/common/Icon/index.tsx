@@ -147,12 +147,12 @@ const glyphMap: Record<string, number> = {
   'heart-pulse-line': 60945,
 
   // Gender & avatar icons
-  'men-fill': 60983,
-  'men-line': 60984,
-  'women-fill': 61977,
-  'women-line': 61978,
-  'camera-fill': 60190,
-  'camera-line': 60191,
+  'men-fill': 61229,
+  'men-line': 61230,
+  'women-fill': 62157,
+  'women-line': 62158,
+  'camera-fill': 60206,
+  'camera-line': 60209,
 
   // Coach-specific icons
   'dashboard-line': 60436,

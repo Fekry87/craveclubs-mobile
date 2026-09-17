@@ -37,8 +37,7 @@ type Props = NativeStackScreenProps<
 >;
 
 export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
-  const { basicProfile, updateBasicProfile, setStep, clubName } =
-    useRegistrationStore();
+  const { basicProfile, updateBasicProfile, setStep } = useRegistrationStore();
 
   // ── Local form state ───────────────────────────────────────────
   const [fullName, setFullName] = useState(basicProfile.fullName);
@@ -276,210 +275,152 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
       ctaTitle="Continue"
       onCtaPress={handleContinue}
     >
-      {/* ── Selected Club Banner ───────────────────────────────── */}
-      {clubName && (
-        <View style={styles.clubBanner}>
-          <Icon name="building-2-fill" size={18} color={colors.primary} />
-          <Text style={styles.clubBannerText}>{clubName}</Text>
-        </View>
-      )}
+      {/* The club isn't repeated here: the swimmer chose it on the entry
+          screen, and this whole flow is already branded for it. */}
 
-      {/* ── Avatar ─────────────────────────────────────────────── */}
+      {/* ── Photo ──────────────────────────────────────────────── */}
       <Animated.View style={[styles.avatarRow, avatarEntry]}>
         <TouchableOpacity
           onPress={handleAvatarPress}
           onPressIn={avatarPress.onPressIn}
           onPressOut={avatarPress.onPressOut}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={avatarUrl ? 'Change photo' : 'Add a photo'}
         >
-          <Animated.View
-            style={[styles.avatarCircle, avatarPress.animatedStyle]}
-          >
-            {avatarUrl ? (
-              <Image
-                source={{ uri: avatarUrl }}
-                style={styles.avatarImage}
-                contentFit="cover"
-              />
-            ) : (
-              <Icon
-                name="user-fill"
-                size={36}
-                color={colors.textDim}
-              />
-            )}
-            <View style={styles.cameraBadge}>
-              <Icon
-                name="camera-fill"
-                size={12}
-                color={colors.white}
-              />
+          <Animated.View style={avatarPress.animatedStyle}>
+            <View style={styles.avatarCircle}>
+              {avatarUrl ? (
+                <Image
+                  source={{ uri: avatarUrl }}
+                  style={styles.avatarImage}
+                  contentFit="cover"
+                />
+              ) : (
+                <Icon name="user-fill" size={40} color={colors.textDim} />
+              )}
+            </View>
+            <View style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
+              <Icon name="camera-fill" size={14} color={colors.white} />
             </View>
           </Animated.View>
         </TouchableOpacity>
-        <Text style={styles.avatarHint}>Tap to add photo</Text>
+        <Text style={[styles.avatarHint, { color: colors.primary }]} onPress={handleAvatarPress}>
+          {avatarUrl ? 'Change photo' : 'Add a photo'}
+        </Text>
+        {!avatarUrl && <Text style={styles.optionalHint}>Optional</Text>}
       </Animated.View>
 
-      {/* ── Form Card ──────────────────────────────────────────── */}
-      <View style={styles.formCard}>
-        {/* Full Name */}
-        <Animated.View style={nameEntry}>
-          <Input
-            label="Full Name"
-            value={fullName}
-            onChangeText={(text) => {
-              setFullName(text);
-              clearError('fullName');
-            }}
-            placeholder="Full name"
-            autoCapitalize="words"
-            error={errors.fullName}
-          />
-        </Animated.View>
+      {/* ── Name & phone ───────────────────────────────────────── */}
+      <Animated.View style={nameEntry}>
+        <Input
+          label="Full name"
+          value={fullName}
+          onChangeText={(text) => {
+            setFullName(text);
+            clearError('fullName');
+          }}
+          placeholder="e.g. Laila Ahmed"
+          autoCapitalize="words"
+          error={errors.fullName}
+        />
+      </Animated.View>
 
-        {/* Phone */}
-        <Animated.View style={phoneEntry}>
-          <Input
-            label="Phone Number"
-            value={phone}
-            onChangeText={(text) => {
-              setPhone(text);
-              clearError('phone');
-            }}
-            placeholder="Phone number"
-            keyboardType="phone-pad"
-            error={errors.phone}
-          />
-        </Animated.View>
-      </View>
+      <Animated.View style={phoneEntry}>
+        <Input
+          label="Phone number"
+          value={phone}
+          onChangeText={(text) => {
+            setPhone(text);
+            clearError('phone');
+          }}
+          placeholder="e.g. 010 1234 5678"
+          keyboardType="phone-pad"
+          error={errors.phone}
+        />
+      </Animated.View>
 
       {/* ── Gender ─────────────────────────────────────────────── */}
-      <Animated.View style={[styles.genderSection, genderEntry]}>
-        <Text style={styles.fieldLabel}>Gender</Text>
-        <View style={styles.genderRow}>
-          {/* Male card */}
-          <TouchableOpacity
-            style={styles.genderCardWrapper}
-            onPress={() => {
-              setGender('male');
-              clearError('gender');
-            }}
-            onPressIn={malePress.onPressIn}
-            onPressOut={malePress.onPressOut}
-            activeOpacity={0.7}
-          >
-            <Animated.View
-              style={[
-                styles.genderCard,
-                gender === 'male'
-                  ? styles.genderCardSelected
-                  : styles.genderCardUnselected,
-                malePress.animatedStyle,
-              ]}
-            >
-              <Icon
-                name="men-line"
-                size={22}
-                color={
-                  gender === 'male' ? colors.primary : colors.textMuted
-                }
-              />
-              <Text
-                style={[
-                  styles.genderLabel,
-                  gender === 'male' && styles.genderLabelSelected,
-                ]}
+      <Animated.View style={[styles.section, genderEntry]}>
+        <Text style={styles.sectionLabel}>Gender</Text>
+        <View style={styles.genderRow} accessibilityRole="radiogroup">
+          {(
+            [
+              { key: 'male', label: 'Male', icon: 'men-line', press: malePress },
+              { key: 'female', label: 'Female', icon: 'women-line', press: femalePress },
+            ] as const
+          ).map((option) => {
+            const selected = gender === option.key;
+            return (
+              <TouchableOpacity
+                key={option.key}
+                style={styles.genderCardWrapper}
+                onPress={() => {
+                  setGender(option.key);
+                  clearError('gender');
+                }}
+                onPressIn={option.press.onPressIn}
+                onPressOut={option.press.onPressOut}
+                activeOpacity={0.8}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
               >
-                Male
-              </Text>
-            </Animated.View>
-          </TouchableOpacity>
-
-          {/* Female card */}
-          <TouchableOpacity
-            style={styles.genderCardWrapper}
-            onPress={() => {
-              setGender('female');
-              clearError('gender');
-            }}
-            onPressIn={femalePress.onPressIn}
-            onPressOut={femalePress.onPressOut}
-            activeOpacity={0.7}
-          >
-            <Animated.View
-              style={[
-                styles.genderCard,
-                gender === 'female'
-                  ? styles.genderCardSelected
-                  : styles.genderCardUnselected,
-                femalePress.animatedStyle,
-              ]}
-            >
-              <Icon
-                name="women-line"
-                size={22}
-                color={
-                  gender === 'female'
-                    ? colors.primary
-                    : colors.textMuted
-                }
-              />
-              <Text
-                style={[
-                  styles.genderLabel,
-                  gender === 'female' && styles.genderLabelSelected,
-                ]}
-              >
-                Female
-              </Text>
-            </Animated.View>
-          </TouchableOpacity>
+                <Animated.View
+                  style={[
+                    styles.genderCard,
+                    selected && {
+                      backgroundColor: colors.primaryDim,
+                      borderColor: colors.primary,
+                    },
+                    errors.gender && !gender ? styles.fieldErrorBorder : undefined,
+                    option.press.animatedStyle,
+                  ]}
+                >
+                  <Icon
+                    name={option.icon}
+                    size={20}
+                    color={selected ? colors.primary : colors.textMuted}
+                  />
+                  <Text style={[styles.genderLabel, selected && { color: colors.primary }]}>
+                    {option.label}
+                  </Text>
+                </Animated.View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
-        {errors.gender && (
-          <Text style={styles.errorText}>{errors.gender}</Text>
-        )}
+        {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
       </Animated.View>
 
-      {/* ── Date of Birth ──────────────────────────────────────── */}
-      <Animated.View style={[styles.dobSection, dobEntry]}>
-        <Text style={styles.fieldLabel}>Date of Birth</Text>
+      {/* ── Date of birth — styled as a field, like name and phone ── */}
+      <Animated.View style={[styles.section, dobEntry]}>
         <TouchableOpacity
-          style={[
-            styles.dobRow,
-            errors.birthDate ? styles.dobRowError : undefined,
-          ]}
+          style={[styles.dobField, errors.birthDate ? styles.fieldErrorBorder : undefined]}
           onPress={openDatePicker}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Date of birth"
         >
-          <Icon
-            name="calendar-event-line"
-            size={22}
-            color={birthDate ? colors.primary : colors.textDim}
-          />
-          <Text
-            style={[
-              styles.dobText,
-              !birthDate && styles.dobPlaceholder,
-            ]}
-          >
-            {birthDate ? formatDate(birthDate) : 'Select date of birth'}
-          </Text>
+          <View style={styles.dobBody}>
+            <Text style={styles.dobLabel}>Date of birth</Text>
+            <Text style={[styles.dobValue, !birthDate && styles.dobPlaceholder]}>
+              {birthDate ? formatDate(birthDate) : 'Select your date of birth'}
+            </Text>
+          </View>
+          {birthDate ? (
+            <View style={styles.agePill}>
+              <Text style={styles.agePillText}>{calculateAge(birthDate)} yrs</Text>
+            </View>
+          ) : (
+            <Icon name="calendar-event-line" size={20} color={colors.textMuted} />
+          )}
         </TouchableOpacity>
-        {birthDate && (
-          <Text style={styles.ageText}>
-            Age: {calculateAge(birthDate)} years
-          </Text>
-        )}
-        {errors.birthDate && (
-          <Text style={styles.errorText}>{errors.birthDate}</Text>
-        )}
+        {errors.birthDate && <Text style={styles.errorText}>{errors.birthDate}</Text>}
 
         {/* Android date picker (renders inline) */}
         {Platform.OS === 'android' && showDatePicker && (
           <DateTimePicker
-            value={
-              birthDate ? new Date(birthDate) : new Date(2000, 0, 15)
-            }
+            value={birthDate ? new Date(birthDate) : new Date(2000, 0, 15)}
             mode="date"
             display="default"
             maximumDate={new Date()}
@@ -488,26 +429,29 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
         )}
       </Animated.View>
 
-      {/* ── Guardian Info (for minors) ──────────────────────── */}
-      <Animated.View style={[styles.guardianSection, guardianEntry]}>
+      {/* ── Parent or guardian ─────────────────────────────────── */}
+      <Animated.View style={[styles.section, guardianEntry]}>
         <TouchableOpacity
           style={styles.guardianHeader}
           onPress={() => setGuardianExpanded((v) => !v)}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: guardianExpanded }}
         >
-          <View style={styles.guardianHeaderLeft}>
-            <Icon
-              name="hand-heart-fill"
-              size={18}
-              color={colors.secondary}
-            />
-            <Text style={styles.guardianTitle}>Guardian Info</Text>
-            {isMinor && (
-              <View style={styles.minorBadge}>
-                <Text style={styles.minorBadgeText}>Under 18</Text>
-              </View>
-            )}
+          <View style={[styles.guardianIcon, { backgroundColor: colors.primaryDim }]}>
+            <Icon name="hand-heart-line" size={18} color={colors.primary} />
           </View>
+          <View style={styles.guardianText}>
+            <Text style={styles.guardianTitle}>Parent or guardian</Text>
+            <Text style={styles.guardianSubtitle}>
+              {isMinor ? 'Needed for swimmers under 18' : 'Optional'}
+            </Text>
+          </View>
+          {isMinor && (
+            <View style={styles.minorBadge}>
+              <Text style={styles.minorBadgeText}>Under 18</Text>
+            </View>
+          )}
           <Icon
             name={guardianExpanded ? 'arrow-up-s-line' : 'arrow-down-s-line'}
             size={20}
@@ -518,24 +462,24 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
         {guardianExpanded && (
           <View style={styles.guardianFields}>
             <Input
-              label="Guardian Name"
+              label="Guardian name"
               value={guardianName}
               onChangeText={setGuardianName}
-              placeholder="Parent or guardian name"
+              placeholder="Parent or guardian's full name"
               autoCapitalize="words"
             />
             <Input
-              label="Guardian Phone"
+              label="Guardian phone"
               value={guardianPhone}
               onChangeText={setGuardianPhone}
-              placeholder="Guardian phone number"
+              placeholder="e.g. 010 1234 5678"
               keyboardType="phone-pad"
             />
             <Input
-              label="Guardian Email"
+              label="Guardian email (optional)"
               value={guardianEmail}
               onChangeText={setGuardianEmail}
-              placeholder="Guardian email (optional)"
+              placeholder="name@example.com"
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -560,34 +504,21 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  // ── Club Banner ───────────────────────────────────────────────
-  clubBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primaryDim,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.primary + '30',
-  },
-  clubBannerText: {
-    ...typography.bodyMedium,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.primary,
-  },
+/**
+ * Brand-dependent colors (primary, primaryDim) are applied inline at render
+ * time so club branding shows; everything here is brand-neutral.
+ */
+const AVATAR_SIZE = 96;
 
-  // ── Avatar ──────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  // ── Photo ───────────────────────────────────────────────────
   avatarRow: {
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
   avatarCircle: {
-    width: 80,
-    height: 80,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.surfaceLight,
     justifyContent: 'center',
@@ -595,94 +526,85 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: borderRadius.pill,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
   },
+  // Outside the clipped circle, so it can overlap the edge.
   cameraBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 26,
-    height: 26,
+    width: 32,
+    height: 32,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.white,
+    borderWidth: 3,
+    borderColor: colors.background,
   },
   avatarHint: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: fontFamily.bodySemiBold,
+    marginTop: spacing.sm + 4,
+  },
+  optionalHint: {
     ...typography.caption,
     color: colors.textDim,
-    marginTop: spacing.xs,
   },
 
-  // ── Form Card ────────────────────────────────────────────────
-  formCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.card,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
+  // ── Sections ────────────────────────────────────────────────
+  section: {
+    marginBottom: spacing.md,
   },
-
-  // ── Field label ─────────────────────────────────────────────
-  fieldLabel: {
+  sectionLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  fieldErrorBorder: {
+    borderColor: colors.error,
+  },
+  errorText: {
     fontSize: 13,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontFamily: fontFamily.bodyRegular,
+    color: colors.error,
+    marginTop: spacing.xs,
+    marginLeft: spacing.xs,
   },
 
   // ── Gender ──────────────────────────────────────────────────
-  genderSection: {
-    marginBottom: spacing.md,
-  },
   genderRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.sm + 4,
   },
   genderCardWrapper: {
     flex: 1,
   },
   genderCard: {
-    height: 52,
+    minHeight: 56,
     borderRadius: borderRadius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    borderWidth: 2,
-  },
-  genderCardUnselected: {
-    backgroundColor: colors.surface,
+    borderWidth: 1,
     borderColor: colors.border,
-  },
-  genderCardSelected: {
-    backgroundColor: colors.primaryDim,
-    borderColor: colors.primary,
+    backgroundColor: colors.white,
   },
   genderLabel: {
     fontSize: 15,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.textMuted,
-  },
-  genderLabelSelected: {
-    color: colors.primary,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.text,
   },
 
-  // ── Date of Birth ───────────────────────────────────────────
-  dobSection: {
-    marginBottom: spacing.sm,
-  },
-  dobRow: {
+  // ── Date of birth (matches Input) ───────────────────────────
+  dobField: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 52,
+    minHeight: 60,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
@@ -690,76 +612,83 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
   },
-  dobRowError: {
-    borderColor: colors.error,
-  },
-  dobText: {
+  dobBody: {
     flex: 1,
+    paddingVertical: spacing.sm + 2,
+  },
+  dobLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
+    marginBottom: 2,
+  },
+  dobValue: {
     fontSize: 16,
+    lineHeight: 20,
     fontFamily: fontFamily.bodyRegular,
     color: colors.text,
   },
   dobPlaceholder: {
     color: colors.textDim,
   },
-  ageText: {
-    ...typography.caption,
+  agePill: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
+  },
+  agePillText: {
+    fontSize: 12,
+    fontFamily: fontFamily.bodyMedium,
     color: colors.textMuted,
-    marginTop: spacing.xs,
-    marginLeft: spacing.xs,
   },
 
-  // ── Error text ──────────────────────────────────────────────
-  errorText: {
-    ...typography.caption,
-    color: colors.error,
-    marginTop: spacing.xs,
-  },
-
-  // ── Guardian section ──────────────────────────────────────
-  guardianSection: {
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-  },
+  // ── Parent or guardian ──────────────────────────────────────
   guardianHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.secondaryDim,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    gap: spacing.sm + 4,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.secondary + '30',
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 4,
   },
-  guardianHeaderLeft: {
-    flexDirection: 'row',
+  guardianIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.sm,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.sm,
+  },
+  guardianText: {
+    flex: 1,
   },
   guardianTitle: {
-    fontSize: 14,
-    fontFamily: fontFamily.bodySemiBold,
+    fontSize: 15,
+    lineHeight: 20,
+    fontFamily: fontFamily.bodyMedium,
     color: colors.text,
   },
+  guardianSubtitle: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  // Tinted pill, per the design system.
   minorBadge: {
-    backgroundColor: colors.warning,
+    backgroundColor: colors.warningDim,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: borderRadius.pill,
   },
   minorBadgeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: fontFamily.bodySemiBold,
-    color: colors.text,
+    color: colors.warningDark,
   },
   guardianFields: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.card,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    padding: spacing.md,
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
   },
-
 });
