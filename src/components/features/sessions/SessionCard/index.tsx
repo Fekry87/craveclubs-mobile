@@ -81,6 +81,7 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
   const isUpcoming =
     session.status === 'Scheduled' || session.status === 'Live';
   const isCompleted = session.status === 'Completed';
+  const isCancelled = session.status === 'Cancelled';
   const attended = session.attendances?.some((a) => a.present);
   // The club's real attendance XP. Never fall back to a guessed number: a card
   // saying "+25 XP" next to a detail page saying "+5 XP" is worse than no number.
@@ -188,6 +189,21 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
               />
               <Text style={styles.earnedText} numberOfLines={1}>
                 {celebration.text}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Cancelled: nothing to earn — say why instead. */}
+        {isCancelled && (
+          <View style={styles.cancelledBanner}>
+            <View style={styles.cancelledIconCircle}>
+              <Icon name="close-circle-line" size={16} color={colors.error} />
+            </View>
+            <View style={styles.cancelledBody}>
+              <Text style={styles.cancelledValue}>Session cancelled</Text>
+              <Text style={styles.cancelledReason} numberOfLines={2}>
+                {session.cancellation_reason || 'Your club cancelled this session.'}
               </Text>
             </View>
           </View>

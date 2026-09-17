@@ -195,13 +195,17 @@ export const HomeScreen: React.FC = () => {
     return <ErrorView message="No data available." onRetry={fetchDashboard} />;
   }
 
-  // Show only today's session (Scheduled or Live) from sessions API
+  // Today's sessions that are still ahead (Scheduled or Live), plus any that
+  // were cancelled today. A cancelled session must stay here, tagged with its
+  // reason, or a swimmer would simply find their session gone and turn up anyway.
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const todaySessions = sessions
     .filter(
       (s) =>
-        (s.status === 'Scheduled' || s.status === 'Live') &&
+        (s.status === 'Scheduled' ||
+          s.status === 'Live' ||
+          s.status === 'Cancelled') &&
         s.date.startsWith(todayStr),
     )
     .sort(
