@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useBrandingStore } from '../../store/branding.store';
@@ -16,7 +17,7 @@ import {
   getPlatformBranding,
   PlatformBranding,
 } from '../../api/services/platform.service';
-import { colors, spacing, fontFamily, borderRadius, typography } from '../../theme';
+import { colors, spacing, fontFamily, typography } from '../../theme';
 import { applyBrandingColors } from '../../theme/colors';
 import { toHex } from '../../services/branding.service';
 
@@ -24,15 +25,14 @@ const FALLBACK_NAME = 'CraveClubs';
 const FALLBACK_MARK = 'CC';
 
 /**
- * The logo is drawn inside this box at its own aspect ratio, never stretched
- * into a fixed frame. A fixed 120×76 frame with `contain` rendered a wide
- * wordmark ~20pt tall with dead space above and below it — which read as a
- * large, uneven gap under the logo. Wide marks hit the width cap (so a wordmark
- * is ~160×27, leading the headline without outweighing it); square marks hit
- * the height cap (64×64).
+ * The logo is a small header mark in the top-left corner, drawn inside this box
+ * at its own aspect ratio — never stretched into a fixed frame, which leaves
+ * dead space around a wide wordmark. A wordmark hits the width cap (~112×19),
+ * a square mark the height cap (32×32). The headline carries the screen; the
+ * logo only signs it.
  */
-const LOGO_MAX_WIDTH = 160;
-const LOGO_MAX_HEIGHT = 64;
+const LOGO_MAX_WIDTH = 112;
+const LOGO_MAX_HEIGHT = 32;
 
 const logoSize = (aspectRatio: number) => {
   const width = Math.min(LOGO_MAX_WIDTH, LOGO_MAX_HEIGHT * aspectRatio);
@@ -54,6 +54,7 @@ const markFor = (name: string): string =>
  * call here.
  */
 export const ClubEntryScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -140,35 +141,59 @@ export const ClubEntryScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.inner}
+        contentContainerStyle={[
+          styles.inner,
+          {
+            paddingTop: insets.top + spacing.md,
+            paddingBottom: insets.bottom + spacing.md,
+          },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.header}>
+        {/* ── Brand: a small mark in the corner ── */}
+        <View style={styles.brandRow}>
           {platformLogo && !logoFailed ? (
             logoAspect ? (
               <Image
                 source={{ uri: platformLogo }}
-                style={[styles.logo, logoSize(logoAspect)]}
+                style={logoSize(logoAspect)}
                 resizeMode="contain"
                 onError={() => setLogoFailed(true)}
                 accessibilityLabel={platformName}
               />
             ) : (
-              // Hold the logo's slot while it is measured, so nothing jumps.
+              // Hold the mark's slot while the logo is measured, so nothing jumps.
               <View style={styles.logoPlaceholder} />
             )
           ) : (
-            <View style={[styles.logoMark, { backgroundColor: colors.primary }]}>
-              <Text style={styles.logoText}>{markFor(platformName)}</Text>
-            </View>
+            <>
+              <View style={[styles.logoMark, { backgroundColor: colors.primary }]}>
+                <Text style={styles.logoText}>{markFor(platformName)}</Text>
+              </View>
+              <Text style={styles.brandName} numberOfLines={1}>
+                {platformName}
+              </Text>
+            </>
           )}
-          <Text style={styles.title}>{platformName}</Text>
+        </View>
+
+        {/* ── The task, stated big, in the middle ── */}
+        <View style={styles.statement}>
+          {platformLogo && !logoFailed ? (
+            // With a logo up top, the platform name reads as its line: the
+            // admin's slogan ("Your way to the top") sits above the task.
+            <Text style={styles.eyebrow}>{platformName}</Text>
+          ) : null}
+          <Text style={styles.headline} accessibilityRole="header">
+            {'Find your\nclub'}
+          </Text>
           <Text style={styles.subtitle}>
-            Enter your club's name to sign in or create an account.
+            Enter its name to sign in or join.
           </Text>
         </View>
 
-        <View style={styles.form}>
+        {/* ── The form, where the thumb is ── */}
+        <View>
           <Input
             label="Club name"
             placeholder="e.g. Smart Club"
@@ -186,26 +211,28 @@ export const ClubEntryScreen: React.FC = () => {
             onPress={handleContinue}
             loading={loading}
             disabled={loading}
-            style={styles.button}
           />
-        </View>
 
-        <Text style={styles.hint}>
-          {"Type the name exactly as your club wrote it.\nIf it doesn't work, ask your club which name to use."}
-        </Text>
+          <Text style={styles.hint}>Ask your club for its exact name</Text>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
 /**
- * Hierarchy, top to bottom: brand mark → headline → instruction → field →
- * button → help. Spacing is on the 8pt grid and says what belongs together:
- *   mark → headline        32  (the mark heads the screen, set apart)
- *   headline → instruction  8  (one thought)
- *   instruction → field    32  (reading ends, doing starts)
- *   field → button         16
- *   button → help          24
+ * Thumb-zone layout: brand mark pinned to the top, the field and button pinned
+ * to the bottom where a thumb reaches them, and the task stated as one big
+ * headline sitting directly on top of that form — it introduces the field, so
+ * it belongs with it, and the empty canvas stays above rather than splitting
+ * the two. On the 8pt grid:
+ *   eyebrow → headline       8
+ *   headline → instruction  12
+ *   instruction → field     48
+ *   field → button          16  (Input leaves it below itself)
+ *   button → help           16
+ * The top flexes, so the layout holds on any screen height and simply scrolls
+ * when the keyboard takes the room.
  */
 const styles = StyleSheet.create({
   container: {
@@ -214,62 +241,61 @@ const styles = StyleSheet.create({
   },
   inner: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    // More room below than above lifts the group to the optical centre, a
-    // little above the true middle, where a centred block looks centred.
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xxl * 2,
   },
-  header: {
+  brandRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  logo: {
-    marginBottom: spacing.xl,
+    gap: spacing.sm,
+    minHeight: LOGO_MAX_HEIGHT,
   },
   logoPlaceholder: {
-    height: LOGO_MAX_HEIGHT / 2,
-    marginBottom: spacing.xl,
+    height: LOGO_MAX_HEIGHT,
   },
   logoMark: {
     width: LOGO_MAX_HEIGHT,
     height: LOGO_MAX_HEIGHT,
-    borderRadius: borderRadius.card,
+    // Same corner proportion as an app icon, so the mark reads as one.
+    borderRadius: LOGO_MAX_HEIGHT * 0.28,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xl,
   },
   logoText: {
     fontFamily: fontFamily.headingHeavy,
-    fontSize: 24,
+    fontSize: 13,
     color: colors.white,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
-  title: {
-    ...typography.heading,
+  brandName: {
+    ...typography.bodyMedium,
     color: colors.text,
-    textAlign: 'center',
-    letterSpacing: -0.3,
+    flexShrink: 1,
+  },
+  statement: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
+  },
+  eyebrow: {
+    ...typography.bodyMedium,
+    color: colors.textMuted,
     marginBottom: spacing.sm,
+  },
+  headline: {
+    ...typography.display,
+    color: colors.text,
+    letterSpacing: -0.8,
   },
   subtitle: {
     ...typography.body,
     color: colors.textMuted,
-    textAlign: 'center',
-    // Keeps the line break balanced instead of stranding "account." alone.
-    maxWidth: 280,
-  },
-  form: {
-    marginBottom: spacing.lg,
-  },
-  button: {
-    // Input already leaves spacing.md below itself.
-    marginTop: 0,
+    marginTop: spacing.sm + 4,
   },
   hint: {
     ...typography.caption,
     color: colors.textDim,
     textAlign: 'center',
+    marginTop: spacing.md,
   },
 });
