@@ -3,7 +3,7 @@
 Date: 2026-09-17
 
 ## Outcome
-Done, verified end to end on the iOS simulator against the local API, and shipped in two PRs (backend + portal: Fekry87/craveclub; app: Fekry87/craveclubs-mobile).
+Done, verified end to end on the iOS simulator against the local API, and shipped in two PRs (backend + portal: Fekry87/craveclub#46; app: Fekry87/craveclubs-mobile#23).
 
 ## Deviation from the spec: the backend "companion phase" did not exist
 `main` had no `group_type`, `capacity`, schedule or public groups route — `groups` held only name, description, coach and sport. The step cannot work without them, so this phase built the backend too:
