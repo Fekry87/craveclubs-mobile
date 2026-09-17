@@ -59,12 +59,14 @@ export type RegistrationStackParamList = {
   Step5_BranchSelection: undefined;
   Step6_SubscriptionPlan: undefined;
   Step7_CoachSelection: undefined;
+  Step7b_GroupSelection: undefined;
   Step8_ReviewPayment: undefined;
   RegistrationSuccess: {
     swimmerName: string;
     branchName: string;
     coachName: string;
     planName: string;
+    groupName?: string | null;
   };
 };
 

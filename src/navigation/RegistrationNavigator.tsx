@@ -9,6 +9,7 @@ import {
   Step5_BranchSelection,
   Step6_SubscriptionPlan,
   Step7_CoachSelection,
+  Step7b_GroupSelection,
   Step8_ReviewPayment,
   RegistrationSuccess,
 } from '../screens/Registration';
@@ -41,6 +42,10 @@ export const RegistrationNavigator: React.FC = () => {
       <Stack.Screen
         name="Step7_CoachSelection"
         component={Step7_CoachSelection}
+      />
+      <Stack.Screen
+        name="Step7b_GroupSelection"
+        component={Step7b_GroupSelection}
       />
       <Stack.Screen
         name="Step8_ReviewPayment"

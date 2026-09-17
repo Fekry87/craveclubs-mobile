@@ -63,6 +63,28 @@ export interface Coach {
   experience_years: number | null;
 }
 
+// ── Group ─────────────────────────────────────────────────────────
+export interface Group {
+  id: number;
+  name: string;
+  description: string | null;
+  /** daily | two_days | three_days | private — see utils/trainingTypes. */
+  group_type: string;
+  coach_name: string | null;
+  /** 0 = Sunday … 6 = Saturday. */
+  days_of_week: number[];
+  /** "Sun", "Tue"… in the same order. */
+  days_of_week_labels: string[];
+  /** "17:00", or null when the club hasn't set a time. */
+  start_time: string | null;
+  end_time: string | null;
+  /** Null = no limit. */
+  capacity: number | null;
+  /** Null when there is no limit. Counts members and pending registrations. */
+  remaining_spots: number | null;
+  is_full: boolean;
+}
+
 export interface ScheduleSlot {
   day: string;
   start_time: string;
@@ -101,6 +123,8 @@ export interface RegistrationPayload {
   branch_id: number;
   plan_id: number;
   coach_id: number;
+  /** The group chosen on the group step; approval puts the swimmer in it. */
+  group_id?: number;
   preferred_time: string;
   payment_method: 'cash';
   avatar_url?: string | null;
@@ -165,6 +189,18 @@ export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
 
 export const getCoaches = async (): Promise<Coach[]> => {
   const response = await apiClient.get(ENDPOINTS.REGISTRATION.COACHES);
+  return response.data.data ?? response.data;
+};
+
+/**
+ * The chosen coach's groups, for the group step. Server-filtered by coach so
+ * the app never downloads the whole club's roster of groups; the tabs are
+ * derived client-side from `group_type` with trainingTypesIn().
+ */
+export const getGroups = async (coachId: number): Promise<Group[]> => {
+  const response = await apiClient.get(ENDPOINTS.REGISTRATION.GROUPS, {
+    params: { coach_id: coachId },
+  });
   return response.data.data ?? response.data;
 };
 

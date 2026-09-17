@@ -63,6 +63,8 @@ export const ENDPOINTS = {
     SUBSCRIPTION_PLANS: '/subscription-plans',
     COACHES: '/coaches',
     COACH_SCHEDULE: (id: number) => `/coaches/${id}/schedule` as const,
+    // A coach's groups with type, schedule and spots left (`?coach_id=`).
+    GROUPS: '/groups',
     SUBMIT: '/registrations',
     // Step 1 asks whether the email is free before the other seven steps.
     CHECK_EMAIL: '/registrations/check-email',

@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
 import { PlanOption } from '../TrainingOptions';
+import { TrainingTypeTabs } from '../TrainingTypeTabs';
 import { SubscriptionPlan } from '../../../../api/services/registration.service';
-import { trainingTypeTab, trainingTypesIn } from '../../../../utils/trainingTypes';
-import { colors } from '../../../../theme';
-import { styles } from './styles';
+import { trainingTypesIn } from '../../../../utils/trainingTypes';
 
 interface PlanPickerProps {
   plans: SubscriptionPlan[];
@@ -39,38 +38,7 @@ export const PlanPicker: React.FC<PlanPickerProps> = ({ plans, selectedId, onSel
 
   return (
     <View>
-      {types.length > 1 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tabsScroll}
-          contentContainerStyle={styles.tabs}
-        >
-          {types.map((type) => {
-            const active = type === activeType;
-            return (
-              <TouchableOpacity
-                key={type}
-                onPress={() => setActiveType(type)}
-                activeOpacity={0.8}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-                style={[
-                  styles.tab,
-                  active && [
-                    styles.tabActive,
-                    { borderColor: colors.primary, backgroundColor: colors.primaryDim },
-                  ],
-                ]}
-              >
-                <Text style={[styles.tabText, active && { color: colors.primary }]}>
-                  {trainingTypeTab(type)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      )}
+      <TrainingTypeTabs types={types} active={activeType} onChange={setActiveType} />
 
       {visible.map((item, index) => (
         <PlanOption

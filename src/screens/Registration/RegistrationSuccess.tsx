@@ -25,7 +25,7 @@ const NEXT_STEPS = [
 export const RegistrationSuccess: React.FC<Props> = ({ navigation, route }) => {
   const resetRegistration = useRegistrationStore((s) => s.resetRegistration);
   const clubName = useRegistrationStore((s) => s.clubName);
-  const { swimmerName, branchName, coachName, planName } = route.params;
+  const { swimmerName, branchName, coachName, planName, groupName } = route.params;
   const firstName = swimmerName.trim().split(/\s+/)[0] || swimmerName;
 
   // ── Spring animation for the check ─────────────────────────────
@@ -87,6 +87,7 @@ export const RegistrationSuccess: React.FC<Props> = ({ navigation, route }) => {
           <Card>
             <InfoRow icon="building-2-line" label="Branch" value={branchName || '—'} />
             <InfoRow icon="user-star-line" label="Coach" value={coachName || '—'} />
+            {groupName ? <InfoRow icon="group-line" label="Group" value={groupName} /> : null}
             <InfoRow icon="gift-line" label="Plan" value={planName || '—'} isLast />
           </Card>
         </Animated.View>

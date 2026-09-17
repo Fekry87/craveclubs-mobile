@@ -67,7 +67,7 @@ export const Step7_CoachSelection: React.FC<Props> = ({ navigation }) => {
       setCoach(coach.id, coach.name);
     }
     setStep(8);
-    navigation.navigate('Step8_ReviewPayment');
+    navigation.navigate('Step7b_GroupSelection');
   };
 
   const onBack = () => {

@@ -36,7 +36,8 @@ interface RegistrationLayoutProps {
   ctaVariant?: 'primary' | 'blue' | 'danger' | 'secondary';
 }
 
-const TOTAL_STEPS = 8;
+// Steps 1–7, the group step (7b, shown as 8) and the review (9).
+const TOTAL_STEPS = 9;
 
 export const RegistrationLayout: React.FC<RegistrationLayoutProps> = ({
   currentStep,

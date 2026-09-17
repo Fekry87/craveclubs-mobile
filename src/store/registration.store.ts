@@ -46,6 +46,11 @@ interface RegistrationState {
   planTrainingType: string | null;
   coachId: number | null;
   coachName: string | null;
+  groupId: number | null;
+  groupName: string | null;
+  groupType: string | null;
+  /** "Sun, Tue, Thu · 5:00 PM – 6:30 PM", for the review and the success screen. */
+  groupSchedule: string | null;
   preferredTime: string | null;
   isDraft: boolean;
 
@@ -60,6 +65,8 @@ interface RegistrationState {
   setBranch: (id: number, name: string) => void;
   setPlan: (id: number, name: string, price: number, trainingType: string) => void;
   setCoach: (id: number, name: string) => void;
+  setGroup: (id: number, name: string, type: string, schedule: string | null) => void;
+  clearGroup: () => void;
   setPreferredTime: (time: string) => void;
   setIsDraft: (val: boolean) => void;
   resetRegistration: () => void;
@@ -109,6 +116,10 @@ const initialState = {
   planTrainingType: null as string | null,
   coachId: null as number | null,
   coachName: null as string | null,
+  groupId: null as number | null,
+  groupName: null as string | null,
+  groupType: null as string | null,
+  groupSchedule: null as string | null,
   preferredTime: null as string | null,
   isDraft: false,
 };
@@ -146,7 +157,16 @@ export const useRegistrationStore = create<RegistrationState>((set) => ({
   setBranch: (branchId, branchName) => set({ branchId, branchName }),
   setPlan: (planId, planName, planPrice, planTrainingType) =>
     set({ planId, planName, planPrice, planTrainingType }),
-  setCoach: (coachId, coachName) => set({ coachId, coachName }),
+  // A group belongs to a coach, so choosing a different coach drops it.
+  setCoach: (coachId, coachName) =>
+    set((s) =>
+      s.coachId === coachId
+        ? { coachId, coachName }
+        : { coachId, coachName, groupId: null, groupName: null, groupType: null, groupSchedule: null },
+    ),
+  setGroup: (groupId, groupName, groupType, groupSchedule) =>
+    set({ groupId, groupName, groupType, groupSchedule }),
+  clearGroup: () => set({ groupId: null, groupName: null, groupType: null, groupSchedule: null }),
   setPreferredTime: (preferredTime) => set({ preferredTime }),
   setIsDraft: (isDraft) => set({ isDraft }),
 

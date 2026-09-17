@@ -50,7 +50,7 @@ type Props = NativeStackScreenProps<
 
 type Row = Omit<InfoRowProps, 'isLast'>;
 
-type Section = 'about' | 'body' | 'experience' | 'training';
+type Section = 'about' | 'body' | 'experience' | 'training' | 'group';
 
 /** Which review card each payload field the server may refuse is edited in. */
 const SECTION_OF_FIELD: Record<string, Section> = {
@@ -71,6 +71,8 @@ const SECTION_OF_FIELD: Record<string, Section> = {
   branch_id: 'training',
   plan_id: 'training',
   coach_id: 'training',
+  // "This group has just filled up": back to the group step, which refetches.
+  group_id: 'group',
 };
 
 
@@ -141,6 +143,11 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
   const [trainingError, setTrainingError] = useState<string | null>(null);
 
   const openEditor = (section: Section) => {
+    if (section === 'group') {
+      store.setStep(8);
+      navigation.navigate('Step7b_GroupSelection');
+      return;
+    }
     if (section === 'about') aboutForm.reset(aboutFromStore(basicProfile));
     if (section === 'body') bodyForm.reset(bodyFromStore(physicalInfo));
     if (section === 'experience') experienceForm.reset(experienceFromStore(experience));
@@ -199,9 +206,16 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
           setTrainingError('Choose a branch, a plan and a coach.');
           return;
         }
+        const coachChanged = coach.id !== store.coachId;
         store.setBranch(branch.id, branch.name);
         store.setPlan(plan.id, plan.name, planPrice(plan), plan.training_type);
+        // Drops the group when the coach changes: groups belong to a coach.
         store.setCoach(coach.id, coach.name);
+        if (coachChanged) {
+          setEditing(null);
+          openEditor('group');
+          return;
+        }
         break;
       }
       default:
@@ -219,6 +233,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
       !store.branchId ||
       !store.planId ||
       !store.coachId ||
+      !store.groupId ||
       !store.experience.level
     ) {
       Alert.alert(
@@ -255,6 +270,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         branch_id: store.branchId,
         plan_id: store.planId,
         coach_id: store.coachId,
+        group_id: store.groupId,
         preferred_time: store.preferredTime ?? 'flexible',
         payment_method: 'cash',
       });
@@ -264,6 +280,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         branchName: store.branchName ?? '',
         coachName: store.coachName ?? '',
         planName: store.planName ?? '',
+        groupName: store.groupName,
       });
     } catch (err: unknown) {
       // The server's 422 messages are written for the swimmer ("This email is
@@ -277,7 +294,10 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         section
           ? [
               { text: 'Not now', style: 'cancel' },
-              { text: 'Edit', onPress: () => openEditor(section) },
+              {
+                text: section === 'group' ? 'Choose another group' : 'Edit',
+                onPress: () => openEditor(section),
+              },
             ]
           : undefined,
       );
@@ -343,13 +363,24 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
     { icon: 'hand-coin-line', label: 'Payment', value: 'Cash, at the club' },
   ];
 
+  const groupRows: Row[] = [
+    {
+      icon: 'group-line',
+      label: 'Group',
+      value: store.groupName ?? 'Not chosen yet',
+      hint: store.groupName
+        ? [trainingTypeLabel(store.groupType), store.groupSchedule].filter(Boolean).join(' · ')
+        : undefined,
+    },
+  ];
+
   return (
     <RegistrationLayout
-      currentStep={8}
+      currentStep={9}
       title="Review and submit"
       subtitle="Check your details before you send them"
       onBack={() => {
-        store.setStep(7);
+        store.setStep(8);
         navigation.goBack();
       }}
       ctaTitle={isSubmitting ? 'Submitting…' : 'Submit registration'}
@@ -361,6 +392,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
       <ReviewSection title="Body and fitness" rows={bodyRows} index={1} onEdit={() => openEditor('body')} />
       <ReviewSection title="Experience" rows={experienceRows} index={2} onEdit={() => openEditor('experience')} />
       <ReviewSection title="Training" rows={trainingRows} index={3} onEdit={() => openEditor('training')} />
+      <ReviewSection title="Group" rows={groupRows} index={4} onEdit={() => openEditor('group')} />
 
       {/* ── Edit sheets ─────────────────────────────────────────── */}
       <FormSheet
