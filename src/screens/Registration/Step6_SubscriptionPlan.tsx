@@ -1,31 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { RegistrationLayout } from '../../components/features/registration/RegistrationLayout';
-import { Button } from '../../components/common/Button'; // Used in error state
-import { Icon } from '../../components/common/Icon';
+import { SelectCard } from '../../components/features/registration/SelectCard';
+import { StepStatus } from '../../components/features/registration/StepStatus';
+import { FieldError } from '../../components/features/registration/SectionLabel';
 import { useRegistrationStore } from '../../store/registration.store';
-import { useAnimatedPress } from '../../hooks/useAnimatedPress';
-import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import {
   getSubscriptionPlans,
   SubscriptionPlan,
 } from '../../api/services/registration.service';
-import {
-  colors,
-  spacing,
-  borderRadius,
-  typography,
-  fontFamily,
-} from '../../theme';
+import { colors, spacing, borderRadius, fontFamily, typography } from '../../theme';
 import { formatMoney, planPrice } from '../../utils/formatters';
 
 type Props = NativeStackScreenProps<
@@ -33,143 +19,7 @@ type Props = NativeStackScreenProps<
   'Step6_SubscriptionPlan'
 >;
 
-const PLAN_COLORS = [
-  { bg: colors.primaryDim, border: colors.primary, accent: colors.primary },
-  { bg: colors.swimmerDim, border: colors.swimmer, accent: colors.swimmer },
-  { bg: colors.orangeDim, border: colors.orange, accent: colors.orange },
-  {
-    bg: colors.secondaryDim,
-    border: colors.secondary,
-    accent: colors.secondary,
-  },
-];
-
-// ── PlanCard (inline) ────────────────────────────────────────────
-function PlanCard({
-  plan,
-  isSelected,
-  onPress,
-  index,
-}: {
-  plan: SubscriptionPlan;
-  isSelected: boolean;
-  onPress: () => void;
-  index: number;
-}) {
-  const entry = useAnimatedEntry(index);
-  const press = useAnimatedPress();
-  const colorSet = PLAN_COLORS[index % PLAN_COLORS.length];
-
-  return (
-    <Animated.View style={entry}>
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={press.onPressIn}
-        onPressOut={press.onPressOut}
-        activeOpacity={0.7}
-      >
-        <Animated.View
-          style={[
-            styles.planCard,
-            {
-              backgroundColor: isSelected ? colorSet.bg : colors.surface,
-              borderColor: isSelected ? colorSet.border : colors.border,
-            },
-            press.animatedStyle,
-          ]}
-        >
-          {/* Popular badge */}
-          {plan.is_popular && (
-            <View style={styles.popularBadge}>
-              <Icon name="star-fill" size={12} color={colors.white} />
-              <Text style={styles.popularText}>Popular</Text>
-            </View>
-          )}
-
-          {/* Header row */}
-          <View style={styles.planHeader}>
-            <View style={styles.planNameCol}>
-              <Text
-                style={[
-                  styles.planName,
-                  isSelected && { color: colorSet.accent },
-                ]}
-              >
-                {plan.name}
-              </Text>
-              <Text style={styles.planDesc}>
-                {plan.duration_months} {plan.duration_months === 1 ? 'month' : 'months'}
-              </Text>
-            </View>
-            {isSelected && (
-              <Icon
-                name="checkbox-circle-fill"
-                size={22}
-                color={colorSet.accent}
-              />
-            )}
-          </View>
-
-          {/* Price — the amount actually charged, not the list price. This used to render
-              plan.price beside a "N% off" badge, so the app quoted 500 while the portal
-              quoted 450 for the same plan and the registration was billed 450. */}
-          <View style={styles.priceRow}>
-            <Text
-              style={[
-                styles.priceAmount,
-                isSelected && { color: colorSet.accent },
-              ]}
-            >
-              {formatMoney(planPrice(plan))}
-            </Text>
-            {plan.discount_percent > 0 && (
-              <Text style={styles.priceStrikethrough}>{formatMoney(plan.price)}</Text>
-            )}
-            <Text style={styles.pricePeriod}>
-              / {plan.duration_months} {plan.duration_months === 1 ? 'mo' : 'mos'}
-            </Text>
-          </View>
-
-          {/* Features */}
-          <View style={styles.featuresRow}>
-            <View style={styles.featureItem}>
-              <Icon
-                name="calendar-event-fill"
-                size={14}
-                color={isSelected ? colorSet.accent : colors.textMuted}
-              />
-              <Text
-                style={[
-                  styles.featureText,
-                  isSelected && { color: colorSet.accent },
-                ]}
-              >
-                {plan.duration_months} {plan.duration_months === 1 ? 'month' : 'months'}
-              </Text>
-            </View>
-            {plan.discount_percent > 0 && (
-              <View style={styles.featureItem}>
-                <Icon
-                  name="percent-line"
-                  size={14}
-                  color={isSelected ? colorSet.accent : colors.swimmer}
-                />
-                <Text
-                  style={[
-                    styles.discountText,
-                    isSelected && { color: colorSet.accent },
-                  ]}
-                >
-                  {plan.discount_percent}% off
-                </Text>
-              </View>
-            )}
-          </View>
-        </Animated.View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
+const months = (n: number) => `${n} ${n === 1 ? 'month' : 'months'}`;
 
 // ── Main Screen ─────────────────────────────────────────────────
 export const Step6_SubscriptionPlan: React.FC<Props> = ({ navigation }) => {
@@ -220,200 +70,100 @@ export const Step6_SubscriptionPlan: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('Step7_CoachSelection');
   };
 
-  // ── Loading state ─────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <RegistrationLayout
-        currentStep={6}
-        title="Subscription Plan"
-        subtitle="Pick the plan that fits your goals"
-        onBack={() => {
-          setStep(5);
-          navigation.goBack();
-        }}
-      >
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading plans...</Text>
-        </View>
-      </RegistrationLayout>
-    );
-  }
-
-  // ── Error state ───────────────────────────────────────────────
-  if (error) {
-    return (
-      <RegistrationLayout
-        currentStep={6}
-        title="Subscription Plan"
-        subtitle="Pick the plan that fits your goals"
-        onBack={() => {
-          setStep(5);
-          navigation.goBack();
-        }}
-      >
-        <View style={styles.centerContainer}>
-          <Icon name="error-warning-fill" size={48} color={colors.error} />
-          <Text style={styles.errorMessage}>{error}</Text>
-          <Button title="Try Again" onPress={fetchPlans} variant="blue" />
-        </View>
-      </RegistrationLayout>
-    );
-  }
+  const onBack = () => {
+    setStep(5);
+    navigation.goBack();
+  };
 
   return (
     <RegistrationLayout
       currentStep={6}
-      title="Subscription Plan"
+      title="Choose a plan"
       subtitle="Pick the plan that fits your goals"
-      onBack={() => {
-        setStep(5);
-        navigation.goBack();
-      }}
-      ctaTitle="Continue"
+      onBack={onBack}
+      ctaTitle={isLoading || error || plans.length === 0 ? undefined : 'Continue'}
       onCtaPress={handleContinue}
     >
-      {/* Plan cards */}
-      {plans.map((plan, index) => (
-        <PlanCard
-          key={plan.id}
-          plan={plan}
-          isSelected={selectedId === plan.id}
-          onPress={() => handleSelect(plan)}
-          index={index}
+      {isLoading ? (
+        <StepStatus kind="loading" message="Loading plans…" />
+      ) : error ? (
+        <StepStatus kind="error" message={error} onRetry={fetchPlans} />
+      ) : plans.length === 0 ? (
+        <StepStatus
+          kind="empty"
+          icon="gift-line"
+          title="No plans yet"
+          message="This club hasn't published a plan. Please check with the club."
         />
-      ))}
-
-      {/* Empty state */}
-      {plans.length === 0 && (
-        <View style={styles.centerContainer}>
-          <Icon name="gift-fill" size={48} color={colors.textDim} />
-          <Text style={styles.emptyText}>No plans available</Text>
-        </View>
+      ) : (
+        plans.map((plan, index) => {
+          const selected = selectedId === plan.id;
+          return (
+            <SelectCard
+              key={plan.id}
+              title={plan.name}
+              subtitle={months(plan.duration_months)}
+              badge={plan.is_popular ? 'Popular' : undefined}
+              selected={selected}
+              onPress={() => handleSelect(plan)}
+              index={index}
+            >
+              {/* Price — the amount actually charged, not the list price. This used
+                  to render plan.price beside a "N% off" badge, so the app quoted 500
+                  while the portal quoted 450 for the same plan and the registration
+                  was billed 450. */}
+              <View style={styles.priceRow}>
+                <Text style={[styles.price, selected && { color: colors.primary }]}>
+                  {formatMoney(planPrice(plan))}
+                </Text>
+                {plan.discount_percent > 0 && (
+                  <>
+                    <Text style={styles.listPrice}>{formatMoney(plan.price)}</Text>
+                    <View style={styles.savePill}>
+                      <Text style={styles.saveText}>Save {plan.discount_percent}%</Text>
+                    </View>
+                  </>
+                )}
+              </View>
+            </SelectCard>
+          );
+        })
       )}
 
-      {/* Validation error */}
-      {validationError && (
-        <Text style={styles.validationError}>{validationError}</Text>
-      )}
-
+      <FieldError message={validationError} />
     </RegistrationLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  // ── Plan Card ─────────────────────────────────────────────────
-  planCard: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.sm,
-    borderWidth: 2,
-  },
-  planHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  planNameCol: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  planName: {
-    ...typography.bodyMedium,
-    fontFamily: fontFamily.bodySemiBold,
-    fontSize: 16,
-    color: colors.text,
-  },
-  planDesc: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
   priceRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
     marginTop: spacing.sm,
   },
-  priceAmount: {
-    fontSize: 24,
+  price: {
+    fontSize: 22,
+    lineHeight: 28,
     fontFamily: fontFamily.headingBold,
     color: colors.text,
   },
-  priceStrikethrough: {
-    fontSize: 13,
-    marginLeft: 8,
+  listPrice: {
+    ...typography.caption,
+    color: colors.textDim,
     textDecorationLine: 'line-through',
-    opacity: 0.55,
   },
-  pricePeriod: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginLeft: 4,
-  },
-  featuresRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.sm,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  featureText: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  discountText: {
-    ...typography.caption,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.swimmer,
-  },
-  popularBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: colors.orange,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+  savePill: {
+    backgroundColor: colors.successDim,
     borderRadius: borderRadius.pill,
-    gap: 4,
-    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
   },
-  popularText: {
-    ...typography.label,
-    color: colors.white,
+  saveText: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.swimmerDark,
   },
-
-  // ── States ────────────────────────────────────────────────────
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-    gap: spacing.md,
-  },
-  loadingText: {
-    ...typography.body,
-    color: colors.textMuted,
-  },
-  errorMessage: {
-    ...typography.body,
-    color: colors.error,
-    textAlign: 'center',
-  },
-  emptyText: {
-    ...typography.body,
-    color: colors.textMuted,
-  },
-
-  // ── Validation ────────────────────────────────────────────────
-  validationError: {
-    ...typography.caption,
-    color: colors.error,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-
 });

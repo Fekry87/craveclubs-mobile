@@ -218,6 +218,14 @@ const glyphMap: Record<string, number> = {
 
   // App update
   'download-2-line': 60500,
+
+  // Registration (codepoints from remixicon.glyph.json)
+  'checkbox-blank-circle-line': 0xEB7D,
+  'hand-coin-line': 0xEDF1,
+  'wifi-off-line': 0xF2C2,
+  'first-aid-kit-line': 0xED37,
+  'user-star-line': 0xF276,
+  'login-box-line': 0xEED4,
 };
 
 const RemixIcon = createIconSet(glyphMap, 'remixicon', 'remixicon.ttf');

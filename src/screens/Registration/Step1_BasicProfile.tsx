@@ -20,6 +20,7 @@ import { RegistrationLayout } from '../../components/features/registration/Regis
 import { PickerModal } from '../../components/common/PickerModal';
 import { Input } from '../../components/common/Input';
 import { Icon } from '../../components/common/Icon';
+import { SectionLabel } from '../../components/features/registration/SectionLabel';
 import { useRegistrationStore } from '../../store/registration.store';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
@@ -342,7 +343,7 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
 
       {/* ── Gender ─────────────────────────────────────────────── */}
       <Animated.View style={[styles.section, genderEntry]}>
-        <Text style={styles.sectionLabel}>Gender</Text>
+        <SectionLabel>Gender</SectionLabel>
         <View style={styles.genderRow} accessibilityRole="radiogroup">
           {(
             [
@@ -556,13 +557,6 @@ const styles = StyleSheet.create({
   // ── Sections ────────────────────────────────────────────────
   section: {
     marginBottom: spacing.md,
-  },
-  sectionLabel: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontFamily: fontFamily.bodyMedium,
-    color: colors.text,
-    marginBottom: spacing.sm,
   },
   fieldErrorBorder: {
     borderColor: colors.error,

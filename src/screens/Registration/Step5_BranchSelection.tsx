@@ -1,142 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { RegistrationLayout } from '../../components/features/registration/RegistrationLayout';
-import { Button } from '../../components/common/Button'; // Used in error state
+import { SelectCard } from '../../components/features/registration/SelectCard';
+import { StepStatus } from '../../components/features/registration/StepStatus';
+import { FieldError } from '../../components/features/registration/SectionLabel';
 import { Icon } from '../../components/common/Icon';
 import { useRegistrationStore } from '../../store/registration.store';
-import { useAnimatedPress } from '../../hooks/useAnimatedPress';
-import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { getBranches, Branch } from '../../api/services/registration.service';
-import {
-  colors,
-  spacing,
-  borderRadius,
-  typography,
-  fontFamily,
-} from '../../theme';
+import { colors, spacing, borderRadius, typography } from '../../theme';
 
 type Props = NativeStackScreenProps<
   RegistrationStackParamList,
   'Step5_BranchSelection'
 >;
-
-// ── BranchCard (inline) ──────────────────────────────────────────
-function BranchCard({
-  branch,
-  isSelected,
-  onPress,
-  index,
-}: {
-  branch: Branch;
-  isSelected: boolean;
-  onPress: () => void;
-  index: number;
-}) {
-  const entry = useAnimatedEntry(index);
-  const press = useAnimatedPress();
-
-  return (
-    <Animated.View style={entry}>
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={press.onPressIn}
-        onPressOut={press.onPressOut}
-        activeOpacity={0.7}
-      >
-        <Animated.View
-          style={[
-            styles.branchCard,
-            isSelected
-              ? styles.branchCardSelected
-              : styles.branchCardUnselected,
-            press.animatedStyle,
-          ]}
-        >
-          {/* Icon circle */}
-          <View
-            style={[
-              styles.iconCircle,
-              {
-                backgroundColor: isSelected
-                  ? colors.primaryDim
-                  : colors.surfaceLight,
-              },
-            ]}
-          >
-            <Icon
-              name="building-2-fill"
-              size={22}
-              color={isSelected ? colors.primary : colors.textDim}
-            />
-          </View>
-
-          {/* Text content */}
-          <View style={styles.branchTextCol}>
-            <Text
-              style={[
-                styles.branchName,
-                isSelected && styles.branchNameSelected,
-              ]}
-            >
-              {branch.name}
-            </Text>
-            <View style={styles.addressRow}>
-              <Icon
-                name="map-pin-line"
-                size={14}
-                color={isSelected ? colors.primaryDark : colors.textMuted}
-              />
-              <Text
-                style={[
-                  styles.branchAddress,
-                  isSelected && styles.branchAddressSelected,
-                ]}
-                numberOfLines={2}
-              >
-                {branch.address}, {branch.city}
-              </Text>
-            </View>
-            {branch.phone && (
-              <View style={styles.addressRow}>
-                <Icon
-                  name="phone-line"
-                  size={14}
-                  color={isSelected ? colors.primaryDark : colors.textMuted}
-                />
-                <Text
-                  style={[
-                    styles.branchAddress,
-                    isSelected && styles.branchAddressSelected,
-                  ]}
-                >
-                  {branch.phone}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Checkmark */}
-          {isSelected && (
-            <Icon
-              name="checkbox-circle-fill"
-              size={22}
-              color={colors.primary}
-            />
-          )}
-        </Animated.View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
 
 // ── Main Screen ─────────────────────────────────────────────────
 export const Step5_BranchSelection: React.FC<Props> = ({ navigation }) => {
@@ -187,168 +65,90 @@ export const Step5_BranchSelection: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('Step6_SubscriptionPlan');
   };
 
-  // ── Loading state ─────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <RegistrationLayout
-        currentStep={5}
-        title="Select Branch"
-        subtitle="Choose your preferred training location"
-        onBack={() => {
-          setStep(4);
-          navigation.goBack();
-        }}
-      >
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading branches...</Text>
-        </View>
-      </RegistrationLayout>
-    );
-  }
-
-  // ── Error state ───────────────────────────────────────────────
-  if (error) {
-    return (
-      <RegistrationLayout
-        currentStep={5}
-        title="Select Branch"
-        subtitle="Choose your preferred training location"
-        onBack={() => {
-          setStep(4);
-          navigation.goBack();
-        }}
-      >
-        <View style={styles.centerContainer}>
-          <Icon name="error-warning-fill" size={48} color={colors.error} />
-          <Text style={styles.errorMessage}>{error}</Text>
-          <Button title="Try Again" onPress={fetchBranches} variant="blue" />
-        </View>
-      </RegistrationLayout>
-    );
-  }
+  const onBack = () => {
+    setStep(4);
+    navigation.goBack();
+  };
 
   return (
     <RegistrationLayout
       currentStep={5}
-      title="Select Branch"
-      subtitle="Choose your preferred training location"
-      onBack={() => {
-        setStep(4);
-        navigation.goBack();
-      }}
-      ctaTitle="Continue"
+      title="Choose a branch"
+      subtitle="Where would you like to train?"
+      onBack={onBack}
+      ctaTitle={isLoading || error || branches.length === 0 ? undefined : 'Continue'}
       onCtaPress={handleContinue}
     >
-      {/* Branch cards */}
-      {branches.map((branch, index) => (
-        <BranchCard
-          key={branch.id}
-          branch={branch}
-          isSelected={selectedId === branch.id}
-          onPress={() => handleSelect(branch)}
-          index={index}
+      {isLoading ? (
+        <StepStatus kind="loading" message="Loading branches…" />
+      ) : error ? (
+        <StepStatus kind="error" message={error} onRetry={fetchBranches} />
+      ) : branches.length === 0 ? (
+        <StepStatus
+          kind="empty"
+          icon="building-2-line"
+          title="No branches yet"
+          message="This club hasn't added a branch. Please check with the club."
         />
-      ))}
-
-      {/* Empty state */}
-      {branches.length === 0 && (
-        <View style={styles.centerContainer}>
-          <Icon name="building-2-fill" size={48} color={colors.textDim} />
-          <Text style={styles.emptyText}>No branches available</Text>
-        </View>
+      ) : (
+        branches.map((branch, index) => {
+          const selected = selectedId === branch.id;
+          const address = [branch.address, branch.city].filter(Boolean).join(', ');
+          return (
+            <SelectCard
+              key={branch.id}
+              title={branch.name}
+              subtitle={address || null}
+              selected={selected}
+              onPress={() => handleSelect(branch)}
+              index={index}
+              leading={
+                <View
+                  style={[
+                    styles.iconTile,
+                    { backgroundColor: selected ? colors.white : colors.surfaceLight },
+                  ]}
+                >
+                  <Icon
+                    name="building-2-line"
+                    size={22}
+                    color={selected ? colors.primary : colors.textMuted}
+                  />
+                </View>
+              }
+            >
+              {branch.phone ? (
+                <View style={styles.metaRow}>
+                  <Icon name="phone-line" size={14} color={colors.textMuted} />
+                  <Text style={styles.metaText}>{branch.phone}</Text>
+                </View>
+              ) : null}
+            </SelectCard>
+          );
+        })
       )}
 
-      {/* Validation error */}
-      {validationError && (
-        <Text style={styles.validationError}>{validationError}</Text>
-      )}
-
+      <FieldError message={validationError} />
     </RegistrationLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  // ── Branch Card ───────────────────────────────────────────────
-  branchCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.sm,
-    borderWidth: 2,
-  },
-  branchCardUnselected: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-  },
-  branchCardSelected: {
-    backgroundColor: colors.primaryDim,
-    borderColor: colors.primary,
-  },
-  iconCircle: {
+  iconTile: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
+    borderRadius: borderRadius.sm,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  branchTextCol: {
-    flex: 1,
-    marginLeft: spacing.sm,
-  },
-  branchName: {
-    ...typography.bodyMedium,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.text,
-  },
-  branchNameSelected: {
-    color: colors.primary,
-  },
-  addressRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
-    gap: 4,
+    gap: spacing.xs,
+    marginTop: spacing.xs,
   },
-  branchAddress: {
+  metaText: {
     ...typography.caption,
     color: colors.textMuted,
-    flex: 1,
   },
-  branchAddressSelected: {
-    color: colors.primaryDark,
-  },
-
-  // ── States ────────────────────────────────────────────────────
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-    gap: spacing.md,
-  },
-  loadingText: {
-    ...typography.body,
-    color: colors.textMuted,
-  },
-  errorMessage: {
-    ...typography.body,
-    color: colors.error,
-    textAlign: 'center',
-  },
-  emptyText: {
-    ...typography.body,
-    color: colors.textMuted,
-  },
-
-  // ── Validation ────────────────────────────────────────────────
-  validationError: {
-    ...typography.caption,
-    color: colors.error,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-
 });
