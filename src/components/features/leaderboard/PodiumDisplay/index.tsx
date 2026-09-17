@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Icon } from '../../../common/Icon';
-import { SeaCharacter } from '../SeaCharacter';
+import { SwimmerAvatar } from '../../../common/SwimmerAvatar';
 import { LeaderboardEntryInterface } from '../../../../types/models.types';
 import { colors, gradients, fontFamily, spacing, borderRadius } from '../../../../theme';
 import { styles } from './styles';
@@ -27,7 +27,7 @@ const PodiumSlot: React.FC<{
     <View style={styles.podiumSlot}>
       {/* Avatar with medal ring */}
       <View style={[styles.slotAvatarRing, { borderColor: medalColor }]}>
-        <SeaCharacter swimmerId={entry.swimmer_id} size={46} />
+        <SwimmerAvatar avatarUrl={entry.avatar_url} swimmerId={entry.swimmer_id} size={46} fallback="character" />
         {/* Rank circle overlapping bottom-right */}
         <LinearGradient
           colors={[...gradient]}
@@ -132,7 +132,7 @@ const ChampionSlot: React.FC<{ entry: LeaderboardEntryInterface }> = ({
         end={{ x: 1, y: 1 }}
         style={styles.championRing}
       >
-        <SeaCharacter swimmerId={entry.swimmer_id} size={60} showBubbles />
+        <SwimmerAvatar avatarUrl={entry.avatar_url} swimmerId={entry.swimmer_id} size={60} fallback="character" showBubbles />
       </LinearGradient>
 
       {/* Sparkle dots */}

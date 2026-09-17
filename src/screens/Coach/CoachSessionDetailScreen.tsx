@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Icon } from '../../components/common/Icon';
+import { SwimmerAvatar } from '../../components/common/SwimmerAvatar';
 import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
 import { StarRating } from '../../components/features/coach/StarRating';
@@ -272,13 +273,14 @@ export const CoachSessionDetailScreen: React.FC<Props> = ({
                       !isLast && s.swimmerRowBorder,
                     ]}
                   >
-                    {/* Avatar circle */}
-                    <View style={s.swimmerAvatar}>
-                      <Text style={s.swimmerInitials}>
-                        {swimmer.first_name.charAt(0)}
-                        {swimmer.last_name.charAt(0)}
-                      </Text>
-                    </View>
+                    {/* Photo, else initials */}
+                    <SwimmerAvatar
+                      avatarUrl={swimmer.avatar_url}
+                      size={36}
+                      fallback="initials"
+                      firstName={swimmer.first_name}
+                      lastName={swimmer.last_name}
+                    />
 
                     {/* Name + level */}
                     <View style={s.swimmerInfo}>
@@ -533,19 +535,6 @@ const s = StyleSheet.create({
   swimmerRowBorder: {
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
-  },
-  swimmerAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primaryDim,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  swimmerInitials: {
-    fontSize: 13,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.primary,
   },
   swimmerInfo: {
     flex: 1,

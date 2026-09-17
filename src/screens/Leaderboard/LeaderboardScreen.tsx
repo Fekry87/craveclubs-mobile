@@ -14,7 +14,7 @@ import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Icon, IconName } from '../../components/common/Icon';
-import { SeaCharacter } from '../../components/features/leaderboard/SeaCharacter';
+import { SwimmerAvatar } from '../../components/common/SwimmerAvatar';
 import { PodiumDisplay } from '../../components/features/leaderboard/PodiumDisplay';
 import { LeaderboardCard } from '../../components/features/leaderboard/LeaderboardCard';
 import { LevelCharacter } from '../../components/features/leaderboard/LevelCharacter';
@@ -240,7 +240,12 @@ export const LeaderboardScreen: React.FC = () => {
           <View style={s.levelCardHeader}>
             {currentUser && (
               <View style={s.myAvatarWrap}>
-                <SeaCharacter swimmerId={currentUser.swimmer_id} size={48} />
+                <SwimmerAvatar
+                  avatarUrl={currentUser.avatar_url}
+                  swimmerId={currentUser.swimmer_id}
+                  size={48}
+                  fallback="character"
+                />
                 <View style={s.myRankBadge}>
                   <Text style={s.myRankBadgeText}>#{data.my_rank}</Text>
                 </View>

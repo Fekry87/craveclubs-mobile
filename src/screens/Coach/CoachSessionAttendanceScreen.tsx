@@ -17,6 +17,7 @@ import { ErrorView } from '../../components/common/ErrorView';
 import { Icon } from '../../components/common/Icon';
 import { StarRating } from '../../components/features/coach/StarRating';
 import { AwardSheet } from '../../components/features/coach/AwardSheet';
+import { SwimmerAvatar } from '../../components/common/SwimmerAvatar';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { coachService } from '../../api/services/coach.service';
@@ -90,32 +91,19 @@ const SwimmerAttendanceRow: React.FC<{
   const absentPress = useAnimatedPress();
   const awardPress = useAnimatedPress();
 
-  const initials =
-    (swimmer.first_name?.[0] ?? '') + (swimmer.last_name?.[0] ?? '');
-
   return (
     <Animated.View style={[s.swimmerRow, entry]}>
       {/* Avatar + Name */}
       <View style={s.swimmerInfo}>
-        <View
-          style={[
-            s.avatar,
-            {
-              backgroundColor: isPresent
-                ? colors.swimmerDim
-                : colors.errorDim,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              s.avatarText,
-              { color: isPresent ? colors.swimmer : colors.error },
-            ]}
-          >
-            {initials.toUpperCase()}
-          </Text>
-        </View>
+        <SwimmerAvatar
+          avatarUrl={swimmer.avatar_url}
+          size={40}
+          fallback="initials"
+          firstName={swimmer.first_name}
+          lastName={swimmer.last_name}
+          initialsBackground={isPresent ? colors.swimmerDim : colors.errorDim}
+          initialsColor={isPresent ? colors.swimmer : colors.error}
+        />
         <View style={s.swimmerNameCol}>
           <Text style={s.swimmerName} numberOfLines={1}>
             {swimmer.first_name} {swimmer.last_name}
@@ -809,17 +797,6 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontSize: 14,
-    fontFamily: fontFamily.headingBold,
   },
   swimmerNameCol: {
     flex: 1,

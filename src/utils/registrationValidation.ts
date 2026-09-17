@@ -6,7 +6,7 @@ import type {
 
 export type FieldErrors = Record<string, string>;
 
-export type AboutYouValues = Omit<BasicProfile, 'avatarUrl'>;
+export type AboutYouValues = Omit<BasicProfile, 'avatarUrl' | 'photoData'>;
 export type BodyValues = Pick<PhysicalInfo, 'heightCm' | 'weightKg' | 'fitnessLevel' | 'medicalNotes'>;
 export type ExperienceValues = Pick<Experience, 'level' | 'primaryGoal'>;
 
@@ -72,7 +72,7 @@ export const cleanAboutYou = (v: AboutYouValues): AboutYouValues => ({
  * with these, so they always start from what is saved.
  */
 
-export const aboutFromStore = ({ avatarUrl: _avatar, ...answers }: BasicProfile): AboutYouValues =>
+export const aboutFromStore = ({ avatarUrl: _avatar, photoData: _photo, ...answers }: BasicProfile): AboutYouValues =>
   answers;
 
 export const bodyFromStore = (p: PhysicalInfo): BodyValues => ({

@@ -92,7 +92,7 @@ export function toHex(color: string | null | undefined): string {
  * Rewrite localhost URLs to use the actual API host.
  * Backend may return http://localhost:8000/storage/... which is unreachable from mobile devices.
  */
-function fixAssetUrl(url: string | null | undefined): string | null {
+export function fixAssetUrl(url: string | null | undefined): string | null {
   if (!url || typeof url !== 'string') return null;
   const baseUrl = apiUrl || 'https://web-production-c3c32.up.railway.app';
   // Replace http://localhost:PORT or http://127.0.0.1:PORT with actual API base

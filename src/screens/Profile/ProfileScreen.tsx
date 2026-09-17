@@ -29,6 +29,7 @@ import { useBrandingStore } from '../../store/branding.store';
 import { SwimmerSubscriptionInterface } from '../../types/api.types';
 import { trainingTypeLabel } from '../../utils/trainingTypes';
 import { formatMediumDate, formatMoney, formatPercentage, formatRating, getInitials } from '../../utils/formatters';
+import { pickProfilePhoto, showPhotoMenu } from '../../utils/photo';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
 
 /* ─── Section title ─── */
@@ -68,9 +69,10 @@ export const ProfileScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, logout } = useAuthStore();
-  const { data, isLoading, error, fetchProfile } = useProfileStore();
+  const { data, isLoading, error, fetchProfile, setPhoto } = useProfileStore();
   const branding = useBrandingStore((st) => st.branding);
   const [refreshing, setRefreshing] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
 
@@ -95,6 +97,41 @@ export const ProfileScreen: React.FC = () => {
       },
     ]);
   }, [logout]);
+
+  /* ─── Profile photo: shown everywhere the swimmer appears, so changing it here
+     changes it for the coach and the club too ─── */
+  const applyPhoto = useCallback(
+    async (dataUrl: string | null) => {
+      setPhotoBusy(true);
+      try {
+        await setPhoto(dataUrl);
+      } catch {
+        Alert.alert(
+          dataUrl ? 'Photo not saved' : 'Photo not removed',
+          "We couldn't update your photo. Check your connection and try again.",
+        );
+      } finally {
+        setPhotoBusy(false);
+      }
+    },
+    [setPhoto],
+  );
+
+  const handleChangePhoto = useCallback(() => {
+    showPhotoMenu({
+      canRemove: !!data?.profile.avatar_url,
+      onPick: async (source) => {
+        const picked = await pickProfilePhoto(source);
+        if (picked) await applyPhoto(picked.dataUrl);
+      },
+      onRemove: () => {
+        Alert.alert('Remove photo?', 'Your initials will be shown instead.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Remove', style: 'destructive', onPress: () => applyPhoto(null) },
+        ]);
+      },
+    });
+  }, [data?.profile.avatar_url, applyPhoto]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -163,7 +200,7 @@ export const ProfileScreen: React.FC = () => {
           />
         }
       >
-        <ProfileHeader user={user} profile={profile} />
+        <ProfileHeader user={user} profile={profile} onChangePhoto={handleChangePhoto} photoBusy={photoBusy} />
 
         {/* ═══ Subscription ═══ */}
         {subscription && tone && (

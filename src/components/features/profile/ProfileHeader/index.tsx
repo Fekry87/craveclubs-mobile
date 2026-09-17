@@ -1,23 +1,29 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated } from 'react-native';
+import { View, Text, Animated, TouchableOpacity } from 'react-native';
+import { Icon } from '../../../common/Icon';
+import { SwimmerAvatar } from '../../../common/SwimmerAvatar';
 import { UserInterface, SwimmerProfileInterface } from '../../../../types/models.types';
-import { getInitials } from '../../../../utils/formatters';
 import { colors } from '../../../../theme';
-import { styles } from './styles';
+import { styles, AVATAR_SIZE } from './styles';
 
 interface ProfileHeaderProps {
   user: UserInterface;
   profile?: SwimmerProfileInterface | null;
+  /** Tapping the avatar or its camera badge; omitted = not changeable here. */
+  onChangePhoto?: () => void;
+  /** A spinner-less dim while the upload is in flight. */
+  photoBusy?: boolean;
 }
 
-/** Centered hero: brand-colored avatar, name, email, level pill */
+/** Centered hero: the swimmer's photo (or brand-colored initials), name, email, level pill */
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   user,
   profile,
+  onChangePhoto,
+  photoBusy = false,
 }) => {
   const firstName = profile?.first_name || user.name.split(' ')[0];
   const lastName = profile?.last_name || user.name.split(' ').slice(1).join(' ');
-  const initials = getInitials(firstName, lastName || 'S');
 
   const avatarScale = useRef(new Animated.Value(0.6)).current;
 
@@ -30,16 +36,42 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     }).start();
   }, [avatarScale]);
 
+  const avatar = (
+    <Animated.View
+      style={[styles.avatarWrap, { transform: [{ scale: avatarScale }], opacity: photoBusy ? 0.6 : 1 }]}
+    >
+      <SwimmerAvatar
+        avatarUrl={profile?.avatar_url}
+        size={AVATAR_SIZE}
+        fallback="initials"
+        firstName={firstName}
+        lastName={lastName || 'S'}
+        initialsBackground={colors.primary}
+        initialsColor={colors.white}
+      />
+      {onChangePhoto && (
+        <View style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
+          <Icon name="camera-fill" size={14} color={colors.white} />
+        </View>
+      )}
+    </Animated.View>
+  );
+
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.avatar,
-          { backgroundColor: colors.primary, transform: [{ scale: avatarScale }] },
-        ]}
-      >
-        <Text style={styles.avatarText}>{initials}</Text>
-      </Animated.View>
+      {onChangePhoto ? (
+        <TouchableOpacity
+          onPress={onChangePhoto}
+          disabled={photoBusy}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={profile?.avatar_url ? 'Change photo' : 'Add a photo'}
+        >
+          {avatar}
+        </TouchableOpacity>
+      ) : (
+        avatar
+      )}
       <Text style={styles.name} numberOfLines={1}>
         {firstName} {lastName}
       </Text>

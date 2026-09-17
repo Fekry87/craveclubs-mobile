@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Modal, View, Text, Animated, Dimensions } from 'react-native';
 import { Button } from '../../../common/Button';
 import { Icon } from '../../../common/Icon';
-import { AwardAvatar } from '../../leaderboard/AwardAvatar';
+import { SwimmerAvatar } from '../../../common/SwimmerAvatar';
 import { PendingAwardInterface } from '../../../../types/models.types';
 import { awardIcon, awardLabel, firstNameOf } from '../../../../utils/awards';
 import { colors, ANIMATION } from '../../../../theme';
@@ -258,10 +258,11 @@ export const AwardCelebrationCard: React.FC<AwardCelebrationCardProps> = ({
               { borderColor: colors.primary, transform: [{ scale: avatarScale }] },
             ]}
           >
-            <AwardAvatar
-              swimmerId={award.swimmer_id}
+            <SwimmerAvatar
               avatarUrl={award.swimmer_avatar_url}
+              swimmerId={award.swimmer_id}
               size={AVATAR}
+              fallback="character"
             />
           </Animated.View>
 

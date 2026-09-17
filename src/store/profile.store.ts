@@ -7,6 +7,8 @@ interface ProfileState {
   isLoading: boolean;
   error: string | null;
   fetchProfile: () => Promise<void>;
+  /** Upload a new photo (data URL) or remove it (null); throws on failure. */
+  setPhoto: (dataUrl: string | null) => Promise<void>;
   reset: () => void;
 }
 
@@ -31,6 +33,17 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         isLoading: false,
         error: hasData ? null : 'Failed to load profile.',
       });
+    }
+  },
+
+  setPhoto: async (dataUrl) => {
+    const avatarUrl = dataUrl
+      ? await profileService.uploadPhoto(dataUrl)
+      : (await profileService.removePhoto(), null);
+    // Patch in place so the header updates without a full refetch.
+    const current = get().data;
+    if (current) {
+      set({ data: { ...current, profile: { ...current.profile, avatar_url: avatarUrl } } });
     }
   },
 
