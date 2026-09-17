@@ -66,4 +66,72 @@ export const styles = StyleSheet.create({
     fontFamily: fontFamily.bodySemiBold,
     color: colors.swimmerDark,
   },
+  // ── Group card ──
+  pillRow: {
+    flexDirection: 'row',
+    gap: spacing.xs + 2,
+    marginTop: spacing.xs,
+  },
+  pill: {
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  pillText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: fontFamily.bodySemiBold,
+  },
+  dayRow: {
+    flexDirection: 'row',
+    gap: spacing.xs + 2,
+    marginTop: spacing.sm + 4,
+  },
+  dayChip: {
+    flex: 1,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  dayChipText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: fontFamily.bodySemiBold,
+  },
+  dayChipOff: {
+    color: colors.textDim,
+    fontFamily: fontFamily.bodyMedium,
+  },
+  timeStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.sm + 4,
+    borderRadius: borderRadius.sm,
+    marginTop: spacing.sm + 4,
+  },
+  timeLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: fontFamily.bodyMedium,
+    letterSpacing: 0.3,
+    color: colors.textDim,
+  },
+  timeValue: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.text,
+  },
+  timeDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: colors.border,
+  },
+  timeDuration: {
+    marginLeft: 'auto',
+    ...typography.caption,
+    color: colors.textMuted,
+  },
 });
