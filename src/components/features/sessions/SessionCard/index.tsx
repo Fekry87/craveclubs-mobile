@@ -82,6 +82,12 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
     session.status === 'Scheduled' || session.status === 'Live';
   const isCompleted = session.status === 'Completed';
   const attended = session.attendances?.some((a) => a.present);
+  // The club's real attendance XP. Never fall back to a guessed number: a card
+  // saying "+25 XP" next to a detail page saying "+5 XP" is worse than no number.
+  const xpLabel =
+    session.xp_per_attendance != null && session.xp_per_attendance > 0
+      ? `+${session.xp_per_attendance} XP`
+      : 'XP';
   const celebration = getCelebration(session.id);
   const missedMsg = getMissedMessage(session.id);
 
@@ -146,7 +152,7 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
                 <Icon name="flashlight-fill" size={14} color={colors.primary} />
               </View>
               <View>
-                <Text style={styles.xpValue}>+25 XP</Text>
+                <Text style={styles.xpValue}>{xpLabel}</Text>
                 <Text style={styles.xpLabel}>Attend to earn</Text>
               </View>
             </View>
@@ -170,7 +176,7 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
                 <Icon name="check-line" size={14} color={colors.swimmerDark} />
               </View>
               <View>
-                <Text style={styles.earnedValue}>+25 XP</Text>
+                <Text style={styles.earnedValue}>{xpLabel}</Text>
                 <Text style={styles.earnedLabel}>Earned</Text>
               </View>
             </View>

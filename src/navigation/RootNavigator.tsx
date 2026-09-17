@@ -140,7 +140,16 @@ export const RootNavigator: React.FC = () => {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        // Arrow only. The default back label is the previous route's name, and
+        // at the root that name is the internal "App" route — meaningless to a
+        // swimmer. An empty headerBackTitle doesn't help: iOS falls back to the
+        // previous title anyway.
+        headerBackButtonDisplayMode: 'minimal',
+      }}
+    >
       {!isAuthenticated && !isResolved ? (
         /* Shared build with no club chosen yet — name the club before login */
         <Stack.Screen name="ClubEntry" component={ClubEntryScreen} />
@@ -168,7 +177,6 @@ export const RootNavigator: React.FC = () => {
             fontSize: 18,
           },
           headerShadowVisible: false,
-          headerBackTitle: '',
         }}
       />
       {/* Change password — from Profile */}
@@ -187,7 +195,6 @@ export const RootNavigator: React.FC = () => {
             fontSize: 18,
           },
           headerShadowVisible: false,
-          headerBackTitle: '',
         }}
       />
       {/* Session detail — from a session card on Home or the Sessions tab */}
@@ -206,7 +213,6 @@ export const RootNavigator: React.FC = () => {
             fontSize: 18,
           },
           headerShadowVisible: false,
-          headerBackTitle: '',
         }}
       />
       {/* Evaluations — full screen from Home "See All" */}
@@ -225,7 +231,6 @@ export const RootNavigator: React.FC = () => {
             fontSize: 18,
           },
           headerShadowVisible: false,
-          headerBackTitle: '',
         }}
       />
       {/* Registration is accessible from both auth & unauth states */}
