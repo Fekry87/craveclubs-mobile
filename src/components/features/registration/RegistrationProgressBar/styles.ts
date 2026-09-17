@@ -16,6 +16,5 @@ export const styles = StyleSheet.create({
   fill: {
     height: 6,
     borderRadius: 999,
-    backgroundColor: colors.primary,
   },
 });
