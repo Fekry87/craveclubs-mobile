@@ -42,6 +42,7 @@ interface RegistrationState {
   planId: number | null;
   planName: string | null;
   planPrice: number | null;
+  planTrainingType: string | null;
   coachId: number | null;
   coachName: string | null;
   preferredTime: string | null;
@@ -56,7 +57,7 @@ interface RegistrationState {
   setSportIds: (ids: string[]) => void;
   updateExperience: (data: Partial<Experience>) => void;
   setBranch: (id: number, name: string) => void;
-  setPlan: (id: number, name: string, price: number) => void;
+  setPlan: (id: number, name: string, price: number, trainingType: string) => void;
   setCoach: (id: number, name: string) => void;
   setPreferredTime: (time: string) => void;
   setIsDraft: (val: boolean) => void;
@@ -104,6 +105,7 @@ const initialState = {
   planId: null as number | null,
   planName: null as string | null,
   planPrice: null as number | null,
+  planTrainingType: null as string | null,
   coachId: null as number | null,
   coachName: null as string | null,
   preferredTime: null as string | null,
@@ -141,8 +143,8 @@ export const useRegistrationStore = create<RegistrationState>((set) => ({
     })),
 
   setBranch: (branchId, branchName) => set({ branchId, branchName }),
-  setPlan: (planId, planName, planPrice) =>
-    set({ planId, planName, planPrice }),
+  setPlan: (planId, planName, planPrice, planTrainingType) =>
+    set({ planId, planName, planPrice, planTrainingType }),
   setCoach: (coachId, coachName) => set({ coachId, coachName }),
   setPreferredTime: (preferredTime) => set({ preferredTime }),
   setIsDraft: (isDraft) => set({ isDraft }),

@@ -178,6 +178,8 @@ export type SubscriptionStatus = 'active' | 'expiring' | 'expired';
 
 export interface SwimmerSubscriptionInterface {
   plan_name: string;
+  /** daily | two_days | three_days | private — see utils/trainingTypes. */
+  training_type?: string;
   duration_months: number;
   /** The plan's list price today. */
   price: number;

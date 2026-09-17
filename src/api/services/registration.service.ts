@@ -40,6 +40,8 @@ export interface Branch {
 export interface SubscriptionPlan {
   id: number;
   name: string;
+  /** daily | two_days | three_days | private — see utils/trainingTypes. */
+  training_type: string;
   /** List price before the discount. */
   price: string;
   duration_months: number;
