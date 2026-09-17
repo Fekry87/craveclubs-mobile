@@ -1,7 +1,8 @@
-import React, { useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
+  ActivityIndicator,
   FlatList,
   ScrollView,
   RefreshControl,
@@ -16,11 +17,10 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { ErrorView } from '../../components/common/ErrorView';
 import { Loader } from '../../components/common/Loader';
 import { Icon, IconName } from '../../components/common/Icon';
-import { useSessionStore } from '../../store/session.store';
-import { TrainingSessionInterface } from '../../types/models.types';
+import { useSessionStore, SessionSegment } from '../../store/session.store';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
 
-type SegmentKey = 'all' | 'upcoming' | 'completed';
+type SegmentKey = SessionSegment;
 
 interface SegmentConfig {
   key: SegmentKey;
@@ -33,36 +33,6 @@ const SEGMENTS: SegmentConfig[] = [
   { key: 'upcoming', label: 'Upcoming', icon: 'calendar-event-line' },
   { key: 'completed', label: 'Completed', icon: 'check-line' },
 ];
-
-/** Sort sessions by date ascending (today first, then nearest) */
-const sortByDateAsc = (
-  a: TrainingSessionInterface,
-  b: TrainingSessionInterface,
-): number => new Date(a.date).getTime() - new Date(b.date).getTime();
-
-/** Sort sessions by date descending (most recent first) */
-const sortByDateDesc = (
-  a: TrainingSessionInterface,
-  b: TrainingSessionInterface,
-): number => new Date(b.date).getTime() - new Date(a.date).getTime();
-
-const filterSessions = (
-  sessions: TrainingSessionInterface[],
-  segment: SegmentKey,
-): TrainingSessionInterface[] => {
-  switch (segment) {
-    case 'upcoming':
-      return sessions
-        .filter((s) => s.status === 'Scheduled' || s.status === 'Live')
-        .sort(sortByDateAsc);
-    case 'completed':
-      return sessions
-        .filter((s) => s.status === 'Completed' || s.status === 'Cancelled')
-        .sort(sortByDateDesc);
-    default:
-      return [...sessions].sort(sortByDateAsc);
-  }
-};
 
 const EMPTY_CONFIG: Record<
   SegmentKey,
@@ -90,48 +60,36 @@ export const SessionsScreen: React.FC = () => {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [activeSegment, setActiveSegment] = useState<SegmentKey>('upcoming');
 
-  const {
-    sessions,
-    isLoading,
-    error,
-    currentPage,
-    totalPages,
-    fetchSessions,
-    refreshSessions,
-  } = useSessionStore();
+  const segments = useSessionStore((st) => st.segments);
+  const counts = useSessionStore((st) => st.counts);
+  const fetchSegment = useSessionStore((st) => st.fetchSegment);
+  const refreshSegment = useSessionStore((st) => st.refreshSegment);
 
-  // Fetch on focus — global polling in AppNavigator handles background refresh
+  const segment = segments[activeSegment];
+
+  // On focus and on every tab switch: load the tab the first time, refresh it
+  // (keeping what was scrolled) after that. Global polling refreshes it too.
   useFocusEffect(
     useCallback(() => {
-      fetchSessions();
-      // eslint-disable-next-line -- run on focus only, store function is stable
-    }, []),
+      refreshSegment(activeSegment);
+    }, [activeSegment, refreshSegment]),
   );
 
   const handleRefresh = useCallback(() => {
-    refreshSessions();
-  }, [refreshSessions]);
+    refreshSegment(activeSegment, true);
+  }, [activeSegment, refreshSegment]);
 
   const handleEndReached = useCallback(() => {
-    if (!isLoading && currentPage < totalPages) {
-      fetchSessions(currentPage + 1);
+    if (segment.loaded && !segment.isLoading && segment.page < segment.lastPage) {
+      fetchSegment(activeSegment, segment.page + 1);
     }
-  }, [isLoading, currentPage, totalPages, fetchSessions]);
-
-  const filteredSessions = useMemo(
-    () => filterSessions(sessions, activeSegment),
-    [sessions, activeSegment],
-  );
+  }, [activeSegment, segment, fetchSegment]);
 
   const emptyConfig = EMPTY_CONFIG[activeSegment];
 
-  if (error && sessions.length === 0) {
-    return <ErrorView message={error} onRetry={() => fetchSessions()} />;
-  }
-
-  if (isLoading && sessions.length === 0) {
-    return <Loader message="Loading sessions..." />;
-  }
+  /** Server count when known; otherwise what that tab has loaded, if anything. */
+  const badgeCount = (key: SegmentKey): number | null =>
+    counts?.[key] ?? (segments[key].loaded ? segments[key].items.length : null);
 
   return (
     <View style={screenStyles.container}>
@@ -168,6 +126,7 @@ export const SessionsScreen: React.FC = () => {
                 {seg.label}
               </Text>
               {/* Count badge */}
+              {badgeCount(seg.key) !== null && (
               <View
                 style={[
                   screenStyles.countBadge,
@@ -180,9 +139,10 @@ export const SessionsScreen: React.FC = () => {
                     isActive && screenStyles.countTextActive,
                   ]}
                 >
-                  {filterSessions(sessions, seg.key).length}
+                  {badgeCount(seg.key)}
                 </Text>
               </View>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -190,7 +150,7 @@ export const SessionsScreen: React.FC = () => {
 
       {/* Sessions List */}
       <FlatList
-        data={filteredSessions}
+        data={segment.items}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item, index }) => (
           <SessionCard
@@ -201,11 +161,11 @@ export const SessionsScreen: React.FC = () => {
         )}
         contentContainerStyle={[
           screenStyles.listContent,
-          filteredSessions.length === 0 && screenStyles.listContentEmpty,
+          segment.items.length === 0 && screenStyles.listContentEmpty,
         ]}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading && sessions.length > 0}
+            refreshing={segment.isRefreshing}
             onRefresh={handleRefresh}
             colors={[colors.primary]}
             tintColor={colors.primary}
@@ -214,11 +174,25 @@ export const SessionsScreen: React.FC = () => {
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
-          <EmptyState
-            icon={emptyConfig.icon}
-            title={emptyConfig.title}
-            message={emptyConfig.message}
-          />
+          segment.error ? (
+            <ErrorView
+              message={segment.error}
+              onRetry={() => fetchSegment(activeSegment)}
+            />
+          ) : !segment.loaded || segment.isLoading ? (
+            <Loader message="Loading sessions..." />
+          ) : (
+            <EmptyState
+              icon={emptyConfig.icon}
+              title={emptyConfig.title}
+              message={emptyConfig.message}
+            />
+          )
+        }
+        ListFooterComponent={
+          segment.isLoading && segment.items.length > 0 ? (
+            <ActivityIndicator style={screenStyles.footerLoader} color={colors.primary} />
+          ) : null
         }
       />
     </View>
@@ -285,5 +259,8 @@ const screenStyles = StyleSheet.create({
   },
   listContentEmpty: {
     flex: 1,
+  },
+  footerLoader: {
+    paddingVertical: spacing.md,
   },
 });

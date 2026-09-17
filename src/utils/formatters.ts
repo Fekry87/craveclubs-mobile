@@ -115,3 +115,7 @@ export const planPrice = (plan: {
 
   return (list || 0) * (1 - (plan.discount_percent || 0) / 100);
 };
+
+/** The device's local calendar date as YYYY-MM-DD (not UTC). */
+export const localDateString = (date: Date = new Date()): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;

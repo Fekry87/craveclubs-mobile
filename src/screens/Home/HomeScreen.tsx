@@ -81,7 +81,9 @@ export const HomeScreen: React.FC = () => {
       const [dashData, lbData, sessionsData] = await Promise.all([
         progressService.getDashboard(),
         progressService.getLeaderboard(),
-        sessionService.getSessions(1, 50),
+        // Today's sessions only: the newest-first list missed today once a
+        // club had more than a page of future sessions scheduled.
+        sessionService.getSessions(1, 50, 'today'),
       ]);
       setDashboard(dashData);
       setLeaderboard(lbData);
@@ -109,7 +111,7 @@ export const HomeScreen: React.FC = () => {
       const [dashData, lbData, sessionsData] = await Promise.all([
         progressService.getDashboard(),
         progressService.getLeaderboard(),
-        sessionService.getSessions(1, 50),
+        sessionService.getSessions(1, 50, 'today'),
       ]);
       setDashboard(dashData);
       setLeaderboard(lbData);
