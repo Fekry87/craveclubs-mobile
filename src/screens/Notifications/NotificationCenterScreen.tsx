@@ -35,6 +35,7 @@ const NOTIF_ICON_MAP: Record<string, { icon: IconName; color: string }> = {
   absence_recorded: { icon: 'close-line', color: colors.error },
   subscription_expiring: { icon: 'time-fill', color: colors.orange },
   session_reminder: { icon: 'drop-fill', color: colors.primary },
+  session_cancelled: { icon: 'close-circle-fill', color: colors.error },
   plan_assigned: { icon: 'clipboard-fill', color: colors.secondary },
   registration_approved: { icon: 'check-line', color: colors.swimmer },
   repeated_absence: { icon: 'alert-fill', color: colors.error },
@@ -179,6 +180,15 @@ export const NotificationCenterScreen: React.FC = () => {
           setExpiryModal({ visible: true, daysLeft });
           break;
         }
+
+        case 'session_cancelled':
+          // Straight to the session, where the reason is shown.
+          if (typeof data?.session_id === 'number') {
+            navigation.navigate('SessionDetail', { sessionId: data.session_id });
+          } else {
+            navigation.navigate('App', { screen: 'Sessions' });
+          }
+          break;
 
         case 'plan_assigned':
           navigation.navigate('App', { screen: 'MyPlan' });

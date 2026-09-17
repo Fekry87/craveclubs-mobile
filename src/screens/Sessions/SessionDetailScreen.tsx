@@ -161,6 +161,21 @@ export const SessionDetailScreen: React.FC = () => {
             </Text>
           </View>
 
+          {/* Cancelled: the reason the club gave, where the XP would be. */}
+          {current.status === 'Cancelled' && (
+            <View style={[s.cancelledBanner, { backgroundColor: colors.errorDim }]}>
+              <Icon name="close-circle-line" size={20} color={colors.error} />
+              <View style={s.cancelledBody}>
+                <Text style={[s.cancelledTitle, { color: colors.error }]}>
+                  This session was cancelled
+                </Text>
+                <Text style={s.cancelledReason} selectable>
+                  {current.cancellation_reason || 'Your club cancelled this session.'}
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Upcoming: what attending is worth. Over: nothing to promise. */}
           {!isOver && !attendanceTaken && current.xp.per_attendance > 0 && (
             <View style={[s.xpBanner, { backgroundColor: colors.primaryDim }]}>
@@ -422,6 +437,30 @@ const s = StyleSheet.create({
   xpText: {
     fontSize: 14,
     fontFamily: fontFamily.bodySemiBold,
+  },
+  cancelledBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm + 2,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 4,
+    borderRadius: borderRadius.md,
+  },
+  cancelledBody: {
+    flex: 1,
+  },
+  cancelledTitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: fontFamily.bodySemiBold,
+  },
+  cancelledReason: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 2,
+    fontFamily: fontFamily.bodyRegular,
+    color: colors.text,
   },
 
   /* Notes */

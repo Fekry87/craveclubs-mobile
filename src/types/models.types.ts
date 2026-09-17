@@ -66,6 +66,9 @@ export interface TrainingSessionInterface {
   attendances?: AttendanceInterface[];
   /** The club's attendance XP, sent with each row of GET /swimmer/sessions. */
   xp_per_attendance?: number;
+  /** Why the coach or club cancelled it — set when status is 'Cancelled'. */
+  cancellation_reason?: string | null;
+  cancelled_at?: string | null;
 }
 
 /** GET /swimmer/sessions/:id — everything the session detail page shows. */
@@ -81,6 +84,9 @@ export interface SessionDetailInterface {
   location: string | null;
   started_at: string | null;
   completed_at: string | null;
+  /** Why it was cancelled, written in the portal. Null unless status is 'Cancelled'. */
+  cancellation_reason?: string | null;
+  cancelled_at?: string | null;
   /** Set by the club when scheduling the session in the portal. */
   notes: string | null;
   group: { id: number; name: string } | null;

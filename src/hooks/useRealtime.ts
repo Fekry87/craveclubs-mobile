@@ -13,12 +13,19 @@ import { storageService } from '../services/storage.service';
  * Hook for subscribing to real-time events via Laravel Reverb.
  * Listens on `private-swimmer.{user.id}` for:
  * - SessionCompleted  → Refresh sessions + show summary popup
+ * - SessionCancelled  → Refresh sessions + in-app alert with the reason
  * - NewSessionAssigned → Refresh sessions + notification
  * - CoachMessage       → Show in-app notification
  * - ScheduleChanged    → Refresh sessions + notification
  *
  * Falls back gracefully when WebSocket is not available.
  */
+
+interface SessionCancelledEvent {
+  session_id: number;
+  title: string | null;
+  cancellation_reason: string | null;
+}
 
 interface SessionCompletedEvent {
   session_id: number;
@@ -77,6 +84,18 @@ export const useRealtime = () => {
           title: 'Session Started',
           message: 'Your training session is now live!',
           type: 'info',
+        });
+      });
+
+      channel.listen('.SessionCancelled', (data: SessionCancelledEvent) => {
+        if (!mountedRef.current) return;
+        refreshSessions();
+        addNotification({
+          title: 'Session cancelled',
+          message: data.cancellation_reason
+            ? `${data.title || 'Your session'} was cancelled: ${data.cancellation_reason}`
+            : `${data.title || 'Your session'} was cancelled.`,
+          type: 'warning',
         });
       });
 

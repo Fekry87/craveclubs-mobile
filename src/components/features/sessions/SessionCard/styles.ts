@@ -179,4 +179,32 @@ export const styles = StyleSheet.create({
     fontFamily: fontFamily.bodyMedium,
     color: colors.textMuted,
   },
+
+  // Cancelled banner — the reason takes the place of the XP
+  cancelledBanner: {
+    ...banner,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    gap: spacing.sm + 2,
+    backgroundColor: colors.errorDim,
+  },
+  cancelledIconCircle: {
+    ...iconCircle,
+    backgroundColor: colors.white,
+  },
+  cancelledBody: {
+    flex: 1,
+  },
+  cancelledValue: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: fontFamily.headingBold,
+    color: colors.error,
+  },
+  cancelledReason: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: fontFamily.bodyRegular,
+    color: colors.text,
+  },
 });
