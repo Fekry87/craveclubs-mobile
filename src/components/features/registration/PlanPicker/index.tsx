@@ -3,12 +3,19 @@ import { View } from 'react-native';
 import { PlanOption } from '../TrainingOptions';
 import { TrainingTypeTabs } from '../TrainingTypeTabs';
 import { SubscriptionPlan } from '../../../../api/services/registration.service';
-import { trainingTypesIn } from '../../../../utils/trainingTypes';
+import { InlineNotice } from '../InlineNotice';
+import { trainingTypeLabel, trainingTypesIn } from '../../../../utils/trainingTypes';
 
 interface PlanPickerProps {
   plans: SubscriptionPlan[];
   selectedId: number | null;
   onSelect: (plan: SubscriptionPlan) => void;
+  /**
+   * Types whose groups are all full right now. Their plans are shown but
+   * can't be chosen, with a note saying why — better learnt here than two
+   * steps later, when no coach turns up.
+   */
+  unavailableTypes?: ReadonlySet<string>;
 }
 
 /**
@@ -19,7 +26,7 @@ interface PlanPickerProps {
  * The tab opens on the type of the plan already chosen, so an edit lands the
  * swimmer where they left off.
  */
-export const PlanPicker: React.FC<PlanPickerProps> = ({ plans, selectedId, onSelect }) => {
+export const PlanPicker: React.FC<PlanPickerProps> = ({ plans, selectedId, onSelect, unavailableTypes }) => {
   const types = useMemo(() => trainingTypesIn(plans), [plans]);
   const selectedType = plans.find((p) => p.id === selectedId)?.training_type ?? null;
   const [activeType, setActiveType] = useState<string | null>(selectedType ?? types[0] ?? null);
@@ -40,6 +47,14 @@ export const PlanPicker: React.FC<PlanPickerProps> = ({ plans, selectedId, onSel
     <View>
       <TrainingTypeTabs types={types} active={activeType} onChange={setActiveType} />
 
+      {activeType && unavailableTypes?.has(activeType) ? (
+        <InlineNotice
+          icon="group-line"
+          title={`All ${trainingTypeLabel(activeType).toLowerCase()} groups are full`}
+          message="No coach has a spot left in this type right now. Pick another type, or check with the club."
+        />
+      ) : null}
+
       {visible.map((item, index) => (
         <PlanOption
           key={item.id}
@@ -47,6 +62,7 @@ export const PlanPicker: React.FC<PlanPickerProps> = ({ plans, selectedId, onSel
           selected={selectedId === item.id}
           onPress={() => onSelect(item)}
           index={index}
+          disabled={unavailableTypes?.has(item.training_type)}
         />
       ))}
     </View>

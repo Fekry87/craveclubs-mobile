@@ -206,12 +206,20 @@ export const getCoaches = async (): Promise<Coach[]> => {
  * from `group_type` with trainingTypesIn().
  */
 export const getGroups = async (clubSlug: string, coach: Pick<Coach, 'user_id' | 'name'>): Promise<Group[]> => {
-  const response = await apiClient.get(ENDPOINTS.PUBLIC.CLUB_GROUPS(clubSlug));
-  const grouped = (response.data.data ?? {}) as Record<string, Group[]> | Group[];
-  const all: Group[] = Array.isArray(grouped) ? grouped : Object.values(grouped).flat();
+  const all = await getClubGroups(clubSlug);
   return all.filter((g) =>
     coach.user_id != null ? g.coach_user_id === coach.user_id : g.coach_name === coach.name,
   );
+};
+
+/**
+ * Every scheduled group of the club, flat. The plan and coach steps use it to
+ * tell which training types and which coaches still have an open group.
+ */
+export const getClubGroups = async (clubSlug: string): Promise<Group[]> => {
+  const response = await apiClient.get(ENDPOINTS.PUBLIC.CLUB_GROUPS(clubSlug));
+  const grouped = (response.data.data ?? {}) as Record<string, Group[]> | Group[];
+  return Array.isArray(grouped) ? grouped : Object.values(grouped).flat();
 };
 
 export const getCoachSchedule = async (

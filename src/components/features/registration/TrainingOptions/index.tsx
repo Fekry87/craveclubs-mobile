@@ -52,7 +52,13 @@ export const BranchOption: React.FC<OptionProps<Branch>> = ({ item, selected, on
 
 const months = (n: number) => `${n} ${n === 1 ? 'month' : 'months'}`;
 
-export const PlanOption: React.FC<OptionProps<SubscriptionPlan>> = ({ item, selected, onPress, index }) => (
+export const PlanOption: React.FC<OptionProps<SubscriptionPlan> & { disabled?: boolean }> = ({
+  item,
+  selected,
+  onPress,
+  index,
+  disabled,
+}) => (
   <SelectCard
     title={item.name}
     subtitle={months(item.duration_months)}
@@ -60,6 +66,7 @@ export const PlanOption: React.FC<OptionProps<SubscriptionPlan>> = ({ item, sele
     selected={selected}
     onPress={onPress}
     index={index}
+    disabled={disabled}
   >
     {/* Price — the amount actually charged, not the list price. This used to
         render plan.price beside a "N% off" badge, so the app quoted 500 while
@@ -140,8 +147,9 @@ export const GroupOption: React.FC<OptionProps<Group>> = ({ item, selected, onPr
       subtitle={groupSchedule(item) || null}
       badge={item.is_full ? 'Full' : undefined}
       selected={selected}
-      onPress={item.is_full ? () => undefined : onPress}
+      onPress={onPress}
       index={index}
+      disabled={item.is_full}
       leading={
         <View
           style={[styles.iconTile, { backgroundColor: selected ? colors.white : colors.surfaceLight }]}

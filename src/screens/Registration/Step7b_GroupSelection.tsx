@@ -9,7 +9,7 @@ import { StepStatus } from '../../components/features/registration/StepStatus';
 import { FieldError } from '../../components/features/registration/SectionLabel';
 import { useRegistrationStore } from '../../store/registration.store';
 import { getGroups, Group } from '../../api/services/registration.service';
-import { trainingTypesIn } from '../../utils/trainingTypes';
+import { trainingTypeLabel, trainingTypesIn } from '../../utils/trainingTypes';
 import { groupSchedule } from '../../utils/formatters';
 
 type Props = NativeStackScreenProps<
@@ -18,9 +18,10 @@ type Props = NativeStackScreenProps<
 >;
 
 /**
- * Step 7b — the chosen coach's groups, one tab per training type, each with
- * its schedule and the spots left. Opens on the tab of the plan's type, since
- * that is the kind of group the swimmer is paying for.
+ * Step 7b — the chosen coach's groups of the plan's training type, each with
+ * its schedule and the spots left. The plan decided the type (a daily plan
+ * means a daily group), so other types are not offered; the tabs only appear
+ * when no plan type is known (an older store).
  */
 export const Step7b_GroupSelection: React.FC<Props> = ({ navigation }) => {
   const { clubSlug, coachId, coachName, coachUserId, groupId, planTrainingType, setGroup, setStep } =
@@ -46,7 +47,8 @@ export const Step7b_GroupSelection: React.FC<Props> = ({ navigation }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getGroups(clubSlug, { user_id: coachUserId ?? undefined, name: coachName ?? '' });
+      const all = await getGroups(clubSlug, { user_id: coachUserId ?? undefined, name: coachName ?? '' });
+      const data = planTrainingType ? all.filter((g) => g.group_type === planTrainingType) : all;
       setGroups(data);
       setActiveType((current) => {
         const present = trainingTypesIn(data.map((g) => ({ ...g, training_type: g.group_type })));
@@ -105,7 +107,11 @@ export const Step7b_GroupSelection: React.FC<Props> = ({ navigation }) => {
     <RegistrationLayout
       currentStep={8}
       title="Choose a group"
-      subtitle={coachName ? `${coachName}'s groups — pick the schedule that suits you` : 'Pick the schedule that suits you'}
+      subtitle={
+        coachName
+          ? `${coachName}'s ${trainingTypeLabel(planTrainingType).toLowerCase() || ''} groups — pick the schedule that suits you`.replace('  ', ' ')
+          : 'Pick the schedule that suits you'
+      }
       onBack={onBack}
       ctaTitle={isLoading || error || groups.length === 0 ? undefined : 'Continue'}
       onCtaPress={handleContinue}
@@ -118,8 +124,8 @@ export const Step7b_GroupSelection: React.FC<Props> = ({ navigation }) => {
         <StepStatus
           kind="empty"
           icon="group-line"
-          title="No groups yet"
-          message="This coach has no groups open for registration yet. Go back and choose another coach, or check with the club."
+          title="No groups here"
+          message={`This coach has no ${trainingTypeLabel(planTrainingType).toLowerCase() || ''} group open for registration. Go back and choose another coach, or check with the club.`.replace('  ', ' ')}
         />
       ) : (
         <>

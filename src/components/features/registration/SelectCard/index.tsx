@@ -19,6 +19,8 @@ interface SelectCardProps {
   onPress: () => void;
   /** Stagger index for the entry animation. */
   index?: number;
+  /** Drawn but not choosable (a full group, a plan nobody can join right now). */
+  disabled?: boolean;
 }
 
 /**
@@ -39,19 +41,20 @@ export const SelectCard: React.FC<SelectCardProps> = ({
   selected,
   onPress,
   index = 0,
+  disabled = false,
 }) => {
   const entry = useAnimatedEntry(Math.min(index, 10));
   const press = useAnimatedPress();
 
   return (
-    <Animated.View style={[styles.wrapper, entry]}>
+    <Animated.View style={[styles.wrapper, entry, disabled && styles.disabled]}>
       <TouchableOpacity
-        onPress={onPress}
-        onPressIn={press.onPressIn}
-        onPressOut={press.onPressOut}
-        activeOpacity={0.85}
+        onPress={disabled ? undefined : onPress}
+        onPressIn={disabled ? undefined : press.onPressIn}
+        onPressOut={disabled ? undefined : press.onPressOut}
+        activeOpacity={disabled ? 1 : 0.85}
         accessibilityRole="radio"
-        accessibilityState={{ selected }}
+        accessibilityState={{ selected, disabled }}
         accessibilityLabel={[title, subtitle].filter(Boolean).join(', ')}
       >
         <Animated.View
