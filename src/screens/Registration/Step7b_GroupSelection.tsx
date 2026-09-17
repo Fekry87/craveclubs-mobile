@@ -23,7 +23,7 @@ type Props = NativeStackScreenProps<
  * that is the kind of group the swimmer is paying for.
  */
 export const Step7b_GroupSelection: React.FC<Props> = ({ navigation }) => {
-  const { coachId, coachName, groupId, planTrainingType, setGroup, setStep } =
+  const { clubSlug, coachId, coachName, coachUserId, groupId, planTrainingType, setGroup, setStep } =
     useRegistrationStore();
 
   // ── State ─────────────────────────────────────────────────────
@@ -42,11 +42,11 @@ export const Step7b_GroupSelection: React.FC<Props> = ({ navigation }) => {
 
   // ── Fetch groups ──────────────────────────────────────────────
   const fetchGroups = useCallback(async () => {
-    if (!coachId) return;
+    if (!clubSlug || !coachId) return;
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getGroups(coachId);
+      const data = await getGroups(clubSlug, { user_id: coachUserId ?? undefined, name: coachName ?? '' });
       setGroups(data);
       setActiveType((current) => {
         const present = trainingTypesIn(data.map((g) => ({ ...g, training_type: g.group_type })));
@@ -59,7 +59,7 @@ export const Step7b_GroupSelection: React.FC<Props> = ({ navigation }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [coachId, planTrainingType]);
+  }, [clubSlug, coachId, coachUserId, coachName, planTrainingType]);
 
   // Refetch on every focus, not just on mount: coming back here after "this
   // group has just filled up" must show the spots as they are now, and the

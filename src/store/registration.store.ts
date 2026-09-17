@@ -46,6 +46,8 @@ interface RegistrationState {
   planTrainingType: string | null;
   coachId: number | null;
   coachName: string | null;
+  /** users.id of the coach — groups point at it (coach_user_id). */
+  coachUserId: number | null;
   groupId: number | null;
   groupName: string | null;
   groupType: string | null;
@@ -64,7 +66,7 @@ interface RegistrationState {
   updateExperience: (data: Partial<Experience>) => void;
   setBranch: (id: number, name: string) => void;
   setPlan: (id: number, name: string, price: number, trainingType: string) => void;
-  setCoach: (id: number, name: string) => void;
+  setCoach: (id: number, name: string, userId?: number | null) => void;
   setGroup: (id: number, name: string, type: string, schedule: string | null) => void;
   clearGroup: () => void;
   setPreferredTime: (time: string) => void;
@@ -116,6 +118,7 @@ const initialState = {
   planTrainingType: null as string | null,
   coachId: null as number | null,
   coachName: null as string | null,
+  coachUserId: null as number | null,
   groupId: null as number | null,
   groupName: null as string | null,
   groupType: null as string | null,
@@ -158,11 +161,11 @@ export const useRegistrationStore = create<RegistrationState>((set) => ({
   setPlan: (planId, planName, planPrice, planTrainingType) =>
     set({ planId, planName, planPrice, planTrainingType }),
   // A group belongs to a coach, so choosing a different coach drops it.
-  setCoach: (coachId, coachName) =>
+  setCoach: (coachId, coachName, coachUserId = null) =>
     set((s) =>
       s.coachId === coachId
-        ? { coachId, coachName }
-        : { coachId, coachName, groupId: null, groupName: null, groupType: null, groupSchedule: null },
+        ? { coachId, coachName, coachUserId }
+        : { coachId, coachName, coachUserId, groupId: null, groupName: null, groupType: null, groupSchedule: null },
     ),
   setGroup: (groupId, groupName, groupType, groupSchedule) =>
     set({ groupId, groupName, groupType, groupSchedule }),

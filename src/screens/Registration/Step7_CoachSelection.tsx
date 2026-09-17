@@ -64,7 +64,7 @@ export const Step7_CoachSelection: React.FC<Props> = ({ navigation }) => {
     }
     const coach = coaches.find((c) => c.id === selectedId);
     if (coach) {
-      setCoach(coach.id, coach.name);
+      setCoach(coach.id, coach.name, coach.user_id ?? null);
     }
     setStep(8);
     navigation.navigate('Step7b_GroupSelection');

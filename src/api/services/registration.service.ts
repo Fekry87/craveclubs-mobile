@@ -54,6 +54,8 @@ export interface SubscriptionPlan {
 // ── Coach ─────────────────────────────────────────────────────────
 export interface Coach {
   id: number;
+  /** The coach's users.id, which groups point at (coach_user_id). */
+  user_id?: number;
   name: string;
   email: string;
   phone: string | null;
@@ -67,10 +69,11 @@ export interface Coach {
 export interface Group {
   id: number;
   name: string;
-  description: string | null;
   /** daily | two_days | three_days | private — see utils/trainingTypes. */
   group_type: string;
   coach_name: string | null;
+  /** The coach's users.id — what Coach.user_id matches. */
+  coach_user_id: number | null;
   /** 0 = Sunday … 6 = Saturday. */
   days_of_week: number[];
   /** "Sun", "Tue"… in the same order. */
@@ -80,7 +83,7 @@ export interface Group {
   end_time: string | null;
   /** Null = no limit. */
   capacity: number | null;
-  /** Null when there is no limit. Counts members and pending registrations. */
+  /** Null when there is no limit. Counts current members. */
   remaining_spots: number | null;
   is_full: boolean;
 }
@@ -193,15 +196,22 @@ export const getCoaches = async (): Promise<Coach[]> => {
 };
 
 /**
- * The chosen coach's groups, for the group step. Server-filtered by coach so
- * the app never downloads the whole club's roster of groups; the tabs are
- * derived client-side from `group_type` with trainingTypesIn().
+ * The chosen coach's groups, for the group step.
+ *
+ * The server answers the whole club's groups grouped by type
+ * (`{ daily: [...], two_days: [...] }`, or `{}` when there are none) and has
+ * no coach filter, so the list is flattened and cut to the coach here: by
+ * `coach_user_id` when the coaches list gave us the user id, by name as a
+ * fallback for a backend that doesn't. The tabs are re-derived client-side
+ * from `group_type` with trainingTypesIn().
  */
-export const getGroups = async (coachId: number): Promise<Group[]> => {
-  const response = await apiClient.get(ENDPOINTS.REGISTRATION.GROUPS, {
-    params: { coach_id: coachId },
-  });
-  return response.data.data ?? response.data;
+export const getGroups = async (clubSlug: string, coach: Pick<Coach, 'user_id' | 'name'>): Promise<Group[]> => {
+  const response = await apiClient.get(ENDPOINTS.PUBLIC.CLUB_GROUPS(clubSlug));
+  const grouped = (response.data.data ?? {}) as Record<string, Group[]> | Group[];
+  const all: Group[] = Array.isArray(grouped) ? grouped : Object.values(grouped).flat();
+  return all.filter((g) =>
+    coach.user_id != null ? g.coach_user_id === coach.user_id : g.coach_name === coach.name,
+  );
 };
 
 export const getCoachSchedule = async (

@@ -56,6 +56,8 @@ export const ENDPOINTS = {
     // Exact-match lookup, not a listing: the app never shows a swimmer the
     // other clubs on the platform.
     CLUB_LOOKUP: '/public/club-lookup',
+    // The club's groups grouped by training type, with schedule and spots left.
+    CLUB_GROUPS: (slug: string) => `/clubs/${slug}/groups` as const,
     BRANDING: '/public/branding',
   },
   REGISTRATION: {
@@ -63,8 +65,6 @@ export const ENDPOINTS = {
     SUBSCRIPTION_PLANS: '/subscription-plans',
     COACHES: '/coaches',
     COACH_SCHEDULE: (id: number) => `/coaches/${id}/schedule` as const,
-    // A coach's groups with type, schedule and spots left (`?coach_id=`).
-    GROUPS: '/groups',
     SUBMIT: '/registrations',
     // Step 1 asks whether the email is free before the other seven steps.
     CHECK_EMAIL: '/registrations/check-email',

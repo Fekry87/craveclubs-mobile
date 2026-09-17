@@ -210,7 +210,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         store.setBranch(branch.id, branch.name);
         store.setPlan(plan.id, plan.name, planPrice(plan), plan.training_type);
         // Drops the group when the coach changes: groups belong to a coach.
-        store.setCoach(coach.id, coach.name);
+        store.setCoach(coach.id, coach.name, coach.user_id ?? null);
         if (coachChanged) {
           setEditing(null);
           openEditor('group');

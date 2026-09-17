@@ -137,7 +137,7 @@ export const GroupOption: React.FC<OptionProps<Group>> = ({ item, selected, onPr
   return (
     <SelectCard
       title={item.name}
-      subtitle={groupSchedule(item) || item.description || null}
+      subtitle={groupSchedule(item) || null}
       badge={item.is_full ? 'Full' : undefined}
       selected={selected}
       onPress={item.is_full ? () => undefined : onPress}
