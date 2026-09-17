@@ -27,6 +27,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { useProfileStore } from '../../store/profile.store';
 import { useBrandingStore } from '../../store/branding.store';
 import { SwimmerSubscriptionInterface } from '../../types/api.types';
+import { trainingTypeLabel } from '../../utils/trainingTypes';
 import { formatMediumDate, formatMoney, formatPercentage, formatRating, getInitials } from '../../utils/formatters';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
 
@@ -178,8 +179,13 @@ export const ProfileScreen: React.FC = () => {
                       {subscription.plan_name}
                     </Text>
                     <Text style={s.subMeta}>
-                      {subscription.duration_months}-month plan · ends{' '}
-                      {formatMediumDate(subscription.ends_at)}
+                      {[
+                        trainingTypeLabel(subscription.training_type),
+                        `${subscription.duration_months}-month plan`,
+                        `ends ${formatMediumDate(subscription.ends_at)}`,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
                     </Text>
                     {/* amount_paid, not the plan's current price: this is what this member
                         was actually billed, so editing the plan later cannot rewrite it. */}

@@ -12,8 +12,8 @@ import { ExperienceFields } from '../../components/features/registration/Experie
 import {
   BranchOption,
   CoachOption,
-  PlanOption,
 } from '../../components/features/registration/TrainingOptions';
+import { PlanPicker } from '../../components/features/registration/PlanPicker';
 import { SectionLabel, FieldError } from '../../components/features/registration/SectionLabel';
 import { StepStatus } from '../../components/features/registration/StepStatus';
 import { useRegistrationStore } from '../../store/registration.store';
@@ -33,6 +33,7 @@ import {
   validateExperience,
 } from '../../utils/registrationValidation';
 import { planPrice } from '../../utils/formatters';
+import { trainingTypeLabel } from '../../utils/trainingTypes';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { submitRegistration } from '../../api/services/registration.service';
 import { formatMoney } from '../../utils/formatters';
@@ -150,7 +151,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
           return;
         }
         store.setBranch(branch.id, branch.name);
-        store.setPlan(plan.id, plan.name, planPrice(plan));
+        store.setPlan(plan.id, plan.name, planPrice(plan), plan.training_type);
         store.setCoach(coach.id, coach.name);
         break;
       }
@@ -199,7 +200,8 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         years_experience: store.experience.yearsExperience ?? 'N/A',
         competed: store.experience.competed ?? false,
         primary_goal: store.experience.primaryGoal ?? '',
-        weekly_frequency: store.experience.weeklyFrequency ?? '',
+        // How often they train comes from the plan's type now, not a question.
+        weekly_frequency: trainingTypeLabel(store.planTrainingType) || undefined,
         branch_id: store.branchId,
         plan_id: store.planId,
         coach_id: store.coachId,
@@ -260,7 +262,6 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
   const experienceRows: Row[] = [
     { icon: 'trophy-line', label: 'Skill level', value: capitalize(experience.level) },
     { icon: 'flag-line', label: 'Main goal', value: experience.primaryGoal ?? '—' },
-    { icon: 'calendar-event-line', label: 'How often', value: experience.weeklyFrequency ?? '—' },
   ];
 
   const trainingRows: Row[] = [
@@ -269,7 +270,11 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
       icon: 'gift-line',
       label: 'Plan',
       value: store.planName ?? '—',
-      hint: store.planName ? formatMoney(store.planPrice ?? 0) : undefined,
+      hint: store.planName
+        ? [formatMoney(store.planPrice ?? 0), trainingTypeLabel(store.planTrainingType)]
+            .filter(Boolean)
+            .join(' · ')
+        : undefined,
     },
     { icon: 'user-star-line', label: 'Coach', value: store.coachName ?? '—' },
     // What the registration is sent with; nothing is charged in the app.
@@ -355,14 +360,11 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
             ))}
             <View style={styles.sheetSection}>
               <SectionLabel>Plan</SectionLabel>
-              {training.options.plans.map((item) => (
-                <PlanOption
-                  key={item.id}
-                  item={item}
-                  selected={trainingDraft.planId === item.id}
-                  onPress={() => setTrainingDraft((d) => ({ ...d, planId: item.id }))}
-                />
-              ))}
+              <PlanPicker
+                plans={training.options.plans}
+                selectedId={trainingDraft.planId}
+                onSelect={(item) => setTrainingDraft((d) => ({ ...d, planId: item.id }))}
+              />
             </View>
             <View style={styles.sheetSection}>
               <SectionLabel>Coach</SectionLabel>

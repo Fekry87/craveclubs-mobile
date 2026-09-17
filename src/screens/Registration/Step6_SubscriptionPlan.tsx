@@ -3,7 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { RegistrationLayout } from '../../components/features/registration/RegistrationLayout';
-import { PlanOption } from '../../components/features/registration/TrainingOptions';
+import { PlanPicker } from '../../components/features/registration/PlanPicker';
 import { StepStatus } from '../../components/features/registration/StepStatus';
 import { FieldError } from '../../components/features/registration/SectionLabel';
 import { useRegistrationStore } from '../../store/registration.store';
@@ -68,7 +68,7 @@ export const Step6_SubscriptionPlan: React.FC<Props> = ({ navigation }) => {
     }
     const plan = plans.find((p) => p.id === selectedId);
     if (plan) {
-      setPlan(plan.id, plan.name, planPrice(plan));
+      setPlan(plan.id, plan.name, planPrice(plan), plan.training_type);
     }
     setStep(7);
     navigation.navigate('Step7_CoachSelection');
@@ -83,7 +83,7 @@ export const Step6_SubscriptionPlan: React.FC<Props> = ({ navigation }) => {
     <RegistrationLayout
       currentStep={6}
       title="Choose a plan"
-      subtitle="Pick the plan that fits your goals"
+      subtitle="Pick how often you train, then a plan"
       onBack={onBack}
       ctaTitle={isLoading || error || plans.length === 0 ? undefined : 'Continue'}
       onCtaPress={handleContinue}
@@ -100,15 +100,7 @@ export const Step6_SubscriptionPlan: React.FC<Props> = ({ navigation }) => {
           message="This club hasn't published a plan. Please check with the club."
         />
       ) : (
-        plans.map((item, index) => (
-          <PlanOption
-            key={item.id}
-            item={item}
-            selected={selectedId === item.id}
-            onPress={() => handleSelect(item)}
-            index={index}
-          />
-        ))
+        <PlanPicker plans={plans} selectedId={selectedId} onSelect={handleSelect} />
       )}
 
       <FieldError message={validationError} />
