@@ -16,12 +16,28 @@ import {
   getPlatformBranding,
   PlatformBranding,
 } from '../../api/services/platform.service';
-import { colors, spacing, fontFamily, borderRadius } from '../../theme';
+import { colors, spacing, fontFamily, borderRadius, typography } from '../../theme';
 import { applyBrandingColors } from '../../theme/colors';
 import { toHex } from '../../services/branding.service';
 
 const FALLBACK_NAME = 'CraveClubs';
 const FALLBACK_MARK = 'CC';
+
+/**
+ * The logo is drawn inside this box at its own aspect ratio, never stretched
+ * into a fixed frame. A fixed 120×76 frame with `contain` rendered a wide
+ * wordmark ~20pt tall with dead space above and below it — which read as a
+ * large, uneven gap under the logo. Wide marks hit the width cap (so a wordmark
+ * is ~160×27, leading the headline without outweighing it); square marks hit
+ * the height cap (64×64).
+ */
+const LOGO_MAX_WIDTH = 160;
+const LOGO_MAX_HEIGHT = 64;
+
+const logoSize = (aspectRatio: number) => {
+  const width = Math.min(LOGO_MAX_WIDTH, LOGO_MAX_HEIGHT * aspectRatio);
+  return { width, height: width / aspectRatio };
+};
 
 /** Initials to show while the platform logo is missing or still loading. */
 const markFor = (name: string): string =>
@@ -43,6 +59,8 @@ export const ClubEntryScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [platform, setPlatform] = useState<PlatformBranding | null>(null);
   const [logoFailed, setLogoFailed] = useState(false);
+  // Measured from the image itself; null until known.
+  const [logoAspect, setLogoAspect] = useState<number | null>(null);
   const setSlug = useBrandingStore((s) => s.setSlug);
 
   // This screen belongs to CraveClubs, not to any club, so its identity comes
@@ -99,6 +117,23 @@ export const ClubEntryScreen: React.FC = () => {
   const platformName = platform?.platform_name?.trim() || FALLBACK_NAME;
   const platformLogo = platform?.platform_logo_url ?? null;
 
+  useEffect(() => {
+    if (!platformLogo) return;
+    let cancelled = false;
+    Image.getSize(
+      platformLogo,
+      (w, h) => {
+        if (!cancelled && w > 0 && h > 0) setLogoAspect(w / h);
+      },
+      () => {
+        if (!cancelled) setLogoFailed(true);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [platformLogo]);
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -108,14 +143,20 @@ export const ClubEntryScreen: React.FC = () => {
         contentContainerStyle={styles.inner}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.logoArea}>
+        <View style={styles.header}>
           {platformLogo && !logoFailed ? (
-            <Image
-              source={{ uri: platformLogo }}
-              style={styles.logoImage}
-              resizeMode="contain"
-              onError={() => setLogoFailed(true)}
-            />
+            logoAspect ? (
+              <Image
+                source={{ uri: platformLogo }}
+                style={[styles.logo, logoSize(logoAspect)]}
+                resizeMode="contain"
+                onError={() => setLogoFailed(true)}
+                accessibilityLabel={platformName}
+              />
+            ) : (
+              // Hold the logo's slot while it is measured, so nothing jumps.
+              <View style={styles.logoPlaceholder} />
+            )
           ) : (
             <View style={[styles.logoMark, { backgroundColor: colors.primary }]}>
               <Text style={styles.logoText}>{markFor(platformName)}</Text>
@@ -150,14 +191,22 @@ export const ClubEntryScreen: React.FC = () => {
         </View>
 
         <Text style={styles.hint}>
-          Type the name exactly as your club wrote it. If it doesn't work, ask
-          your club which name to use.
+          {"Type the name exactly as your club wrote it.\nIf it doesn't work, ask your club which name to use."}
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
+/**
+ * Hierarchy, top to bottom: brand mark → headline → instruction → field →
+ * button → help. Spacing is on the 8pt grid and says what belongs together:
+ *   mark → headline        32  (the mark heads the screen, set apart)
+ *   headline → instruction  8  (one thought)
+ *   instruction → field    32  (reading ends, doing starts)
+ *   field → button         16
+ *   button → help          24
+ */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -167,56 +216,60 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
+    // More room below than above lifts the group to the optical centre, a
+    // little above the true middle, where a centred block looks centred.
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl * 2,
   },
-  logoArea: {
+  header: {
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  logoImage: {
-    width: 120,
-    height: 76,
-    marginBottom: spacing.lg,
+  logo: {
+    marginBottom: spacing.xl,
+  },
+  logoPlaceholder: {
+    height: LOGO_MAX_HEIGHT / 2,
+    marginBottom: spacing.xl,
   },
   logoMark: {
-    width: 76,
-    height: 76,
-    borderRadius: borderRadius.modal - 4,
+    width: LOGO_MAX_HEIGHT,
+    height: LOGO_MAX_HEIGHT,
+    borderRadius: borderRadius.card,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   logoText: {
     fontFamily: fontFamily.headingHeavy,
-    fontSize: 28,
+    fontSize: 24,
     color: colors.white,
     letterSpacing: 1,
   },
   title: {
-    fontFamily: fontFamily.headingBold,
-    fontSize: 30,
-    lineHeight: 36,
+    ...typography.heading,
     color: colors.text,
-    marginBottom: spacing.xs,
+    textAlign: 'center',
+    letterSpacing: -0.3,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontFamily: fontFamily.bodyRegular,
-    fontSize: 16,
-    lineHeight: 22,
+    ...typography.body,
     color: colors.textMuted,
     textAlign: 'center',
+    // Keeps the line break balanced instead of stranding "account." alone.
+    maxWidth: 280,
   },
   form: {
     marginBottom: spacing.lg,
   },
   button: {
-    marginTop: spacing.sm,
+    // Input already leaves spacing.md below itself.
+    marginTop: 0,
   },
   hint: {
-    fontFamily: fontFamily.bodyRegular,
-    fontSize: 13,
+    ...typography.caption,
     color: colors.textDim,
     textAlign: 'center',
-    lineHeight: 20,
   },
 });
