@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/auth.store';
 import { useNotificationStore } from '../store/notification.store';
 import { useSessionStore } from '../store/session.store';
 import { useSessionSummaryStore } from '../store/sessionSummary.store';
+import { useAwardCelebrationStore } from '../store/awardCelebration.store';
 import {
   initializeEcho,
   getEchoInstance,
@@ -17,6 +18,9 @@ import { storageService } from '../services/storage.service';
  * - NewSessionAssigned → Refresh sessions + notification
  * - CoachMessage       → Show in-app notification
  * - ScheduleChanged    → Refresh sessions + notification
+ *
+ * Also joins `private-club.{club_id}.members` (every member of the club) for:
+ * - SwimmerAwarded     → Fetch the unseen awards so the celebration pops live
  *
  * Falls back gracefully when WebSocket is not available.
  */
@@ -50,6 +54,7 @@ export const useRealtime = () => {
   const { addNotification } = useNotificationStore();
   const { refreshSessions } = useSessionStore();
   const { triggerRefreshForCompletion } = useSessionSummaryStore();
+  const { fetchPending: fetchPendingAwards } = useAwardCelebrationStore();
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -157,6 +162,15 @@ export const useRealtime = () => {
           type: 'success',
         });
       });
+
+      // Club-wide: someone was named Man of the Day / Week / Month. The
+      // payload carries no avatar or `is_mine`, so the queue is refetched
+      // rather than built from the event.
+      const clubChannel = echo.private(`club.${user.club_id}.members`);
+      clubChannel.listen('.SwimmerAwarded', () => {
+        if (!mountedRef.current) return;
+        fetchPendingAwards();
+      });
     };
 
     setup();
@@ -166,7 +180,8 @@ export const useRealtime = () => {
       const echo = getEchoInstance();
       if (echo && user) {
         echo.leave(`swimmer.${user.id}`);
+        echo.leave(`club.${user.club_id}.members`);
       }
     };
-  }, [user, addNotification, refreshSessions, triggerRefreshForCompletion]);
+  }, [user, addNotification, refreshSessions, triggerRefreshForCompletion, fetchPendingAwards]);
 };

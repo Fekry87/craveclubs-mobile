@@ -16,16 +16,21 @@ import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
 import { Icon } from '../../components/common/Icon';
 import { StarRating } from '../../components/features/coach/StarRating';
+import { AwardSheet } from '../../components/features/coach/AwardSheet';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { coachService } from '../../api/services/coach.service';
 import { useCoachStore } from '../../store/coach.store';
+import { useAuthStore } from '../../store/auth.store';
 import { CoachSessionsStackParamList } from '../../navigation/types';
 import {
   AttendanceRosterItem,
+  AwardType,
   SessionAttendanceResponse,
   SessionCompletePayload,
+  SwimmerAwardInterface,
 } from '../../types/models.types';
+import { AWARD_LABELS, awardIcon } from '../../utils/awards';
 import {
   colors,
   spacing,
@@ -73,12 +78,17 @@ const SwimmerAttendanceRow: React.FC<{
   rating: number;
   readOnly: boolean;
   index: number;
+  /** The award just given from this row, so the row can confirm it inline. */
+  awarded: AwardType | null;
+  /** Undefined hides the trophy (club without the leaderboard feature). */
+  onAward?: (swimmer: AttendanceRosterItem) => void;
   onToggle: (swimmerId: number, present: boolean) => void;
   onRate: (swimmerId: number, rating: number) => void;
-}> = React.memo(({ swimmer, isPresent, rating, readOnly, index, onToggle, onRate }) => {
+}> = React.memo(({ swimmer, isPresent, rating, readOnly, index, awarded, onAward, onToggle, onRate }) => {
   const entry = useAnimatedEntry(Math.min(index, 10));
   const presentPress = useAnimatedPress();
   const absentPress = useAnimatedPress();
+  const awardPress = useAnimatedPress();
 
   const initials =
     (swimmer.first_name?.[0] ?? '') + (swimmer.last_name?.[0] ?? '');
@@ -128,6 +138,28 @@ const SwimmerAttendanceRow: React.FC<{
             </View>
           )}
         </View>
+
+        {/* Award: a tinted pill once given, the trophy button until then */}
+        {awarded ? (
+          <View style={s.awardedPill}>
+            <Icon name={awardIcon(awarded)} size={13} color={colors.warningDark} />
+            <Text style={s.awardedText}>{AWARD_LABELS[awarded]}</Text>
+          </View>
+        ) : onAward ? (
+          <TouchableOpacity
+            onPress={() => onAward(swimmer)}
+            onPressIn={awardPress.onPressIn}
+            onPressOut={awardPress.onPressOut}
+            activeOpacity={0.7}
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            accessibilityRole="button"
+            accessibilityLabel={`Give ${swimmer.first_name} an award`}
+          >
+            <Animated.View style={[s.awardBtn, awardPress.animatedStyle]}>
+              <Icon name="trophy-line" size={18} color={colors.warningDark} />
+            </Animated.View>
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {/* Attendance toggles (editable) */}
@@ -219,6 +251,9 @@ export const CoachSessionAttendanceScreen: React.FC<Props> = ({
 }) => {
   const { sessionId } = route.params;
   const { startSession } = useCoachStore();
+  const { user } = useAuthStore();
+  // Awards ride on the leaderboard feature: without it the server answers 403.
+  const awardsEnabled = user?.features?.leaderboard_enabled ?? false;
 
   // State
   const [data, setData] = useState<SessionAttendanceResponse | null>(null);
@@ -230,6 +265,8 @@ export const CoachSessionAttendanceScreen: React.FC<Props> = ({
   const [groupRating, setGroupRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [awardTarget, setAwardTarget] = useState<AttendanceRosterItem | null>(null);
+  const [awardedMap, setAwardedMap] = useState<Record<number, AwardType>>({});
 
   // Animation hooks (top level)
   const headerEntry = useAnimatedEntry(0);
@@ -283,6 +320,16 @@ export const CoachSessionAttendanceScreen: React.FC<Props> = ({
   // Rate swimmer
   const handleRate = useCallback((swimmerId: number, rating: number) => {
     setRatingsMap((prev) => ({ ...prev, [swimmerId]: rating }));
+  }, []);
+
+  // Give award (opens the sheet; the sheet posts, this row confirms)
+  const handleOpenAward = useCallback((swimmer: AttendanceRosterItem) => {
+    setAwardTarget(swimmer);
+  }, []);
+
+  const handleAwarded = useCallback((award: SwimmerAwardInterface) => {
+    setAwardedMap((prev) => ({ ...prev, [award.swimmer_id]: award.award_type }));
+    setAwardTarget(null);
   }, []);
 
   // Mark all present
@@ -502,6 +549,8 @@ export const CoachSessionAttendanceScreen: React.FC<Props> = ({
                 rating={ratingsMap[swimmer.swimmer_id] ?? 0}
                 readOnly={isReadOnly}
                 index={index}
+                awarded={awardedMap[swimmer.swimmer_id] ?? null}
+                onAward={awardsEnabled ? handleOpenAward : undefined}
                 onToggle={handleToggle}
                 onRate={handleRate}
               />
@@ -569,6 +618,17 @@ export const CoachSessionAttendanceScreen: React.FC<Props> = ({
           />
         </View>
       )}
+
+      {/* ── Give an award (Man of the Day / Week / Month) ── */}
+      <AwardSheet
+        visible={awardTarget !== null}
+        swimmerId={awardTarget?.swimmer_id ?? null}
+        swimmerName={
+          awardTarget ? `${awardTarget.first_name} ${awardTarget.last_name}`.trim() : ''
+        }
+        onClose={() => setAwardTarget(null)}
+        onAwarded={handleAwarded}
+      />
     </View>
   );
 };
@@ -778,6 +838,30 @@ const s = StyleSheet.create({
   readOnlyStatusText: {
     fontSize: 12,
     fontFamily: fontFamily.bodyMedium,
+  },
+
+  /* Award (trophy button → tinted pill once given) */
+  awardBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: colors.warningDim,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  awardedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.warningDim,
+    paddingHorizontal: spacing.sm + spacing.xs,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.pill,
+  },
+  awardedText: {
+    fontSize: 12,
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.warningDark,
   },
 
   /* Toggle buttons */

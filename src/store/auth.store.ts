@@ -12,6 +12,7 @@ import { useNotificationStore } from './notification.store';
 import { useTrainingPlanStore } from './trainingPlan.store';
 import { useProfileStore } from './profile.store';
 import { useSessionSummaryStore } from './sessionSummary.store';
+import { useAwardCelebrationStore } from './awardCelebration.store';
 
 interface AuthState {
   user: UserInterface | null;
@@ -109,6 +110,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useNotificationStore.getState().clearNotifications();
       useTrainingPlanStore.getState().reset();
       useSessionSummaryStore.getState().reset();
+      useAwardCelebrationStore.getState().reset();
       useProfileStore.getState().reset();
       await brandingService.clearBrandingCache();
       await useBrandingStore.getState().clearSlug();
@@ -134,6 +136,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useNotificationStore.getState().clearNotifications();
       useTrainingPlanStore.getState().reset();
       useSessionSummaryStore.getState().reset();
+      useAwardCelebrationStore.getState().reset();
       useProfileStore.getState().reset();
       await brandingService.clearBrandingCache();
       await useBrandingStore.getState().clearSlug();

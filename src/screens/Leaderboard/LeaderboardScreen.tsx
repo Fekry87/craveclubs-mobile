@@ -18,10 +18,12 @@ import { SeaCharacter } from '../../components/features/leaderboard/SeaCharacter
 import { PodiumDisplay } from '../../components/features/leaderboard/PodiumDisplay';
 import { LeaderboardCard } from '../../components/features/leaderboard/LeaderboardCard';
 import { LevelCharacter } from '../../components/features/leaderboard/LevelCharacter';
+import { RecentAwards } from '../../components/features/leaderboard/RecentAwards';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { progressService } from '../../api/services/progress.service';
+import { awardService } from '../../api/services/award.service';
 import { LeaderboardResponseType } from '../../types/api.types';
-import { LevelTierInterface } from '../../types/models.types';
+import { LevelTierInterface, SwimmerAwardInterface } from '../../types/models.types';
 import {
   colors,
   spacing,
@@ -107,6 +109,7 @@ const LevelStep: React.FC<LevelStepProps> = ({ tier, status }) => (
 /* ─── Leaderboard Screen ─── */
 export const LeaderboardScreen: React.FC = () => {
   const [data, setData] = useState<LeaderboardResponseType | null>(null);
+  const [awards, setAwards] = useState<SwimmerAwardInterface[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -114,7 +117,8 @@ export const LeaderboardScreen: React.FC = () => {
   const podiumEntry = useAnimatedEntry(0);
   const myCardEntry = useAnimatedEntry(1);
   const statsEntry = useAnimatedEntry(2);
-  const rankingsEntry = useAnimatedEntry(3);
+  const awardsEntry = useAnimatedEntry(3);
+  const rankingsEntry = useAnimatedEntry(4);
 
   // Crown float animation
   const floatAnim = useRef(new Animated.Value(0)).current;
@@ -149,8 +153,14 @@ export const LeaderboardScreen: React.FC = () => {
 
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const response = await progressService.getLeaderboard();
+      // The hall of fame loads with the rankings; it must never take the
+      // leaderboard down with it, so its failure reads as "no awards".
+      const [response, recentAwards] = await Promise.all([
+        progressService.getLeaderboard(),
+        awardService.getRecent().catch(() => [] as SwimmerAwardInterface[]),
+      ]);
       setData(response);
+      setAwards(recentAwards);
       setError(null);
       hasDataRef.current = true;
     } catch {
@@ -328,11 +338,33 @@ export const LeaderboardScreen: React.FC = () => {
               color={colors.error}
               dimColor={colors.errorDim}
             />
+            <View style={s.xpDivider} />
+            <XpStat
+              icon="trophy-fill"
+              value={data.my_xp.award_xp ?? 0}
+              label="Awards"
+              color={colors.warningDark}
+              dimColor={colors.warningDim}
+            />
           </View>
         </Card>
       </Animated.View>
 
-      {/* ═══ Section 4: All Swimmers Rankings ═══ */}
+      {/* ═══ Section 4: Recent Awards (hall of fame) ═══ */}
+      {awards.length > 0 && (
+        <Animated.View style={awardsEntry}>
+          <View style={s.sectionHeader}>
+            <Icon name="trophy-fill" size={18} color={colors.warning} />
+            <Text style={s.sectionTitle}>Recent Awards</Text>
+            <View style={s.countChip}>
+              <Text style={s.countChipText}>{awards.length}</Text>
+            </View>
+          </View>
+          <RecentAwards awards={awards} />
+        </Animated.View>
+      )}
+
+      {/* ═══ Section 5: All Swimmers Rankings ═══ */}
       {restRankings.length > 0 && (
         <Animated.View style={rankingsEntry}>
           <View style={s.sectionHeader}>
