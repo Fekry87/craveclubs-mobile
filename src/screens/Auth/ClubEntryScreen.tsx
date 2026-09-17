@@ -4,7 +4,6 @@ import {
   Text,
   Image,
   StyleSheet,
-  useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
+import { PhotoSlideshow } from '../../components/features/auth/PhotoSlideshow';
 import { useBrandingStore } from '../../store/branding.store';
 import { lookupClub } from '../../api/services/registration.service';
 import {
@@ -25,11 +25,15 @@ import { applyBrandingColors } from '../../theme/colors';
 import { toHex } from '../../services/branding.service';
 
 const FALLBACK_NAME = 'CraveClubs';
+// Stable empty list, so the slideshow doesn't restart on every render.
+const NO_PHOTOS: string[] = [];
 
 /**
  * Overhead butterfly stroke — Luckas Spalinger on Unsplash, used under the
  * Unsplash License. Portrait, with darker water at the top and bottom where the
- * logo and the form sit.
+ * logo and the form sit. The platform admin can replace it with up to three
+ * photos from corporate settings; this one stays as the fallback while they
+ * load and when none are uploaded.
  */
 const HERO = require('../../../assets/images/swim-hero.jpg');
 
@@ -89,7 +93,6 @@ const logoSize = (aspectRatio: number) => {
  */
 export const ClubEntryScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -181,20 +184,12 @@ export const ClubEntryScreen: React.FC = () => {
   }, [brand?.uri]);
 
   const showImageMark = !!brand && !logoFailed;
+  const entryPhotos = platform?.entry_photo_urls ?? NO_PHOTOS;
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <Image
-        source={HERO}
-        resizeMode="cover"
-        // Explicit width: an absolutely positioned local image otherwise keeps
-        // its intrinsic 1080pt width and `cover` zooms into one arm.
-        style={[
-          styles.hero,
-          { width: screenWidth, height: screenHeight, top: -screenHeight * HERO_LIFT },
-        ]}
-      />
+      <PhotoSlideshow photos={entryPhotos} fallback={HERO} lift={HERO_LIFT} />
       <LinearGradient
         colors={SCRIM}
         locations={SCRIM_STOPS}
@@ -303,10 +298,6 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
-  },
-  hero: {
-    position: 'absolute',
-    left: 0,
   },
   inner: {
     flexGrow: 1,
