@@ -209,13 +209,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   changePassword: async (currentPassword: string, newPassword: string) => {
-    await authService.changePassword({
-      current_password: currentPassword,
-      new_password: newPassword,
-      new_password_confirmation: newPassword,
-    });
-    // The password is theirs now: lift the first-sign-in gate without a refetch.
     const current = get().user;
+    try {
+      await authService.changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirmation: newPassword,
+      });
+    } catch (err: unknown) {
+      // A 422 is a real refusal. Anything else (a 500, a dropped connection)
+      // can arrive after the server already saved the new password — it
+      // happened in production: the request failed, the password had
+      // changed, and the swimmer was stuck on the set-password screen with a
+      // temporary password that no longer worked. So before keeping the
+      // gate up, ask the server whether it still wants a new password.
+      const status = (err as { response?: { status?: number } }).response?.status;
+      if (status === 422 || !current?.must_change_password) throw err;
+      let settled = false;
+      try {
+        const { user } = await authService.getMe();
+        settled = !user.must_change_password;
+        if (settled) {
+          await storageService.setUserData(user);
+          set({ user });
+        }
+      } catch {
+        // Couldn't ask; the original failure stands.
+      }
+      if (!settled) throw err;
+      return;
+    }
+    // The password is theirs now: lift the first-sign-in gate without a refetch.
     if (current?.must_change_password) {
       const user = { ...current, must_change_password: false };
       await storageService.setUserData(user);
