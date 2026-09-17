@@ -22,10 +22,6 @@ const GOALS = ['Get fit', 'Compete', 'Learn basics', 'Have fun', 'Lose weight'].
   (g) => ({ value: g, label: g }),
 );
 
-const FREQUENCIES = ['1\u20132x per week', '3\u20134x per week', 'Daily'].map((f) => ({
-  value: f,
-  label: f,
-}));
 
 interface ExperienceFieldsProps {
   value: ExperienceValues;
@@ -34,8 +30,9 @@ interface ExperienceFieldsProps {
 }
 
 /**
- * Skill level, main goal and weekly frequency — Step 4's questions, also used
- * by the review screen's edit sheet.
+ * Skill level and main goal — Step 4's questions, also used by the review
+ * screen's edit sheet. How often the swimmer trains is not asked here any more:
+ * the plan's training type (Step 6) answers it.
  */
 export const ExperienceFields: React.FC<ExperienceFieldsProps> = ({
   value,
@@ -84,15 +81,5 @@ export const ExperienceFields: React.FC<ExperienceFieldsProps> = ({
       <FieldError message={errors.primaryGoal} />
     </View>
 
-    <View style={styles.section}>
-      <SectionLabel>How often can you train?</SectionLabel>
-      <ChoiceChipGroup
-        options={FREQUENCIES}
-        value={value.weeklyFrequency}
-        onChange={(weeklyFrequency) => onChange({ weeklyFrequency })}
-        hasError={!!errors.weeklyFrequency}
-      />
-      <FieldError message={errors.weeklyFrequency} />
-    </View>
   </View>
 );

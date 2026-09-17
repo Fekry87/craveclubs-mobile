@@ -200,7 +200,8 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         years_experience: store.experience.yearsExperience ?? 'N/A',
         competed: store.experience.competed ?? false,
         primary_goal: store.experience.primaryGoal ?? '',
-        weekly_frequency: store.experience.weeklyFrequency ?? '',
+        // How often they train comes from the plan's type now, not a question.
+        weekly_frequency: trainingTypeLabel(store.planTrainingType) || undefined,
         branch_id: store.branchId,
         plan_id: store.planId,
         coach_id: store.coachId,
@@ -261,7 +262,6 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
   const experienceRows: Row[] = [
     { icon: 'trophy-line', label: 'Skill level', value: capitalize(experience.level) },
     { icon: 'flag-line', label: 'Main goal', value: experience.primaryGoal ?? '—' },
-    { icon: 'calendar-event-line', label: 'How often', value: experience.weeklyFrequency ?? '—' },
   ];
 
   const trainingRows: Row[] = [

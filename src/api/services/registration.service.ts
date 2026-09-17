@@ -94,7 +94,8 @@ export interface RegistrationPayload {
   years_experience: string;
   competed: boolean;
   primary_goal: string;
-  weekly_frequency: string;
+  /** Optional: filled from the plan's training type, so the profile's schedule line still reads. */
+  weekly_frequency?: string;
   branch_id: number;
   plan_id: number;
   coach_id: number;

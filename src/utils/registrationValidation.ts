@@ -8,7 +8,7 @@ export type FieldErrors = Record<string, string>;
 
 export type AboutYouValues = Omit<BasicProfile, 'avatarUrl'>;
 export type BodyValues = Pick<PhysicalInfo, 'heightCm' | 'weightKg' | 'fitnessLevel' | 'medicalNotes'>;
-export type ExperienceValues = Pick<Experience, 'level' | 'primaryGoal' | 'weeklyFrequency'>;
+export type ExperienceValues = Pick<Experience, 'level' | 'primaryGoal'>;
 
 const YEAR_MS = 365.25 * 24 * 60 * 60 * 1000;
 
@@ -47,7 +47,6 @@ export const validateExperience = (v: ExperienceValues): FieldErrors => {
   const errs: FieldErrors = {};
   if (!v.level) errs.level = 'Please select your skill level';
   if (!v.primaryGoal) errs.primaryGoal = 'Please select your main goal';
-  if (!v.weeklyFrequency) errs.weeklyFrequency = 'Please select how often you can train';
   return errs;
 };
 
@@ -78,5 +77,4 @@ export const bodyFromStore = (p: PhysicalInfo): BodyValues => ({
 export const experienceFromStore = (e: Experience): ExperienceValues => ({
   level: e.level ?? null,
   primaryGoal: e.primaryGoal ?? null,
-  weeklyFrequency: e.weeklyFrequency ?? null,
 });

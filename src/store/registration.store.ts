@@ -24,7 +24,6 @@ export interface Experience {
   yearsExperience: string | null;
   competed: boolean | null;
   primaryGoal: string | null;
-  weeklyFrequency: string | null;
 }
 
 interface RegistrationState {
@@ -98,7 +97,6 @@ const initialState = {
     yearsExperience: null as string | null,
     competed: null as boolean | null,
     primaryGoal: null as string | null,
-    weeklyFrequency: null as string | null,
   },
   branchId: null as number | null,
   branchName: null as string | null,
