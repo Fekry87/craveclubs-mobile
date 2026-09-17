@@ -183,8 +183,32 @@ export interface XpBreakdownInterface {
   rating_xp: number;
   attendance_xp: number;
   streak_xp: number;
+  /** Man of the Day / Week / Month points; always present, 0 without awards. */
+  award_xp: number;
   evaluation_count: number;
   attended_count: number;
+}
+
+/* ═══ Awards (Man of the Day / Week / Month) ═══ */
+
+export type AwardType = 'day' | 'week' | 'month';
+
+/** One award as `GET /swimmer/awards/recent` and `POST /coach/awards` present it. */
+export interface SwimmerAwardInterface {
+  award_id: number;
+  swimmer_id: number;
+  swimmer_name: string;
+  /** The swimmer user's avatar; null when they have no login or no photo. */
+  swimmer_avatar_url: string | null;
+  award_type: AwardType;
+  xp_value: number;
+  awarded_by: string | null;
+  awarded_at: string | null;
+}
+
+/** An award this viewer has not dismissed yet (`GET /swimmer/awards/pending`). */
+export interface PendingAwardInterface extends SwimmerAwardInterface {
+  is_mine: boolean;
 }
 
 export interface LevelInfoInterface {

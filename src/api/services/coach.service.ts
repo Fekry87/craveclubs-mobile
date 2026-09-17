@@ -10,7 +10,18 @@ import {
   CoachGroupsResponseType,
   CoachSessionCreateResponseType,
 } from '../../types/api.types';
-import { SessionCompletePayload, SessionCreatePayload, SessionAttendanceResponse } from '../../types/models.types';
+import {
+  SessionCompletePayload,
+  SessionCreatePayload,
+  SessionAttendanceResponse,
+  AwardType,
+  SwimmerAwardInterface,
+} from '../../types/models.types';
+
+interface GiveAwardResponse {
+  message: string;
+  award: SwimmerAwardInterface;
+}
 
 export const coachService = {
   /* ═══ Dashboard ═══ */
@@ -116,6 +127,22 @@ export const coachService = {
       ENDPOINTS.COACH.GROUPS,
     );
     return data;
+  },
+
+  /* ═══ Awards ═══ */
+  /**
+   * Name a swimmer Man of the Day / Week / Month. The server answers 422 on
+   * `swimmer_id` when the swimmer is not in one of this coach's groups.
+   */
+  async giveAward(
+    swimmerId: number,
+    awardType: AwardType,
+  ): Promise<SwimmerAwardInterface> {
+    const { data } = await apiClient.post<GiveAwardResponse>(
+      ENDPOINTS.COACH.AWARDS,
+      { swimmer_id: swimmerId, award_type: awardType },
+    );
+    return data.award;
   },
 
   /* ═══ Profile ═══ */

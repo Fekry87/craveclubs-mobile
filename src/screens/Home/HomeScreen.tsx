@@ -22,11 +22,14 @@ import { StatCard } from '../../components/features/progress/StatCard';
 import { SessionCard } from '../../components/features/sessions/SessionCard';
 import { SessionSummaryPopup } from '../../components/features/sessions/SessionSummaryPopup';
 import { WelcomeConfetti } from '../../components/features/notifications/WelcomeConfetti';
+import { AwardCelebrationCard } from '../../components/features/notifications/AwardCelebrationCard';
 import { LevelCharacter } from '../../components/features/leaderboard/LevelCharacter';
 import { useAuthStore } from '../../store/auth.store';
 import { useSessionSummaryStore } from '../../store/sessionSummary.store';
+import { useAwardCelebrationStore } from '../../store/awardCelebration.store';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { useSessionCompletionDetector } from '../../hooks/useSessionCompletionDetector';
+import { useAwardCelebrationDetector } from '../../hooks/useAwardCelebrationDetector';
 import { setDashboardRefreshCallback } from '../../hooks/useRealtime';
 import { progressService } from '../../api/services/progress.service';
 import { sessionService } from '../../api/services/session.service';
@@ -65,6 +68,14 @@ export const HomeScreen: React.FC = () => {
     dismiss: dismissSummary,
   } = useSessionSummaryStore();
   const { checkForCompletions } = useSessionCompletionDetector();
+
+  /* ─── Award Celebration Card (Man of the Day / Week / Month) ─── */
+  const {
+    current: currentAward,
+    queue: awardQueue,
+    dismissCurrent: dismissAward,
+  } = useAwardCelebrationStore();
+  const { checkForAwards } = useAwardCelebrationDetector();
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fetchRef = useRef<(() => Promise<void>) | null>(null);
 
@@ -93,6 +104,8 @@ export const HomeScreen: React.FC = () => {
 
       // Polling fallback: detect session completions
       checkForCompletions(sessionsData.data);
+      // Unseen awards ride on the same cadence (no timer of their own)
+      checkForAwards();
     } catch {
       // Only show error if there's no existing data to display
       if (!hasDataRef.current) {
@@ -102,7 +115,7 @@ export const HomeScreen: React.FC = () => {
       setIsLoading(false);
       setRefreshing(false);
     }
-    // eslint-disable-next-line -- checkForCompletions is stable from the hook
+    // eslint-disable-next-line -- checkForCompletions / checkForAwards are stable from their hooks
   }, []);
 
   /** Silent poll — keeps existing data, no loading/error UI changes. */
@@ -117,6 +130,7 @@ export const HomeScreen: React.FC = () => {
       setLeaderboard(lbData);
       setSessions(sessionsData.data);
       checkForCompletions(sessionsData.data);
+      checkForAwards();
     } catch {
       // Silent fail — keep showing existing data
     }
@@ -184,6 +198,10 @@ export const HomeScreen: React.FC = () => {
   const handleDismissSummary = useCallback(() => {
     dismissSummary();
   }, [dismissSummary]);
+
+  const handleDismissAward = useCallback(() => {
+    void dismissAward();
+  }, [dismissAward]);
 
   if (isLoading) {
     return <Loader message="Loading dashboard..." />;
@@ -453,6 +471,15 @@ export const HomeScreen: React.FC = () => {
       session={completedSession}
       dashboard={summaryData.dashboard}
       leaderboard={summaryData.leaderboard}
+    />
+
+    {/* ═══ Award Celebration (club-wide, one card per unseen award) ═══
+        Waits for the session summary: the two never share the screen. */}
+    <AwardCelebrationCard
+      visible={currentAward !== null && !summaryVisible}
+      award={currentAward}
+      remaining={Math.max(awardQueue.length - 1, 0)}
+      onDismiss={handleDismissAward}
     />
 
     {/* ═══ Welcome Confetti (registration_approved — plays once) ═══ */}

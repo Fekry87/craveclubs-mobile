@@ -20,6 +20,10 @@ export const ENDPOINTS = {
     LEADERBOARD: '/swimmer/leaderboard',
     TRAINING_PLAN: '/swimmer/training-plan',
     WEEKLY_REPORT: '/swimmer/weekly-report',
+    // Man of the Day / Week / Month: the unseen queue, the dismissal, the hall of fame.
+    AWARDS_PENDING: '/swimmer/awards/pending',
+    AWARD_SEEN: (id: number) => `/swimmer/awards/${id}/seen` as const,
+    AWARDS_RECENT: '/swimmer/awards/recent',
   },
   COACH: {
     DASHBOARD: '/coach/dashboard',
@@ -37,6 +41,8 @@ export const ENDPOINTS = {
     SWIMMER_DETAIL: (id: number) => `/coach/swimmers/${id}` as const,
     SWIMMER_EVALUATE: (id: number) =>
       `/coach/swimmers/${id}/evaluate` as const,
+    // Give a swimmer in one of the coach's own groups an award.
+    AWARDS: '/coach/awards',
   },
   CLUB: {
     ANALYTICS: '/club/analytics',
