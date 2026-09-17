@@ -28,10 +28,15 @@ export function useFormAnswers<T extends object>(initial: T) {
     [answers],
   );
 
+  /** Show an error the rules couldn't know about — e.g. the server's answer. */
+  const setFieldError = useCallback((key: keyof T & string, message: string) => {
+    setErrors((prev) => ({ ...prev, [key]: message }));
+  }, []);
+
   const reset = useCallback((values: T) => {
     setAnswers(values);
     setErrors({});
   }, []);
 
-  return { answers, errors, handleChange, validate, reset };
+  return { answers, errors, handleChange, validate, setFieldError, reset };
 }

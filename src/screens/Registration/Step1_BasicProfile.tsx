@@ -18,6 +18,7 @@ import { RegistrationLayout } from '../../components/features/registration/Regis
 import { AboutYouFields } from '../../components/features/registration/AboutYouFields';
 import { Icon } from '../../components/common/Icon';
 import { useRegistrationStore } from '../../store/registration.store';
+import { checkEmailAvailability } from '../../api/services/registration.service';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { useFormAnswers } from '../../hooks/useFormAnswers';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
@@ -44,8 +45,9 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
   const { basicProfile, updateBasicProfile, setStep } = useRegistrationStore();
 
   // ── Local answers (rehydrated from the store) ──────────────────
-  const { answers, errors, handleChange, validate, reset } = useFormAnswers<AboutYouValues>(aboutFromStore(basicProfile));
+  const { answers, errors, handleChange, validate, setFieldError, reset } = useFormAnswers<AboutYouValues>(aboutFromStore(basicProfile));
   const [avatarUrl, setAvatarUrl] = useState<string | null>(basicProfile.avatarUrl);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   // The review screen can edit these answers while this step sits below it in
   // the stack; reload them whenever the step comes back into view, or a later
@@ -132,9 +134,28 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
   };
 
   // ── Submit ─────────────────────────────────────────────────────
-  const handleContinue = () => {
+  // The email becomes the account's login, so an address that already has
+  // one is refused here — not seven steps later at submission, where the
+  // whole form used to fail with a generic error.
+  const handleContinue = async () => {
     if (!validate(validateAboutYou)) return;
-    updateBasicProfile({ ...cleanAboutYou(answers), avatarUrl });
+    const cleaned = cleanAboutYou(answers);
+
+    setCheckingEmail(true);
+    try {
+      const problem = await checkEmailAvailability(cleaned.email);
+      if (problem) {
+        setFieldError('email', problem);
+        return;
+      }
+    } catch {
+      setFieldError('email', "We couldn't check this email. Check your connection and try again.");
+      return;
+    } finally {
+      setCheckingEmail(false);
+    }
+
+    updateBasicProfile({ ...cleaned, avatarUrl });
     setStep(2);
     navigation.navigate('Step2_PhysicalInfo');
   };
@@ -147,6 +168,8 @@ export const Step1_BasicProfile: React.FC<Props> = ({ navigation }) => {
       onBack={() => navigation.getParent()?.goBack()}
       ctaTitle="Continue"
       onCtaPress={handleContinue}
+      ctaLoading={checkingEmail}
+      ctaDisabled={checkingEmail}
     >
       {/* The club isn't repeated here: the swimmer chose it on the entry
           screen, and this whole flow is already branded for it. */}
