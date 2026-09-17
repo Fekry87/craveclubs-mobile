@@ -24,6 +24,8 @@ interface FormSheetProps {
   onSave: () => void;
   saveTitle?: string;
   saveDisabled?: boolean;
+  /** Spinner on Save while the parent checks something with the server. */
+  saving?: boolean;
   children: React.ReactNode;
 }
 
@@ -40,6 +42,7 @@ export const FormSheet: React.FC<FormSheetProps> = ({
   onSave,
   saveTitle = 'Save changes',
   saveDisabled = false,
+  saving = false,
   children,
 }) => {
   const insets = useSafeAreaInsets();
@@ -105,7 +108,7 @@ export const FormSheet: React.FC<FormSheetProps> = ({
             </ScrollView>
 
             <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-              <Button title={saveTitle} onPress={onSave} disabled={saveDisabled} />
+              <Button title={saveTitle} onPress={onSave} disabled={saveDisabled || saving} loading={saving} />
             </View>
           </Animated.View>
         </View>

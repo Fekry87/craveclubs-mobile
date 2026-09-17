@@ -35,7 +35,11 @@ import {
 import { planPrice } from '../../utils/formatters';
 import { trainingTypeLabel } from '../../utils/trainingTypes';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
-import { submitRegistration } from '../../api/services/registration.service';
+import {
+  checkEmailAvailability,
+  describeRegistrationError,
+  submitRegistration,
+} from '../../api/services/registration.service';
 import { formatMoney } from '../../utils/formatters';
 import { colors, spacing, fontFamily } from '../../theme';
 
@@ -47,6 +51,27 @@ type Props = NativeStackScreenProps<
 type Row = Omit<InfoRowProps, 'isLast'>;
 
 type Section = 'about' | 'body' | 'experience' | 'training';
+
+/** Which review card each payload field the server may refuse is edited in. */
+const SECTION_OF_FIELD: Record<string, Section> = {
+  full_name: 'about',
+  phone: 'about',
+  email: 'about',
+  guardian_name: 'about',
+  guardian_phone: 'about',
+  guardian_email: 'about',
+  gender: 'about',
+  birth_date: 'about',
+  height_cm: 'body',
+  weight_kg: 'body',
+  fitness_level: 'body',
+  medical_notes: 'body',
+  experience_level: 'experience',
+  primary_goal: 'experience',
+  branch_id: 'training',
+  plan_id: 'training',
+  coach_id: 'training',
+};
 
 
 const capitalize = (value: string | null | undefined) =>
@@ -92,6 +117,7 @@ function ReviewSection({
 export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
   const store = useRegistrationStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const { basicProfile, physicalInfo, experience } = store;
 
   const birthDate = basicProfile.birthDate ? new Date(basicProfile.birthDate) : null;
@@ -126,11 +152,34 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
     setEditing(section);
   };
 
-  const saveEdit = () => {
+  // A changed email is checked the way Step 1 checks it, so the sheet can't
+  // save an address the submission would refuse.
+  const saveAbout = async (): Promise<boolean> => {
+    if (!aboutForm.validate(validateAboutYou)) return false;
+    const cleaned = cleanAboutYou(aboutForm.answers);
+    if (cleaned.email !== basicProfile.email) {
+      setCheckingEmail(true);
+      try {
+        const problem = await checkEmailAvailability(cleaned.email);
+        if (problem) {
+          aboutForm.setFieldError('email', problem);
+          return false;
+        }
+      } catch {
+        aboutForm.setFieldError('email', "We couldn't check this email. Check your connection and try again.");
+        return false;
+      } finally {
+        setCheckingEmail(false);
+      }
+    }
+    store.updateBasicProfile(cleaned);
+    return true;
+  };
+
+  const saveEdit = async () => {
     switch (editing) {
       case 'about':
-        if (!aboutForm.validate(validateAboutYou)) return;
-        store.updateBasicProfile(cleanAboutYou(aboutForm.answers));
+        if (!(await saveAbout())) return;
         break;
       case 'body':
         if (!bodyForm.validate(validateBody)) return;
@@ -216,10 +265,21 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         coachName: store.coachName ?? '',
         planName: store.planName ?? '',
       });
-    } catch {
+    } catch (err: unknown) {
+      // The server's 422 messages are written for the swimmer ("This email is
+      // already registered…"); when it names a field on this screen, offer the
+      // edit sheet for it instead of sending them back through the steps.
+      const problem = describeRegistrationError(err);
+      const section = problem.field ? SECTION_OF_FIELD[problem.field] : undefined;
       Alert.alert(
-        'Submission Failed',
-        'Something went wrong. Please try again.',
+        "Couldn't submit",
+        problem.message,
+        section
+          ? [
+              { text: 'Not now', style: 'cancel' },
+              { text: 'Edit', onPress: () => openEditor(section) },
+            ]
+          : undefined,
       );
     } finally {
       setIsSubmitting(false);
@@ -308,6 +368,7 @@ export const Step8_ReviewPayment: React.FC<Props> = ({ navigation }) => {
         title="Edit your details"
         onClose={() => setEditing(null)}
         onSave={saveEdit}
+        saving={checkingEmail}
       >
         <AboutYouFields
           value={aboutForm.answers}

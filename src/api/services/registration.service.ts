@@ -186,3 +186,57 @@ export const submitRegistration = async (
   );
   return response.data;
 };
+
+// ── Errors ────────────────────────────────────────────────────────
+
+/** What went wrong with a registration call, in words a swimmer can act on. */
+export interface RegistrationProblem {
+  message: string;
+  /** The payload field the server refused, when it named one (e.g. `email`). */
+  field?: string;
+}
+
+interface ValidationErrorBody {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
+const errorBody = (err: unknown): { status?: number; data?: ValidationErrorBody } => {
+  const response = (err as { response?: { status?: number; data?: ValidationErrorBody } }).response;
+  return { status: response?.status, data: response?.data };
+};
+
+/**
+ * Turn a failed registration call into something the screen can show. A 422
+ * carries the server's own field messages ("This email is already
+ * registered…"), which are written for the swimmer; anything else gets a
+ * generic line, since raw server errors must never reach the screen.
+ */
+export const describeRegistrationError = (err: unknown): RegistrationProblem => {
+  const { status, data } = errorBody(err);
+  if (status === 422 && data?.errors) {
+    const [field, messages] = Object.entries(data.errors)[0] ?? [];
+    if (field && messages?.[0]) return { field, message: messages[0] };
+  }
+  if (status === 429) {
+    return { message: 'Too many attempts. Please wait a few minutes and try again.' };
+  }
+  if (status === 422 && data?.message) return { message: data.message };
+  return { message: 'Something went wrong. Please try again.' };
+};
+
+/**
+ * Ask whether the swimmer's email can still be used, before they fill in the
+ * other seven steps. Resolves to the server's message when it can't (already
+ * an account, or not an address), null when it can. Network failures throw.
+ */
+export const checkEmailAvailability = async (email: string): Promise<string | null> => {
+  try {
+    await apiClient.post(ENDPOINTS.REGISTRATION.CHECK_EMAIL, { email });
+    return null;
+  } catch (err: unknown) {
+    const { status } = errorBody(err);
+    if (status === 422) return describeRegistrationError(err).message;
+    throw err;
+  }
+};
