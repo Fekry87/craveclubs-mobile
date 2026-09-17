@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RegistrationStackParamList } from '../../navigation/types';
 import { RegistrationLayout } from '../../components/features/registration/RegistrationLayout';
-import { SelectCard } from '../../components/features/registration/SelectCard';
+import { BranchOption } from '../../components/features/registration/TrainingOptions';
 import { StepStatus } from '../../components/features/registration/StepStatus';
 import { FieldError } from '../../components/features/registration/SectionLabel';
-import { Icon } from '../../components/common/Icon';
 import { useRegistrationStore } from '../../store/registration.store';
 import { getBranches, Branch } from '../../api/services/registration.service';
-import { colors, spacing, borderRadius, typography } from '../../theme';
 
 type Props = NativeStackScreenProps<
   RegistrationStackParamList,
@@ -23,6 +21,13 @@ export const Step5_BranchSelection: React.FC<Props> = ({ navigation }) => {
   // ── State ─────────────────────────────────────────────────────
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(branchId);
+
+  // Reload on focus: the review screen may have changed this choice meanwhile.
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedId(useRegistrationStore.getState().branchId);
+    }, []),
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -91,64 +96,18 @@ export const Step5_BranchSelection: React.FC<Props> = ({ navigation }) => {
           message="This club hasn't added a branch. Please check with the club."
         />
       ) : (
-        branches.map((branch, index) => {
-          const selected = selectedId === branch.id;
-          const address = [branch.address, branch.city].filter(Boolean).join(', ');
-          return (
-            <SelectCard
-              key={branch.id}
-              title={branch.name}
-              subtitle={address || null}
-              selected={selected}
-              onPress={() => handleSelect(branch)}
-              index={index}
-              leading={
-                <View
-                  style={[
-                    styles.iconTile,
-                    { backgroundColor: selected ? colors.white : colors.surfaceLight },
-                  ]}
-                >
-                  <Icon
-                    name="building-2-line"
-                    size={22}
-                    color={selected ? colors.primary : colors.textMuted}
-                  />
-                </View>
-              }
-            >
-              {branch.phone ? (
-                <View style={styles.metaRow}>
-                  <Icon name="phone-line" size={14} color={colors.textMuted} />
-                  <Text style={styles.metaText}>{branch.phone}</Text>
-                </View>
-              ) : null}
-            </SelectCard>
-          );
-        })
+        branches.map((item, index) => (
+          <BranchOption
+            key={item.id}
+            item={item}
+            selected={selectedId === item.id}
+            onPress={() => handleSelect(item)}
+            index={index}
+          />
+        ))
       )}
 
       <FieldError message={validationError} />
     </RegistrationLayout>
   );
 };
-
-const styles = StyleSheet.create({
-  iconTile: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-  },
-  metaText: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-});
