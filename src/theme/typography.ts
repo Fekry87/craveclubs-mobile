@@ -23,6 +23,8 @@ export const fontFamily = {
 };
 
 export const typography: Record<string, TextStyle> = {
+  /** One statement headline per screen at most (the club-name entry screen). */
+  display: { fontSize: 40, lineHeight: 44, fontFamily: fontFamily.headingBold },
   hero: { fontSize: 32, lineHeight: 38, fontFamily: fontFamily.headingBold },
   heading: { fontSize: 26, lineHeight: 32, fontFamily: fontFamily.headingBold },
   subheading: { fontSize: 20, lineHeight: 26, fontFamily: fontFamily.headingSemiBold },

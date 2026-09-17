@@ -4,10 +4,14 @@ import {
   Text,
   Image,
   StyleSheet,
+  useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useBrandingStore } from '../../store/branding.store';
@@ -16,16 +20,58 @@ import {
   getPlatformBranding,
   PlatformBranding,
 } from '../../api/services/platform.service';
-import { colors, spacing, fontFamily, borderRadius } from '../../theme';
+import { colors, spacing, fontFamily, typography } from '../../theme';
 import { applyBrandingColors } from '../../theme/colors';
 import { toHex } from '../../services/branding.service';
 
 const FALLBACK_NAME = 'CraveClubs';
-const FALLBACK_MARK = 'CC';
 
-/** Initials to show while the platform logo is missing or still loading. */
-const markFor = (name: string): string =>
-  name.trim().slice(0, 2).toUpperCase() || FALLBACK_MARK;
+/**
+ * Overhead butterfly stroke — Luckas Spalinger on Unsplash, used under the
+ * Unsplash License. Portrait, with darker water at the top and bottom where the
+ * logo and the form sit.
+ */
+const HERO = require('../../../assets/images/swim-hero.jpg');
+
+/**
+ * The photo is lifted by this share of the screen height. Drawn edge to edge,
+ * the swimmer landed right under the headline and the white splash swallowed
+ * the text; lifted, the swimmer sits mid-screen and the dark water below takes
+ * the text.
+ */
+const HERO_LIFT = 0.24;
+
+/** Deep water: the scrim's end and the screen background below the photo. */
+const DEEP_WATER = '#031116';
+
+/**
+ * Legibility scrim over the photo, tinted to the water's deep teal rather than
+ * flat black so it reads as part of the image. Light through the middle, where
+ * the swimmer is, then darkening under the text and reaching fully opaque
+ * exactly where the lifted photo ends — so its bottom edge can never show as a
+ * line against the background.
+ */
+const SCRIM = [
+  // Heavier at the very top: the splash spray reaches up behind the logo.
+  'rgba(3, 17, 22, 0.75)',
+  'rgba(3, 17, 22, 0.05)',
+  'rgba(3, 17, 22, 0.35)',
+  DEEP_WATER,
+  DEEP_WATER,
+] as const;
+const SCRIM_STOPS = [0, 0.3, 0.5, 1 - HERO_LIFT, 1] as const;
+
+/**
+ * The logo sits centred at the top, drawn at its own aspect ratio inside this
+ * box: a wordmark hits the width cap (~184×28), a square mark the height cap.
+ */
+const LOGO_MAX_WIDTH = 184;
+const LOGO_MAX_HEIGHT = 40;
+
+const logoSize = (aspectRatio: number) => {
+  const width = Math.min(LOGO_MAX_WIDTH, LOGO_MAX_HEIGHT * aspectRatio);
+  return { width, height: width / aspectRatio };
+};
 
 /**
  * First screen of a shared build: the swimmer types their own club's name.
@@ -36,13 +82,21 @@ const markFor = (name: string): string =>
  * downloaded. Resolving sets the branding slug, which flips `isResolved` and
  * lets RootNavigator render the club-branded login — there is no navigate()
  * call here.
+ *
+ * Layout: a full-bleed swimming photo with the platform logo centred at the
+ * top, and the task — headline, field, button — anchored to the bottom where
+ * the thumb is.
  */
 export const ClubEntryScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [platform, setPlatform] = useState<PlatformBranding | null>(null);
   const [logoFailed, setLogoFailed] = useState(false);
+  // Measured from the image itself; null until known.
+  const [logoAspect, setLogoAspect] = useState<number | null>(null);
   const setSlug = useBrandingStore((s) => s.setSlug);
 
   // This screen belongs to CraveClubs, not to any club, so its identity comes
@@ -97,126 +151,207 @@ export const ClubEntryScreen: React.FC = () => {
   }, [query, setSlug]);
 
   const platformName = platform?.platform_name?.trim() || FALLBACK_NAME;
-  const platformLogo = platform?.platform_logo_url ?? null;
+
+  // On the dark photo the mark must be white. The uploaded platform logo is a
+  // transparent PNG, so it is tinted white. Without one, the splash image — which
+  // is authored white-on-dark already — is used as is.
+  const brand = platform?.platform_logo_url
+    ? { uri: platform.platform_logo_url, tint: true }
+    : platform?.splash_image_url
+      ? { uri: platform.splash_image_url, tint: false }
+      : null;
+
+  useEffect(() => {
+    setLogoAspect(null);
+    setLogoFailed(false);
+    if (!brand) return;
+    let cancelled = false;
+    Image.getSize(
+      brand.uri,
+      (w, h) => {
+        if (!cancelled && w > 0 && h > 0) setLogoAspect(w / h);
+      },
+      () => {
+        if (!cancelled) setLogoFailed(true);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [brand?.uri]);
+
+  const showImageMark = !!brand && !logoFailed;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.inner}
-        keyboardShouldPersistTaps="handled"
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      <Image
+        source={HERO}
+        resizeMode="cover"
+        // Explicit width: an absolutely positioned local image otherwise keeps
+        // its intrinsic 1080pt width and `cover` zooms into one arm.
+        style={[
+          styles.hero,
+          { width: screenWidth, height: screenHeight, top: -screenHeight * HERO_LIFT },
+        ]}
+      />
+      <LinearGradient
+        colors={SCRIM}
+        locations={SCRIM_STOPS}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.logoArea}>
-          {platformLogo && !logoFailed ? (
-            <Image
-              source={{ uri: platformLogo }}
-              style={styles.logoImage}
-              resizeMode="contain"
-              onError={() => setLogoFailed(true)}
-            />
-          ) : (
-            <View style={[styles.logoMark, { backgroundColor: colors.primary }]}>
-              <Text style={styles.logoText}>{markFor(platformName)}</Text>
+        <ScrollView
+          contentContainerStyle={[
+            styles.inner,
+            {
+              paddingTop: insets.top + spacing.lg,
+              paddingBottom: insets.bottom + spacing.md,
+            },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* ── Brand, centred at the top ── */}
+          <View style={styles.brand}>
+            {showImageMark ? (
+              logoAspect ? (
+                <Image
+                  source={{ uri: brand.uri }}
+                  style={[
+                    logoSize(logoAspect),
+                    brand.tint && { tintColor: colors.white },
+                  ]}
+                  resizeMode="contain"
+                  onError={() => setLogoFailed(true)}
+                  accessibilityLabel={platformName}
+                />
+              ) : (
+                // Hold the mark's slot while it is measured, so nothing jumps.
+                <View style={styles.logoPlaceholder} />
+              )
+            ) : (
+              <Text style={styles.wordmark} numberOfLines={1}>
+                {platformName}
+              </Text>
+            )}
+          </View>
+
+          {/* ── The task, anchored to the bottom ── */}
+          <View>
+            {showImageMark ? (
+              <Text style={styles.eyebrow}>{platformName}</Text>
+            ) : null}
+            <Text style={styles.headline} accessibilityRole="header">
+              Find your club
+            </Text>
+            <Text style={styles.instruction}>
+              Enter its name to sign in or join.
+            </Text>
+
+            <View style={styles.form}>
+              <Input
+                label="Club name"
+                placeholder="e.g. Smart Club"
+                value={query}
+                onChangeText={(text: string) => {
+                  setQuery(text);
+                  if (error) setError('');
+                }}
+                autoCapitalize="words"
+                error={error || undefined}
+              />
+
+              <Button
+                title="Continue"
+                variant="ghost"
+                onPress={handleContinue}
+                loading={loading}
+                disabled={loading}
+              />
             </View>
-          )}
-          <Text style={styles.title}>{platformName}</Text>
-          <Text style={styles.subtitle}>
-            Enter your club's name to sign in or create an account.
-          </Text>
-        </View>
 
-        <View style={styles.form}>
-          <Input
-            label="Club name"
-            placeholder="e.g. Smart Club"
-            value={query}
-            onChangeText={(text: string) => {
-              setQuery(text);
-              if (error) setError('');
-            }}
-            autoCapitalize="words"
-            error={error || undefined}
-          />
-
-          <Button
-            title="Continue"
-            onPress={handleContinue}
-            loading={loading}
-            disabled={loading}
-            style={styles.button}
-          />
-        </View>
-
-        <Text style={styles.hint}>
-          Type the name exactly as your club wrote it. If it doesn't work, ask
-          your club which name to use.
-        </Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <Text style={styles.hint}>Ask your club for its exact name</Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
+/**
+ * On the 8pt grid:
+ *   eyebrow → headline       8
+ *   headline → instruction   8
+ *   instruction → field     24
+ *   field → button          16  (Input leaves it below itself)
+ *   button → help           16
+ * The brand pins to the top and the task to the bottom (space-between), so the
+ * photo shows through the middle on any screen height, and the form rises with
+ * the keyboard.
+ */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    // Shows below the lifted photo, and for the instant before it paints.
+    backgroundColor: DEEP_WATER,
+  },
+  flex: {
+    flex: 1,
+  },
+  hero: {
+    position: 'absolute',
+    left: 0,
   },
   inner: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
   },
-  logoArea: {
+  brand: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  logoImage: {
-    width: 120,
-    height: 76,
-    marginBottom: spacing.lg,
-  },
-  logoMark: {
-    width: 76,
-    height: 76,
-    borderRadius: borderRadius.modal - 4,
-    alignItems: 'center',
+    minHeight: LOGO_MAX_HEIGHT,
     justifyContent: 'center',
-    marginBottom: spacing.lg,
   },
-  logoText: {
+  logoPlaceholder: {
+    height: LOGO_MAX_HEIGHT,
+  },
+  wordmark: {
     fontFamily: fontFamily.headingHeavy,
-    fontSize: 28,
+    fontSize: 22,
+    letterSpacing: 4,
     color: colors.white,
-    letterSpacing: 1,
   },
-  title: {
-    fontFamily: fontFamily.headingBold,
-    fontSize: 30,
-    lineHeight: 36,
-    color: colors.text,
-    marginBottom: spacing.xs,
+  eyebrow: {
+    ...typography.bodyMedium,
+    color: colors.white,
+    opacity: 0.72,
+    marginBottom: spacing.sm,
   },
-  subtitle: {
-    fontFamily: fontFamily.bodyRegular,
-    fontSize: 16,
-    lineHeight: 22,
-    color: colors.textMuted,
-    textAlign: 'center',
+  headline: {
+    ...typography.display,
+    color: colors.white,
+    letterSpacing: -0.8,
   },
-  form: {
-    marginBottom: spacing.lg,
-  },
-  button: {
+  instruction: {
+    ...typography.body,
+    color: colors.white,
+    opacity: 0.72,
     marginTop: spacing.sm,
   },
+  form: {
+    marginTop: spacing.lg,
+  },
   hint: {
-    fontFamily: fontFamily.bodyRegular,
-    fontSize: 13,
-    color: colors.textDim,
+    ...typography.caption,
+    color: colors.white,
+    opacity: 0.6,
     textAlign: 'center',
-    lineHeight: 20,
+    marginTop: spacing.md,
   },
 });
