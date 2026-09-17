@@ -38,6 +38,21 @@ export const formatTimeRange = (start: string, end: string): string => {
   return `${formatTime(start)} - ${formatTime(end)}`;
 };
 
+/**
+ * "Sun, Tue, Thu · 5:00 PM - 6:30 PM" for a group; the days alone, the times
+ * alone, or '' when the club set neither.
+ */
+export const groupSchedule = (group: {
+  days_of_week_labels: string[];
+  start_time: string | null;
+  end_time: string | null;
+}): string => {
+  const days = group.days_of_week_labels.join(', ');
+  const times =
+    group.start_time && group.end_time ? formatTimeRange(group.start_time, group.end_time) : '';
+  return [days, times].filter(Boolean).join(' · ');
+};
+
 /** "2h", "1h 30m", "45m" — session lengths. */
 export const formatDuration = (minutes: number | null | undefined): string => {
   if (minutes == null || minutes <= 0) return '';

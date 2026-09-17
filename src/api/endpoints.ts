@@ -56,6 +56,8 @@ export const ENDPOINTS = {
     // Exact-match lookup, not a listing: the app never shows a swimmer the
     // other clubs on the platform.
     CLUB_LOOKUP: '/public/club-lookup',
+    // The club's groups grouped by training type, with schedule and spots left.
+    CLUB_GROUPS: (slug: string) => `/clubs/${slug}/groups` as const,
     BRANDING: '/public/branding',
   },
   REGISTRATION: {

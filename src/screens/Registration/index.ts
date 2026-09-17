@@ -5,5 +5,6 @@ export { Step4_ExperienceLevel } from './Step4_ExperienceLevel';
 export { Step5_BranchSelection } from './Step5_BranchSelection';
 export { Step6_SubscriptionPlan } from './Step6_SubscriptionPlan';
 export { Step7_CoachSelection } from './Step7_CoachSelection';
+export { Step7b_GroupSelection } from './Step7b_GroupSelection';
 export { Step8_ReviewPayment } from './Step8_ReviewPayment';
 export { RegistrationSuccess } from './RegistrationSuccess';

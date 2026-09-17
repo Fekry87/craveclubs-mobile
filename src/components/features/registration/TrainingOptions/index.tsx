@@ -2,14 +2,14 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { SelectCard } from '../SelectCard';
 import { Icon } from '../../../common/Icon';
-import { Branch, Coach, SubscriptionPlan } from '../../../../api/services/registration.service';
-import { formatMoney, planPrice } from '../../../../utils/formatters';
+import { Branch, Coach, Group, SubscriptionPlan } from '../../../../api/services/registration.service';
+import { formatMoney, planPrice, groupSchedule } from '../../../../utils/formatters';
 import { colors } from '../../../../theme';
 import { styles } from './styles';
 
 /*
- * The branch, plan and coach choices — drawn the same in their own steps (5–7)
- * and in the review screen's Training edit sheet.
+ * The branch, plan, coach and group choices — drawn the same in their own
+ * steps (5–7b) and in the review screen's Training edit sheet.
  */
 
 interface OptionProps<T> {
@@ -120,3 +120,42 @@ export const CoachOption: React.FC<OptionProps<Coach>> = ({ item, selected, onPr
     ) : null}
   </SelectCard>
 );
+
+/**
+ * A coach's group: its schedule as the subtitle and the spots left underneath.
+ * A full group is drawn but can't be chosen — hiding it would make the coach
+ * look as if they had fewer groups than the club advertises.
+ */
+export const GroupOption: React.FC<OptionProps<Group>> = ({ item, selected, onPress, index }) => {
+  const spots =
+    item.capacity === null
+      ? null
+      : item.is_full
+        ? 'Full'
+        : `${item.remaining_spots} ${item.remaining_spots === 1 ? 'spot' : 'spots'} left`;
+
+  return (
+    <SelectCard
+      title={item.name}
+      subtitle={groupSchedule(item) || null}
+      badge={item.is_full ? 'Full' : undefined}
+      selected={selected}
+      onPress={item.is_full ? () => undefined : onPress}
+      index={index}
+      leading={
+        <View
+          style={[styles.iconTile, { backgroundColor: selected ? colors.white : colors.surfaceLight }]}
+        >
+          <Icon name="group-line" size={22} color={selected ? colors.primary : colors.textMuted} />
+        </View>
+      }
+    >
+      {spots ? (
+        <View style={styles.metaRow}>
+          <Icon name="user-line" size={14} color={item.is_full ? colors.error : colors.textMuted} />
+          <Text style={[styles.metaText, item.is_full && { color: colors.error }]}>{spots}</Text>
+        </View>
+      ) : null}
+    </SelectCard>
+  );
+};
