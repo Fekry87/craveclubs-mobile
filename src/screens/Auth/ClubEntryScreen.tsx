@@ -285,7 +285,7 @@ export const ClubEntryScreen: React.FC = () => {
 /**
  * On the 8pt grid:
  *   brand → eyebrow          8
- *   eyebrow → headline       8
+ *   eyebrow → headline      32
  *   headline → instruction   8
  *   instruction → field     24
  *   field → button          16  (Input leaves it below itself)
@@ -324,11 +324,13 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     color: colors.white,
   },
+  // The brand and its slogan sit a clear step above the headline, not
+  // stacked on it (lifted 2026-09-17 at the user's request).
   eyebrow: {
     ...typography.bodyMedium,
     color: colors.white,
     opacity: 0.72,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xl,
   },
   headline: {
     ...typography.display,
