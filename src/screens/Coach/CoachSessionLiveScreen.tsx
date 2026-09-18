@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,9 +18,12 @@ import { Icon } from '../../components/common/Icon';
 import { ElapsedTimer } from '../../components/features/coach/ElapsedTimer';
 import { StarRating } from '../../components/features/coach/StarRating';
 import { SwimmerRosterItem } from '../../components/features/coach/SwimmerRosterItem';
+import { MeasurementSheet } from '../../components/features/coach/MeasurementSheet';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { usePulseGlow } from '../../hooks/usePulseGlow';
 import { useCoachStore } from '../../store/coach.store';
+import { useAuthStore } from '../../store/auth.store';
+import { useMeasurementStore } from '../../store/measurement.store';
 import { CoachSessionsStackParamList } from '../../navigation/types';
 import {
   SwimmerProfileInterface,
@@ -56,6 +59,15 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
   const [ratingsMap, setRatingsMap] = useState<Record<number, number>>({});
   const [notesMap, setNotesMap] = useState<Record<number, string>>({});
   const [expandedSwimmerId, setExpandedSwimmerId] = useState<number | null>(null);
+
+  // القياس — timed swims. The options are the club's Skills, so the feature
+  // follows that flag (the routes answer 403 without it).
+  const user = useAuthStore((st) => st.user);
+  const measurementsEnabled = user?.features?.skills_enabled === true;
+  const measurements = useMeasurementStore((st) => st.measurements);
+  const fetchMeasurements = useMeasurementStore((st) => st.fetchForSession);
+  const fetchMeasurementOptions = useMeasurementStore((st) => st.fetchOptions);
+  const [measureSwimmer, setMeasureSwimmer] = useState<SwimmerProfileInterface | null>(null);
   const [summaryNotes, setSummaryNotes] = useState('');
   const [groupRating, setGroupRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,6 +83,27 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
     fetchSessionDetail(sessionId);
     fetchRoster(sessionId);
   }, [sessionId, fetchSessionDetail, fetchRoster]);
+
+  useEffect(() => {
+    if (!measurementsEnabled) return;
+    fetchMeasurements(sessionId);
+    fetchMeasurementOptions();
+  }, [measurementsEnabled, sessionId, fetchMeasurements, fetchMeasurementOptions]);
+
+  const measurementCounts = useMemo(() => {
+    const counts: Record<number, number> = {};
+    measurements.forEach((m) => {
+      counts[m.swimmer_id] = (counts[m.swimmer_id] ?? 0) + 1;
+    });
+    return counts;
+  }, [measurements]);
+
+  const handleMeasure = useCallback(
+    (swimmerId: number) => {
+      setMeasureSwimmer(roster.find((swimmer) => swimmer.id === swimmerId) ?? null);
+    },
+    [roster],
+  );
 
   // Initialize attendance map when roster loads (all present by default)
   useEffect(() => {
@@ -192,9 +225,14 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
         onRate={handleRate}
         onToggleExpand={handleToggleExpand}
         onChangeNote={handleChangeNote}
+        onMeasure={measurementsEnabled ? handleMeasure : undefined}
+        measurementCount={measurementCounts[item.id] ?? 0}
       />
     ),
     [
+      measurementsEnabled,
+      measurementCounts,
+      handleMeasure,
       attendanceMap,
       ratingsMap,
       notesMap,
@@ -383,6 +421,19 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
           onPress={handleEndSession}
         />
       </View>
+
+      {measurementsEnabled && (
+        <MeasurementSheet
+          visible={measureSwimmer !== null}
+          sessionId={sessionId}
+          swimmerId={measureSwimmer?.id ?? null}
+          swimmerName={
+            measureSwimmer ? `${measureSwimmer.first_name} ${measureSwimmer.last_name}` : ''
+          }
+          coachUserId={user?.id ?? null}
+          onClose={() => setMeasureSwimmer(null)}
+        />
+      )}
     </View>
   );
 };

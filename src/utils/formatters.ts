@@ -134,3 +134,28 @@ export const planPrice = (plan: {
 /** The device's local calendar date as YYYY-MM-DD (not UTC). */
 export const localDateString = (date: Date = new Date()): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+/**
+ * A swim time in seconds as it is read on a pool deck: "32.45s" under a
+ * minute, "1:35.30" from a minute up. The API sends the seconds as a string.
+ */
+export const formatSwimTime = (seconds: number | string): string => {
+  const total = Number(seconds);
+  if (!Number.isFinite(total) || total < 0) return '—';
+  // Whole hundredths first, so 119.999 reads 2:00.00 and never 1:60.00.
+  const centis = Math.round(total * 100);
+  if (centis < 6000) return `${(centis / 100).toFixed(2)}s`;
+  const minutes = Math.floor(centis / 6000);
+  return `${minutes}:${((centis - minutes * 6000) / 100).toFixed(2).padStart(5, '0')}`;
+};
+
+/** "50m" from the API's "50.00"; falls back to the option's own name. */
+export const formatDistance = (
+  distance: { name: string; numeric_value: string | null } | null,
+): string => {
+  if (!distance) return '—';
+  const meters = Number(distance.numeric_value);
+  return distance.numeric_value !== null && Number.isFinite(meters)
+    ? `${meters}m`
+    : distance.name;
+};

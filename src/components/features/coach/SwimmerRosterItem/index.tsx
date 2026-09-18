@@ -22,6 +22,10 @@ interface SwimmerRosterItemProps {
   onRate: (swimmerId: number, rating: number) => void;
   onToggleExpand: (swimmerId: number) => void;
   onChangeNote: (swimmerId: number, note: string) => void;
+  /** القياس: opens the time sheet. Omitted when the club has no Skills feature. */
+  onMeasure?: (swimmerId: number) => void;
+  /** Times already recorded for this swimmer in this session. */
+  measurementCount?: number;
 }
 
 export const SwimmerRosterItem: React.FC<SwimmerRosterItemProps> = React.memo(({
@@ -36,6 +40,8 @@ export const SwimmerRosterItem: React.FC<SwimmerRosterItemProps> = React.memo(({
   onRate,
   onToggleExpand,
   onChangeNote,
+  onMeasure,
+  measurementCount = 0,
 }) => {
   const handleToggle = () => {
     onToggleAttendance(swimmerId);
@@ -78,6 +84,28 @@ export const SwimmerRosterItem: React.FC<SwimmerRosterItemProps> = React.memo(({
             </View>
           )}
         </Pressable>
+
+        {/* القياس: record a time (present swimmers only) */}
+        {onMeasure && isPresent && (
+          <Pressable
+            style={[styles.measureBtn, { backgroundColor: colors.primaryDim }]}
+            onPress={() => onMeasure(swimmerId)}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={`Record a time for ${name}`}
+          >
+            <Icon
+              name={measurementCount > 0 ? 'timer-fill' : 'timer-line'}
+              size={18}
+              color={colors.primary}
+            />
+            {measurementCount > 0 && (
+              <View style={[styles.measureCount, { backgroundColor: colors.primary }]}>
+                <Text style={styles.measureCountText}>{measurementCount}</Text>
+              </View>
+            )}
+          </Pressable>
+        )}
 
         {/* Center: Attendance toggle */}
         <Pressable
