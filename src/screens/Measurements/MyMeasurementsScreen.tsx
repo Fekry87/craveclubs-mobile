@@ -19,6 +19,7 @@ import { useMyMeasurementsStore } from '../../store/myMeasurements.store';
 import { MeasurementDayInterface } from '../../types/models.types';
 import { formatDate, getRelativeDate } from '../../utils/formatters';
 import { colors, spacing, fontFamily, borderRadius, typography, shadows } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 interface DayCardProps {
   day: MeasurementDayInterface;
@@ -144,7 +145,11 @@ export const MyMeasurementsScreen: React.FC = () => {
       data={days}
       keyExtractor={(item) => item.date}
       renderItem={renderItem}
-      contentContainerStyle={[s.list, days.length === 0 && s.listEmpty]}
+      contentContainerStyle={[
+        s.list,
+        { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+        days.length === 0 && s.listEmpty,
+      ]}
       ListHeaderComponent={
         progress && progress.points.length > 0 ? (
           <MeasurementProgressChart

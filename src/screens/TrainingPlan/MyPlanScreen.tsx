@@ -24,6 +24,7 @@ import {
   typography,
   fontFamily,
 } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string }> = {
   beginner: { bg: colors.successDim, text: colors.success },
@@ -143,7 +144,10 @@ export const MyPlanScreen: React.FC = () => {
     <View style={s.safeArea}>
       <ScrollView
         style={s.scroll}
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={[
+          s.scrollContent,
+          { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* Paused Banner */}

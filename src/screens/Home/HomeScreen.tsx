@@ -38,6 +38,7 @@ import { TrainingSessionInterface } from '../../types/models.types';
 import { AppTabParamList } from '../../navigation/types';
 import { formatRating } from '../../utils/formatters';
 import { colors, spacing, fontFamily } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SESSION_CARD_WIDTH = SCREEN_WIDTH - spacing.lg * 2 - spacing.lg;
@@ -242,7 +243,10 @@ export const HomeScreen: React.FC = () => {
     <>
     <ScrollView
       style={screenStyles.container}
-      contentContainerStyle={screenStyles.content}
+      contentContainerStyle={[
+        screenStyles.content,
+        { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+      ]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -494,7 +498,7 @@ const screenStyles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xxl,
   },

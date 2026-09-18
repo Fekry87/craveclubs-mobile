@@ -21,6 +21,7 @@ import { weeklyReportService } from '../../api/services/weeklyReport.service';
 import { storageService } from '../../services/storage.service';
 import { WeeklyReport } from '../../types/weeklyReport';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 /* ═══════════════════════════════════════════════════
    ISO Week Helpers
@@ -380,7 +381,10 @@ export const WeeklyReportScreen: React.FC = () => {
       ) : (
         <ScrollView
           style={s.container}
-          contentContainerStyle={s.content}
+          contentContainerStyle={[
+            s.content,
+            { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+          ]}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

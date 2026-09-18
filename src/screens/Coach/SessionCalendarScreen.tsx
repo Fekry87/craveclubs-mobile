@@ -26,6 +26,7 @@ import {
   fontFamily,
   ANIMATION,
 } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 import { Animated } from 'react-native';
 
 type CalendarNav = BottomTabNavigationProp<CoachTabParamList>;
@@ -396,7 +397,7 @@ const s = StyleSheet.create({
   // Today FAB
   todayFab: {
     position: 'absolute',
-    bottom: spacing.lg,
+    bottom: GLASS_TABBAR_CONTENT_INSET,
     right: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',

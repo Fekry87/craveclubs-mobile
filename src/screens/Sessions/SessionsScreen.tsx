@@ -19,6 +19,7 @@ import { Loader } from '../../components/common/Loader';
 import { Icon, IconName } from '../../components/common/Icon';
 import { useSessionStore, SessionSegment } from '../../store/session.store';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 type SegmentKey = SessionSegment;
 
@@ -161,6 +162,7 @@ export const SessionsScreen: React.FC = () => {
         )}
         contentContainerStyle={[
           screenStyles.listContent,
+          { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
           segment.items.length === 0 && screenStyles.listContentEmpty,
         ]}
         refreshControl={
@@ -211,7 +213,7 @@ const screenStyles = StyleSheet.create({
   },
   segmentBar: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
     paddingBottom: spacing.sm + 4,
     gap: spacing.sm,
@@ -253,7 +255,7 @@ const screenStyles = StyleSheet.create({
 
   // List
   listContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
     paddingBottom: spacing.xxl,
   },

@@ -25,6 +25,7 @@ import { ProgressStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../store/auth.store';
 import { formatPercentage, formatRating } from '../../utils/formatters';
 import { colors, spacing, fontFamily } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 type ProgressNavProp = NativeStackNavigationProp<ProgressStackParamList, 'ProgressMain'>;
 
@@ -93,7 +94,10 @@ export const ProgressScreen: React.FC = () => {
   return (
     <ScrollView
       style={screenStyles.container}
-      contentContainerStyle={screenStyles.content}
+      contentContainerStyle={[
+        screenStyles.content,
+        { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+      ]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

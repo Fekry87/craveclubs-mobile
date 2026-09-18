@@ -31,6 +31,7 @@ import {
   borderRadius,
   shadows,
 } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 /* ─── XP Mini-stat row item ─── */
 interface XpStatProps {
@@ -203,7 +204,10 @@ export const LeaderboardScreen: React.FC = () => {
   return (
     <ScrollView
       style={s.container}
-      contentContainerStyle={s.content}
+      contentContainerStyle={[
+        s.content,
+        { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+      ]}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
