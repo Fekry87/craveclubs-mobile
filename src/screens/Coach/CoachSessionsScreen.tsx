@@ -2,16 +2,14 @@ import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
-  SectionList,
+  FlatList,
   ScrollView,
   RefreshControl,
+  ActivityIndicator,
   TouchableOpacity,
   StyleSheet,
   Animated,
   Dimensions,
-  LayoutAnimation,
-  Platform,
-  UIManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -28,15 +26,6 @@ import { CoachSessionInterface } from '../../types/models.types';
 import { CoachSessionsStackParamList } from '../../navigation/types';
 import { getRelativeDate } from '../../utils/formatters';
 import { colors, spacing, fontFamily, borderRadius, shadows } from '../../theme';
-
-/* ═══ Enable LayoutAnimation on Android ═══ */
-
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 /* ═══ Constants ═══ */
 
@@ -76,40 +65,6 @@ const getTodayKey = (): string => {
   return `${y}-${m}-${d}`;
 };
 
-const isPastDate = (dateKey: string): boolean => {
-  return dateKey < getTodayKey();
-};
-
-/* ═══ Sorting helpers ═══ */
-
-const sortByDateAsc = (
-  a: CoachSessionInterface,
-  b: CoachSessionInterface,
-): number => new Date(a.date).getTime() - new Date(b.date).getTime();
-
-const sortByDateDesc = (
-  a: CoachSessionInterface,
-  b: CoachSessionInterface,
-): number => new Date(b.date).getTime() - new Date(a.date).getTime();
-
-const filterSessions = (
-  sessions: CoachSessionInterface[],
-  segment: SegmentKey,
-): CoachSessionInterface[] => {
-  switch (segment) {
-    case 'upcoming':
-      return sessions
-        .filter((s) => s.status === 'Scheduled' || s.status === 'Live')
-        .sort(sortByDateAsc);
-    case 'completed':
-      return sessions
-        .filter((s) => s.status === 'Completed' || s.status === 'Cancelled')
-        .sort(sortByDateDesc);
-    default:
-      return [...sessions].sort(sortByDateAsc);
-  }
-};
-
 /* ═══ Date Grouping ═══ */
 
 interface DateGroup {
@@ -118,77 +73,60 @@ interface DateGroup {
 
 interface DateSection {
   title: string;
-  isPast?: boolean;
+  isPast: boolean;
+  /** First past day on the All tab: draws the "Past sessions" divider above it. */
+  startsPast: boolean;
   data: DateGroup[];
 }
 
+/**
+ * Group one tab's rows by day, keeping the server's order: the tabs are
+ * filtered, sorted and paginated there (soonest first for Upcoming, latest
+ * first for Completed, upcoming then past for All), so re-sorting here would
+ * shuffle rows every time another page arrives. On All, the first past day
+ * carries the "Past sessions" divider.
+ */
 const groupSessionsByDate = (
   sessions: CoachSessionInterface[],
-  pastExpanded: boolean,
+  segment: SegmentKey,
 ): DateSection[] => {
-  const groups: Record<string, CoachSessionInterface[]> = {};
+  const todayKey = getTodayKey();
+  const sections: DateSection[] = [];
 
   sessions.forEach((session) => {
     const dateKey = session.date.substring(0, 10);
-    if (!groups[dateKey]) groups[dateKey] = [];
-    groups[dateKey].push(session);
+    const last = sections[sections.length - 1];
+    if (last && last.title === dateKey) {
+      last.data[0].sessions.push(session);
+      return;
+    }
+    sections.push({
+      title: dateKey,
+      // Only All mixes the two; on Completed every day is past, so none is dimmed.
+      isPast: segment === 'all' && dateKey < todayKey,
+      startsPast: false,
+      data: [{ sessions: [session] }],
+    });
   });
 
-  const todayKey = getTodayKey();
-  const pastSessions: CoachSessionInterface[] = [];
-  const currentAndFutureSections: DateSection[] = [];
+  const firstPast = sections.find((section) => section.isPast);
+  if (firstPast) firstPast.startsPast = true;
 
-  // Separate past vs current+future
-  Object.entries(groups)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([date, data]) => {
-      if (date < todayKey) {
-        pastSessions.push(...data);
-      } else {
-        currentAndFutureSections.push({
-          title: date,
-          data: [{ sessions: data }],
-        });
-      }
-    });
-
-  const result: DateSection[] = [];
-
-  // Add collapsed "Past Sessions" group if there are past sessions
-  if (pastSessions.length > 0) {
-    if (pastExpanded) {
-      // When expanded, show individual past date sections
-      const pastGroups: Record<string, CoachSessionInterface[]> = {};
-      pastSessions.forEach((session) => {
-        const dateKey = session.date.substring(0, 10);
-        if (!pastGroups[dateKey]) pastGroups[dateKey] = [];
-        pastGroups[dateKey].push(session);
-      });
-
-      Object.entries(pastGroups)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .forEach(([date, data]) => {
-          result.push({
-            title: date,
-            isPast: true,
-            data: [{ sessions: data }],
-          });
-        });
-    } else {
-      // When collapsed, add a single section with empty data (header-only)
-      result.push({
-        title: '__past__',
-        isPast: true,
-        data: [{ sessions: [] }],
-      });
-    }
-  }
-
-  // Add current and future sections
-  result.push(...currentAndFutureSections);
-
-  return result;
+  return sections;
 };
+
+/** A row of the screen's flat list. */
+type ListRow =
+  | { kind: 'tabs' }
+  | { kind: 'status' }
+  | { kind: 'date'; section: DateSection }
+  | { kind: 'sessions'; sessions: CoachSessionInterface[] };
+
+/**
+ * The segment bar is the first data row. With a ListHeaderComponent the list
+ * puts the header at child 0, so the first data row is child 1.
+ */
+const STICKY_TABS = [1];
 
 const isHighlightDate = (dateStr: string): boolean => {
   const label = getRelativeDate(dateStr);
@@ -218,23 +156,17 @@ const EMPTY_CONFIG: Record<
   },
 };
 
-/* ═══ List Header Component ═══ */
+/* ═══ List Header: greeting + live banner (scrolls away) ═══ */
 
 interface ListHeaderProps {
   firstName: string;
   liveSessions: CoachSessionInterface[];
-  activeSegment: SegmentKey;
-  segmentCounts: Record<SegmentKey, number>;
-  onSegmentPress: (key: SegmentKey) => void;
   onLivePress: (id: number) => void;
 }
 
 const ListHeader: React.FC<ListHeaderProps> = ({
   firstName,
   liveSessions,
-  activeSegment,
-  segmentCounts,
-  onSegmentPress,
   onLivePress,
 }) => (
   <View style={s.headerContainer}>
@@ -259,7 +191,24 @@ const ListHeader: React.FC<ListHeaderProps> = ({
       </View>
     )}
 
-    {/* Segment Bar */}
+  </View>
+);
+
+/* ═══ Segment Bar: the list's first row, pinned to the top while scrolling ═══ */
+
+interface SegmentBarProps {
+  activeSegment: SegmentKey;
+  /** null until the server (or a first load) says how many. */
+  segmentCounts: Record<SegmentKey, number | null>;
+  onSegmentPress: (key: SegmentKey) => void;
+}
+
+const SegmentBar: React.FC<SegmentBarProps> = ({
+  activeSegment,
+  segmentCounts,
+  onSegmentPress,
+}) => (
+  <View style={s.stickyBar}>
     <View style={s.segmentBar}>
       {SEGMENTS.map((seg) => {
         const isActive = activeSegment === seg.key;
@@ -287,21 +236,23 @@ const ListHeader: React.FC<ListHeaderProps> = ({
             >
               {seg.label}
             </Text>
-            <View
-              style={[
-                s.countBadge,
-                isActive && s.countBadgeActive,
-              ]}
-            >
-              <Text
+            {count !== null && (
+              <View
                 style={[
-                  s.countText,
-                  isActive && s.countTextActive,
+                  s.countBadge,
+                  isActive && s.countBadgeActive,
                 ]}
               >
-                {count}
-              </Text>
-            </View>
+                <Text
+                  style={[
+                    s.countText,
+                    isActive && s.countTextActive,
+                  ]}
+                >
+                  {count}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         );
       })}
@@ -369,22 +320,16 @@ export const CoachSessionsScreen: React.FC = () => {
   const navigation = useNavigation<SessionsNavProp>();
   const { user } = useAuthStore();
   const [activeSegment, setActiveSegment] = useState<SegmentKey>('upcoming');
-  const [pastExpanded, setPastExpanded] = useState(false);
-
-  /* ─── Chevron rotation ─── */
-  const chevronRotation = useRef(new Animated.Value(0)).current;
 
   const {
-    sessions,
-    isSessionsLoading,
-    sessionsError,
-    currentPage,
-    totalPages,
-    fetchSessions,
-    refreshSessions,
+    segments,
+    sessionCounts,
+    fetchSegment,
+    refreshSegment,
     dashboard,
     fetchDashboard,
   } = useCoachStore();
+  const segment = segments[activeSegment];
 
   /* ─── FAB press animation ─── */
   const fabScale = useRef(new Animated.Value(1)).current;
@@ -406,22 +351,21 @@ export const CoachSessionsScreen: React.FC = () => {
   /* ─── Data fetching ─── */
   useFocusEffect(
     useCallback(() => {
-      fetchSessions(1);
+      refreshSegment(activeSegment);
       fetchDashboard();
-      // eslint-disable-next-line -- run on focus only
-    }, []),
+    }, [activeSegment, refreshSegment, fetchDashboard]),
   );
 
   const handleRefresh = useCallback(() => {
-    refreshSessions();
+    refreshSegment(activeSegment, true);
     fetchDashboard();
-  }, [refreshSessions, fetchDashboard]);
+  }, [activeSegment, refreshSegment, fetchDashboard]);
 
   const handleEndReached = useCallback(() => {
-    if (!isSessionsLoading && currentPage < totalPages) {
-      fetchSessions(currentPage + 1);
+    if (segment.loaded && !segment.isLoading && segment.page < segment.lastPage) {
+      fetchSegment(activeSegment, segment.page + 1);
     }
-  }, [isSessionsLoading, currentPage, totalPages, fetchSessions]);
+  }, [activeSegment, segment, fetchSegment]);
 
   /* ─── Navigation handlers ─── */
   const handleSessionPress = useCallback(
@@ -446,32 +390,6 @@ export const CoachSessionsScreen: React.FC = () => {
     setActiveSegment(key);
   }, []);
 
-  /* ─── Past sessions toggle ─── */
-  const togglePast = useCallback(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    const newExpanded = !pastExpanded;
-    setPastExpanded(newExpanded);
-    Animated.timing(chevronRotation, {
-      toValue: newExpanded ? 1 : 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [pastExpanded, chevronRotation]);
-
-  const chevronRotateStyle = useMemo(
-    () => ({
-      transform: [
-        {
-          rotate: chevronRotation.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0deg', '180deg'],
-          }),
-        },
-      ],
-    }),
-    [chevronRotation],
-  );
-
   /* ─── Derived data ─── */
   const firstName = useMemo(() => {
     if (!user?.name) return 'Coach';
@@ -483,124 +401,64 @@ export const CoachSessionsScreen: React.FC = () => {
     [dashboard],
   );
 
-  const filteredSessions = useMemo(
-    () => filterSessions(sessions, activeSegment),
-    [sessions, activeSegment],
-  );
-
-  const pastSessionCount = useMemo(() => {
-    const todayKey = getTodayKey();
-    return filteredSessions.filter(
-      (s) => s.date.substring(0, 10) < todayKey,
-    ).length;
-  }, [filteredSessions]);
-
   const groupedSections = useMemo(
-    () => groupSessionsByDate(filteredSessions, pastExpanded),
-    [filteredSessions, pastExpanded],
+    () => groupSessionsByDate(segment.items, activeSegment),
+    [segment.items, activeSegment],
   );
 
-  const segmentCounts = useMemo(
-    () => ({
-      all: filterSessions(sessions, 'all').length,
-      upcoming: filterSessions(sessions, 'upcoming').length,
-      completed: filterSessions(sessions, 'completed').length,
-    }),
-    [sessions],
-  );
+  // Badges come from the server, so they are right before a tab is opened.
+  // Against a backend without `counts`, show what each opened tab has loaded.
+  const segmentCounts = useMemo(() => {
+    const countFor = (key: SegmentKey): number | null =>
+      sessionCounts?.[key] ?? (segments[key].loaded ? segments[key].items.length : null);
+    return {
+      all: countFor('all'),
+      upcoming: countFor('upcoming'),
+      completed: countFor('completed'),
+    };
+  }, [sessionCounts, segments]);
 
   const emptyConfig = EMPTY_CONFIG[activeSegment];
 
-  /* ─── SectionList renderers ─── */
-  const renderSectionHeader = useCallback(
-    ({ section }: { section: DateSection }) => {
-      // Collapsed past sessions header
-      if (section.title === '__past__') {
-        return (
-          <TouchableOpacity
-            style={s.pastHeader}
-            onPress={togglePast}
-            activeOpacity={0.7}
-          >
-            <View style={s.pastHeaderLeft}>
-              <Icon name="time-line" size={18} color={colors.textMuted} />
-              <Text style={s.pastHeaderTitle}>Past Sessions</Text>
-              <View style={s.pastCountBadge}>
-                <Text style={s.pastCountText}>{pastSessionCount}</Text>
-              </View>
-            </View>
-            <Animated.View style={chevronRotateStyle}>
-              <Icon
-                name="arrow-down-s-line"
-                size={20}
-                color={colors.textMuted}
-              />
-            </Animated.View>
-          </TouchableOpacity>
-        );
-      }
+  /*
+   * One flat list: the segment bar is its first row and the only sticky one,
+   * so the greeting scrolls away and the tabs stay at the top. (A SectionList
+   * can only pin every section header or none.) The empty / loading / error
+   * state is a row too, because the list is never empty with the bar in it.
+   */
+  const rows = useMemo<ListRow[]>(() => {
+    const out: ListRow[] = [{ kind: 'tabs' }];
+    if (groupedSections.length === 0) {
+      out.push({ kind: 'status' });
+      return out;
+    }
+    groupedSections.forEach((section) => {
+      out.push({ kind: 'date', section });
+      out.push({ kind: 'sessions', sessions: section.data[0].sessions });
+    });
+    return out;
+  }, [groupedSections]);
 
-      // Expanded past day header (with collapse toggle on first past section)
-      if (section.isPast) {
-        const dateLabel = getRelativeDate(section.title);
-        const sessionCount = section.data[0].sessions.length;
+  const renderDateHeader = useCallback((section: DateSection) => {
+    const dateLabel = getRelativeDate(section.title);
+    const highlight = isHighlightDate(section.title);
+    const sessionCount = section.data[0].sessions.length;
 
-        // Check if this is the first past section to show the collapse header
-        const isFirstPastSection =
-          groupedSections.length > 0 &&
-          groupedSections[0].isPast &&
-          groupedSections[0].title === section.title;
-
-        return (
-          <View>
-            {isFirstPastSection && (
-              <TouchableOpacity
-                style={s.pastHeader}
-                onPress={togglePast}
-                activeOpacity={0.7}
-              >
-                <View style={s.pastHeaderLeft}>
-                  <Icon name="time-line" size={18} color={colors.textMuted} />
-                  <Text style={s.pastHeaderTitle}>Past Sessions</Text>
-                  <View style={s.pastCountBadge}>
-                    <Text style={s.pastCountText}>{pastSessionCount}</Text>
-                  </View>
-                </View>
-                <Animated.View style={chevronRotateStyle}>
-                  <Icon
-                    name="arrow-down-s-line"
-                    size={20}
-                    color={colors.textMuted}
-                  />
-                </Animated.View>
-              </TouchableOpacity>
-            )}
-            <View style={s.pastDateHeader}>
-              <Text style={s.pastDateTitle}>{dateLabel}</Text>
-              {sessionCount > 1 && (
-                <View style={s.sessionCountBadge}>
-                  <Text style={s.sessionCountText}>
-                    {sessionCount} sessions
-                  </Text>
-                </View>
-              )}
-            </View>
+    return (
+      <View>
+        {section.startsPast && (
+          <View style={s.pastHeader}>
+            <Icon name="time-line" size={18} color={colors.textMuted} />
+            <Text style={s.pastHeaderTitle}>Past sessions</Text>
           </View>
-        );
-      }
-
-      // Current/future date header
-      const dateLabel = getRelativeDate(section.title);
-      const highlight = isHighlightDate(section.title);
-      const sessionCount = section.data[0].sessions.length;
-
-      return (
-        <View style={s.sectionHeader}>
+        )}
+        <View style={section.isPast ? s.pastDateHeader : s.sectionHeader}>
           <Text
-            style={[
-              s.dateTitle,
-              highlight && s.dateTitleHighlight,
-            ]}
+            style={
+              section.isPast
+                ? s.pastDateTitle
+                : [s.dateTitle, highlight && s.dateTitleHighlight]
+            }
           >
             {dateLabel}
           </Text>
@@ -612,42 +470,82 @@ export const CoachSessionsScreen: React.FC = () => {
             </View>
           )}
         </View>
-      );
-    },
-    [togglePast, chevronRotateStyle, pastSessionCount, groupedSections],
+      </View>
+    );
+  }, []);
+
+  const renderStatus = useCallback(
+    () => (
+      <View style={s.statusRow}>
+        {segment.error ? (
+          <ErrorView
+            message={segment.error}
+            onRetry={() => fetchSegment(activeSegment)}
+          />
+        ) : !segment.loaded || segment.isLoading ? (
+          <Loader message="Loading sessions..." />
+        ) : (
+          <EmptyState
+            icon={emptyConfig.icon}
+            title={emptyConfig.title}
+            message={emptyConfig.message}
+          />
+        )}
+      </View>
+    ),
+    [segment.error, segment.loaded, segment.isLoading, activeSegment, fetchSegment, emptyConfig],
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: DateGroup }) => {
-      // Empty data for collapsed past header
-      if (item.sessions.length === 0) {
-        return null;
+    ({ item }: { item: ListRow }) => {
+      switch (item.kind) {
+        case 'tabs':
+          return (
+            <SegmentBar
+              activeSegment={activeSegment}
+              segmentCounts={segmentCounts}
+              onSegmentPress={handleSegmentPress}
+            />
+          );
+        case 'status':
+          return renderStatus();
+        case 'date':
+          return renderDateHeader(item.section);
+        default:
+          return item.sessions.length === 1 ? (
+            <CoachSessionCard
+              session={item.sessions[0]}
+              onPress={() => handleSessionPress(item.sessions[0].id)}
+              index={0}
+            />
+          ) : (
+            <SwiperRow
+              sessions={item.sessions}
+              onSessionPress={handleSessionPress}
+            />
+          );
       }
-
-      if (item.sessions.length === 1) {
-        return (
-          <CoachSessionCard
-            session={item.sessions[0]}
-            onPress={() => handleSessionPress(item.sessions[0].id)}
-            index={0}
-          />
-        );
-      }
-
-      return (
-        <SwiperRow
-          sessions={item.sessions}
-          onSessionPress={handleSessionPress}
-        />
-      );
     },
-    [handleSessionPress],
+    [
+      activeSegment,
+      segmentCounts,
+      handleSegmentPress,
+      handleSessionPress,
+      renderStatus,
+      renderDateHeader,
+    ],
   );
 
-  const keyExtractor = useCallback(
-    (_item: DateGroup, index: number) => index.toString(),
-    [],
-  );
+  const keyExtractor = useCallback((item: ListRow) => {
+    switch (item.kind) {
+      case 'date':
+        return `date-${item.section.title}`;
+      case 'sessions':
+        return `sessions-${item.sessions[0].id}`;
+      default:
+        return item.kind;
+    }
+  }, []);
 
   /* ─── List header renderer ─── */
   const renderListHeader = useCallback(
@@ -655,62 +553,36 @@ export const CoachSessionsScreen: React.FC = () => {
       <ListHeader
         firstName={firstName}
         liveSessions={liveSessions}
-        activeSegment={activeSegment}
-        segmentCounts={segmentCounts}
-        onSegmentPress={handleSegmentPress}
         onLivePress={handleLivePress}
       />
     ),
-    [firstName, liveSessions, activeSegment, segmentCounts, handleSegmentPress, handleLivePress],
+    [firstName, liveSessions, handleLivePress],
   );
-
-  /* ─── Loading & Error states ─── */
-  if (sessionsError && sessions.length === 0) {
-    return (
-      <ErrorView
-        message={sessionsError}
-        onRetry={() => fetchSessions(1)}
-      />
-    );
-  }
-
-  if (isSessionsLoading && sessions.length === 0) {
-    return <Loader message="Loading sessions..." />;
-  }
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      {/* Sessions SectionList grouped by date */}
-      <SectionList
-        sections={groupedSections}
+      <FlatList
+        data={rows}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
-        renderSectionHeader={renderSectionHeader}
         ListHeaderComponent={renderListHeader}
+        stickyHeaderIndices={STICKY_TABS}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
-        stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
-            refreshing={isSessionsLoading && sessions.length > 0}
+            refreshing={segment.isRefreshing}
             onRefresh={handleRefresh}
             colors={[colors.primary]}
             tintColor={colors.primary}
           />
         }
-        ListEmptyComponent={
-          !isSessionsLoading ? (
-            <EmptyState
-              icon={emptyConfig.icon}
-              title={emptyConfig.title}
-              message={emptyConfig.message}
-            />
+        ListFooterComponent={
+          segment.isLoading && segment.items.length > 0 ? (
+            <ActivityIndicator style={s.footerLoader} color={colors.primary} />
           ) : null
         }
-        contentContainerStyle={[
-          s.listContent,
-          groupedSections.length === 0 && s.listContentEmpty,
-        ]}
+        contentContainerStyle={s.listContent}
       />
 
       {/* FAB — Create Session */}
@@ -744,8 +616,9 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.xxl,
   },
-  listContentEmpty: {
-    flex: 1,
+  statusRow: {
+    minHeight: 340,
+    justifyContent: 'center',
   },
 
   /* ─── Header container ─── */
@@ -780,6 +653,13 @@ const s = StyleSheet.create({
   },
 
   /* ─── Segment bar ─── */
+  // Full-bleed and opaque, so cards pass under it cleanly while it is pinned.
+  stickyBar: {
+    marginHorizontal: -spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    backgroundColor: colors.background,
+  },
   segmentBar: {
     flexDirection: 'row',
     padding: spacing.xs,
@@ -837,43 +717,20 @@ const s = StyleSheet.create({
   pastHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-    ...shadows.sm,
-  },
-  pastHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.sm,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xs,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   pastHeaderTitle: {
     fontSize: 15,
     fontFamily: fontFamily.bodySemiBold,
     color: colors.textMuted,
   },
-  pastCountBadge: {
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.surfaceLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xs,
-  },
-  pastCountText: {
-    fontSize: 11,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.textMuted,
-  },
 
-  /* ─── Past Date Header (inside expanded) ─── */
+  /* ─── Past Date Header (All tab, under the divider) ─── */
   pastDateHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -947,6 +804,9 @@ const s = StyleSheet.create({
   },
 
   /* ─── FAB ─── */
+  footerLoader: {
+    paddingVertical: spacing.md,
+  },
   fabOuter: {
     position: 'absolute',
     bottom: 24,

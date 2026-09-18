@@ -17,6 +17,10 @@ import {
   AwardType,
   SwimmerAwardInterface,
 } from '../../types/models.types';
+import { localDateString } from '../../utils/formatters';
+
+/** A tab on the coach's Sessions screen. */
+export type CoachSessionScope = 'all' | 'upcoming' | 'completed';
 
 interface GiveAwardResponse {
   message: string;
@@ -47,20 +51,27 @@ export const coachService = {
     return data;
   },
 
+  /**
+   * One tab of the Sessions screen. The server filters, sorts and counts
+   * (`scope` + the device's `today`), so a tab never depends on which pages
+   * happen to be loaded — see session.service for the rules, they are shared.
+   */
   async getSessions(
     page: number = 1,
     perPage: number = 20,
-    status?: string,
+    scope: CoachSessionScope = 'all',
   ): Promise<CoachSessionsResponseType> {
-    const params: Record<string, string | number> = {
-      page,
-      per_page: perPage,
-    };
-    if (status) params.status = status;
-
     const { data } = await apiClient.get<CoachSessionsResponseType>(
       ENDPOINTS.COACH.SESSIONS,
-      { params },
+      {
+        params: {
+          page,
+          per_page: perPage,
+          scope,
+          // The server runs on UTC; "today" is the coach's local day.
+          today: localDateString(),
+        },
+      },
     );
     return data;
   },
