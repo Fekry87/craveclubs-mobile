@@ -1,22 +1,26 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { Icon } from '../../../common/Icon';
-import { ChoiceChipGroup } from '../../registration/ChoiceChip';
 import { MeasurementProgressInterface } from '../../../../types/models.types';
 import { formatShortDate, formatSwimTime } from '../../../../utils/formatters';
 import { ANIMATION } from '../../../../theme/animations';
 import { colors } from '../../../../theme';
-import { styles, BAR_MAX, BAR_MIN, WEEK_LABEL_SPACE } from './styles';
+import {
+  styles,
+  BAR_MAX,
+  BAR_MIN,
+  WEEK_LABEL_SPACE,
+  COLUMN_WIDTH,
+  COLUMN_GAP,
+} from './styles';
 
 interface MeasurementProgressChartProps {
   progress: MeasurementProgressInterface;
 }
 
-const ALL = 'all';
-
 interface WeekPoint {
   start: string;
-  /** Average pace per 50m across the week's (filtered) measurements. */
+  /** Average pace per 50m across the week's measurements of the stroke. */
   pace: number;
   count: number;
 }
@@ -62,43 +66,60 @@ const WeekBar: React.FC<{ point: WeekPoint; height: number; isLatest: boolean }>
 };
 
 /**
- * The swimmer's progress: one bar per training week, its height the week's
- * average **pace per 50m** with the axis inverted — dropping times climb.
- * Normalizing to a 50m pace is what lets a 100m swim sit next to a 50m one
- * (and the All view exist at all). A chip row filters by stroke; a dashed
- * line marks the average across the visible weeks.
+ * The swimmer's progress, one stroke at a time: a bar per training week, its
+ * height the week's average **pace per 50m** with the axis inverted —
+ * dropping times climb. Normalizing to a 50m pace lets a 100m swim sit next
+ * to a 50m one. The stroke chips scroll; the opening stroke is the one swum
+ * most in the latest week. When the weeks fit the card the row is spread
+ * with no scrolling at all; only more weeks than fit scroll, starting at the
+ * latest. A dashed line marks the average across the stroke's weeks, its
+ * label on the left so it never covers the latest bar.
  */
 export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> = ({
   progress,
 }) => {
-  const [strokeFilter, setStrokeFilter] = useState<string>(ALL);
+  const [strokeId, setStrokeId] = useState<number | null>(null);
+  const [areaWidth, setAreaWidth] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
+  const chipsRef = useRef<ScrollView>(null);
+  const chipX = useRef<Record<number, number>>({});
 
-  const chipOptions = useMemo(
-    () => [
-      { value: ALL, label: 'All' },
-      ...progress.strokes.map((stroke) => ({ value: String(stroke.id), label: stroke.name })),
-    ],
-    [progress.strokes],
-  );
+  // The chosen chip must be on screen when the card appears — the opening
+  // stroke can be fourth in the row.
+  useEffect(() => {
+    if (strokeId === null) return;
+    const x = chipX.current[strokeId];
+    if (x !== undefined) chipsRef.current?.scrollTo({ x: Math.max(0, x - 12), animated: false });
+  }, [strokeId]);
 
-  const points = useMemo<WeekPoint[]>(
-    () =>
-      progress.weeks
-        .map((week) => {
-          const entries =
-            strokeFilter === ALL
-              ? week.entries
-              : week.entries.filter((entry) => String(entry.stroke_id) === strokeFilter);
-          const count = entries.reduce((sum, entry) => sum + entry.count, 0);
-          if (count === 0) return null;
-          const pace =
-            entries.reduce((sum, entry) => sum + entry.avg_pace * entry.count, 0) / count;
-          return { start: week.start, pace, count };
-        })
-        .filter((point): point is WeekPoint => point !== null),
-    [progress.weeks, strokeFilter],
-  );
+  // Pick (or re-pick, if the chosen stroke vanished) the opening stroke:
+  // the one swum most in the latest week.
+  useEffect(() => {
+    const ids = progress.strokes.map((stroke) => stroke.id);
+    if (ids.length === 0 || (strokeId !== null && ids.includes(strokeId))) return;
+    const latestWeek = progress.weeks[progress.weeks.length - 1];
+    let pick = ids[0];
+    let best = -1;
+    latestWeek?.entries.forEach((entry) => {
+      if (entry.count > best && ids.includes(entry.stroke_id)) {
+        best = entry.count;
+        pick = entry.stroke_id;
+      }
+    });
+    setStrokeId(pick);
+  }, [progress, strokeId]);
+
+  const points = useMemo<WeekPoint[]>(() => {
+    if (strokeId === null) return [];
+    return progress.weeks
+      .map((week) => {
+        const entry = week.entries.find((item) => item.stroke_id === strokeId);
+        return entry
+          ? { start: week.start, pace: entry.avg_pace, count: entry.count }
+          : null;
+      })
+      .filter((point): point is WeekPoint => point !== null);
+  }, [progress.weeks, strokeId]);
 
   const { minPace, maxPace, average, totalCount } = useMemo(() => {
     const paces = points.map((point) => point.pace);
@@ -133,7 +154,12 @@ export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> =
         };
   }, [points]);
 
-  if (points.length === 0 && strokeFilter === ALL) return null;
+  if (strokeId === null || points.length === 0) return null;
+
+  // Fewer weeks than fit → a plain spread row, nothing to scroll or hold.
+  const contentWidth =
+    points.length * COLUMN_WIDTH + (points.length - 1) * COLUMN_GAP;
+  const overflows = areaWidth > 0 && contentWidth > areaWidth;
 
   return (
     <View style={styles.card}>
@@ -148,49 +174,88 @@ export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> =
       </View>
       <Text style={styles.subtitle}>Average pace per 50m — taller is faster</Text>
 
-      <ChoiceChipGroup options={chipOptions} value={strokeFilter} onChange={setStrokeFilter} />
-
-      {points.length === 0 ? (
-        <Text style={styles.emptyText}>No times for this swim type yet.</Text>
-      ) : (
-        <>
-          <View style={styles.chartArea}>
-            {/* The average across the visible weeks. */}
-            <View
+      {/* Stroke chips: a scrolling row, one always chosen. */}
+      <ScrollView
+        ref={chipsRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsRow}
+      >
+        {progress.strokes.map((stroke) => {
+          const selected = stroke.id === strokeId;
+          return (
+            <TouchableOpacity
+              key={stroke.id}
+              onLayout={(event) => {
+                chipX.current[stroke.id] = event.nativeEvent.layout.x;
+                if (stroke.id === strokeId) {
+                  chipsRef.current?.scrollTo({
+                    x: Math.max(0, event.nativeEvent.layout.x - 12),
+                    animated: false,
+                  });
+                }
+              }}
+              onPress={() => setStrokeId(stroke.id)}
+              activeOpacity={0.8}
+              accessibilityRole="radio"
+              accessibilityState={{ selected }}
               style={[
-                styles.averageLine,
-                { bottom: WEEK_LABEL_SPACE + heightFor(average, minPace, maxPace) },
+                styles.chip,
+                selected && {
+                  borderColor: colors.primary,
+                  backgroundColor: colors.primaryDim,
+                },
               ]}
-              pointerEvents="none"
             >
-              <View style={styles.averageDash} />
-              <Text style={styles.averageText}>avg {formatSwimTime(average)}</Text>
-            </View>
+              <Text style={[styles.chipText, selected && { color: colors.primary }]}>
+                {stroke.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
-            <ScrollView
-              ref={scrollRef}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.barsRow}
-              onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
-            >
-              {points.map((point, index) => (
-                <WeekBar
-                  key={`${strokeFilter}-${point.start}`}
-                  point={point}
-                  height={heightFor(point.pace, minPace, maxPace)}
-                  isLatest={index === points.length - 1}
-                />
-              ))}
-            </ScrollView>
-          </View>
+      <View
+        style={styles.chartArea}
+        onLayout={(event) => setAreaWidth(event.nativeEvent.layout.width)}
+      >
+        {/* The average across this stroke's weeks; label on the left. */}
+        <View
+          style={[
+            styles.averageLine,
+            { bottom: WEEK_LABEL_SPACE + heightFor(average, minPace, maxPace) },
+          ]}
+          pointerEvents="none"
+        >
+          <Text style={styles.averageText}>avg {formatSwimTime(average)}</Text>
+          <View style={styles.averageDash} />
+        </View>
 
-          <Text style={styles.footerText}>
-            {totalCount} {totalCount === 1 ? 'swim' : 'swims'} across {points.length}{' '}
-            {points.length === 1 ? 'week' : 'weeks'}
-          </Text>
-        </>
-      )}
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          scrollEnabled={overflows}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.barsRow, !overflows && styles.barsRowSpread]}
+          onContentSizeChange={(width) => {
+            if (width > areaWidth) scrollRef.current?.scrollToEnd({ animated: false });
+          }}
+        >
+          {points.map((point, index) => (
+            <WeekBar
+              key={`${strokeId}-${point.start}`}
+              point={point}
+              height={heightFor(point.pace, minPace, maxPace)}
+              isLatest={index === points.length - 1}
+            />
+          ))}
+        </ScrollView>
+      </View>
+
+      <Text style={styles.footerText}>
+        {totalCount} {totalCount === 1 ? 'swim' : 'swims'} across {points.length}{' '}
+        {points.length === 1 ? 'week' : 'weeks'}
+      </Text>
     </View>
   );
 };
