@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useContext, useLayoutEffect } from 'react';
 import {
   ScrollView,
   View,
@@ -30,7 +30,9 @@ import { SwimmerSubscriptionInterface } from '../../types/api.types';
 import { trainingTypeLabel } from '../../utils/trainingTypes';
 import { formatMediumDate, formatMoney, formatPercentage, formatRating, getInitials } from '../../utils/formatters';
 import { pickProfilePhoto, showPhotoMenu } from '../../utils/photo';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 /* ─── Section title ─── */
 const SectionTitle: React.FC<{ children: string }> = ({ children }) => (
@@ -68,6 +70,10 @@ const titleCase = (v: string) =>
 export const ProfileScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // Manager opens this as a tab (floating bar overlays it → needs clearance);
+  // the swimmer opens it as a pushed screen with no bar (normal padding).
+  const underTabBar = useContext(BottomTabBarHeightContext) != null;
+  const bottomInset = underTabBar ? GLASS_TABBAR_CONTENT_INSET : spacing.xl;
   const { user, logout } = useAuthStore();
   const { data, isLoading, error, fetchProfile, setPhoto } = useProfileStore();
   const branding = useBrandingStore((st) => st.branding);
@@ -190,7 +196,7 @@ export const ProfileScreen: React.FC = () => {
     <>
       <ScrollView
         style={s.container}
-        contentContainerStyle={s.content}
+        contentContainerStyle={[s.content, { paddingBottom: bottomInset }]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -516,7 +522,7 @@ const s = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingBottom: spacing.xxl,
   },
   flex1: {

@@ -5,6 +5,7 @@ import { ManagerAnalyticsScreen, ManagerCoachesScreen } from '../screens/Manager
 import { ProfileScreen } from '../screens/Profile';
 import { Icon, IconName } from '../components/common/Icon';
 import { NotificationBell } from '../components/common/NotificationBell';
+import { GlassTabBar } from '../components/common/GlassTabBar';
 import { ManagerTabParamList } from './types';
 import { colors, fontFamily } from '../theme';
 
@@ -53,27 +54,13 @@ const TabIcon: React.FC<{ routeName: string; focused: boolean }> = ({
 export const ManagerAppNavigator: React.FC = () => {
   return (
     <Tab.Navigator
+      tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused }) => (
           <TabIcon routeName={route.name} focused={focused} />
         ),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDim,
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontFamily: fontFamily.bodyMedium,
-          marginTop: 4,
-        },
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopWidth: 1,
-          borderTopColor: colors.borderLight,
-          height: 88,
-          paddingBottom: 28,
-          paddingTop: 10,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
         headerStyle: {
           backgroundColor: colors.background,
           elevation: 0,

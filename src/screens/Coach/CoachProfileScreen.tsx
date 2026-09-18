@@ -29,6 +29,7 @@ import {
   shadows,
   gradients,
 } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 /* ─── Info row with icon (same pattern as swimmer ProfileScreen) ─── */
 interface InfoRowProps {
@@ -176,7 +177,10 @@ export const CoachProfileScreen: React.FC = () => {
   return (
     <ScrollView
       style={s.container}
-      contentContainerStyle={s.content}
+      contentContainerStyle={[
+        s.content,
+        { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+      ]}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl

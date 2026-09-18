@@ -9,7 +9,7 @@ import { CoachAppNavigator } from './CoachAppNavigator';
 import { ManagerAppNavigator } from './ManagerAppNavigator';
 import { RegistrationNavigator } from './RegistrationNavigator';
 import { NotificationCenterScreen } from '../screens/Notifications';
-import { ChangePasswordScreen, SetPasswordScreen } from '../screens/Profile';
+import { ProfileScreen, ChangePasswordScreen, SetPasswordScreen } from '../screens/Profile';
 import { EvaluationsScreen } from '../screens/Progress';
 import { SessionDetailScreen } from '../screens/Sessions';
 import { useAuthStore } from '../store/auth.store';
@@ -172,6 +172,24 @@ export const RootNavigator: React.FC = () => {
         options={{
           headerShown: true,
           title: 'Notifications',
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerTitleStyle: {
+            fontFamily: fontFamily.headingBold,
+            color: colors.text,
+            fontSize: 18,
+          },
+          headerShadowVisible: false,
+        }}
+      />
+      {/* Profile — opened from the header avatar (no longer a bottom tab) */}
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          headerShown: true,
+          title: 'Profile',
           headerStyle: {
             backgroundColor: colors.background,
           },

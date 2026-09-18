@@ -6,6 +6,7 @@ import { CoachProfileScreen, SessionCalendarScreen } from '../screens/Coach';
 import { CoachSessionsNavigator } from './CoachSessionsNavigator';
 import { Icon, IconName } from '../components/common/Icon';
 import { NotificationBell } from '../components/common/NotificationBell';
+import { GlassTabBar } from '../components/common/GlassTabBar';
 import { useAuthStore } from '../store/auth.store';
 import { CoachTabParamList } from './types';
 import { colors, fontFamily } from '../theme';
@@ -65,27 +66,13 @@ export const CoachAppNavigator: React.FC = () => {
 
   return (
     <Tab.Navigator
+      tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused }) => (
           <TabIcon routeName={route.name} focused={focused} />
         ),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDim,
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontFamily: fontFamily.bodyMedium,
-          marginTop: 4,
-        },
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopWidth: 1,
-          borderTopColor: colors.borderLight,
-          height: 88,
-          paddingBottom: 28,
-          paddingTop: 10,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
         headerStyle: {
           backgroundColor: colors.background,
           elevation: 0,
@@ -110,18 +97,8 @@ export const CoachAppNavigator: React.FC = () => {
           return {
             title: 'Sessions',
             headerShown: false,
-            tabBarStyle: hideTabBar
-              ? { display: 'none' as const }
-              : {
-                  backgroundColor: colors.white,
-                  borderTopWidth: 1,
-                  borderTopColor: colors.borderLight,
-                  height: 88,
-                  paddingBottom: 28,
-                  paddingTop: 10,
-                  elevation: 0,
-                  shadowOpacity: 0,
-                },
+            // Hide the floating bar on deep screens (detail/live/attendance).
+            tabBarStyle: hideTabBar ? { display: 'none' as const } : undefined,
           };
         }}
       />

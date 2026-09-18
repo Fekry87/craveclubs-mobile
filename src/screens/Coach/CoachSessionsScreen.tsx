@@ -26,6 +26,7 @@ import { CoachSessionInterface } from '../../types/models.types';
 import { CoachSessionsStackParamList } from '../../navigation/types';
 import { getRelativeDate } from '../../utils/formatters';
 import { colors, spacing, fontFamily, borderRadius, shadows } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 /* ═══ Constants ═══ */
 
@@ -582,7 +583,10 @@ export const CoachSessionsScreen: React.FC = () => {
             <ActivityIndicator style={s.footerLoader} color={colors.primary} />
           ) : null
         }
-        contentContainerStyle={s.listContent}
+        contentContainerStyle={[
+          s.listContent,
+          { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+        ]}
       />
 
       {/* FAB — Create Session */}

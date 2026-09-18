@@ -6,10 +6,12 @@ import { SessionsScreen } from '../screens/Sessions';
 import { PlanAndReportScreen } from '../screens/TrainingPlan';
 import { ProgressNavigator } from './ProgressNavigator';
 import { LeaderboardScreen } from '../screens/Leaderboard';
-import { ProfileScreen } from '../screens/Profile';
 import { Icon, IconName } from '../components/common/Icon';
 import { NotificationBell } from '../components/common/NotificationBell';
+import { ProfileButton } from '../components/common/ProfileButton';
+import { GlassTabBar } from '../components/common/GlassTabBar';
 import { useAuthStore } from '../store/auth.store';
+import { useProfileStore } from '../store/profile.store';
 import { useTrainingPlanStore } from '../store/trainingPlan.store';
 import { useSportModuleStore } from '../store/sportModule.store';
 import { useRealtime } from '../hooks/useRealtime';
@@ -128,6 +130,12 @@ export const AppNavigator: React.FC = () => {
   // Keep WebSocket connection alive across all tabs
   useRealtime();
 
+  // Load the profile once so the header avatar shows the swimmer's photo
+  // (Profile is no longer a tab that would fetch it on focus).
+  useEffect(() => {
+    useProfileStore.getState().fetchProfile();
+  }, []);
+
   // Global session polling fallback — runs every 30s when WebSocket is NOT connected.
   // Ensures session status changes from the portal reflect on ALL tabs without pull-to-refresh.
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -155,27 +163,13 @@ export const AppNavigator: React.FC = () => {
 
   return (
     <Tab.Navigator
+      tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused }) => (
           <TabIcon routeName={route.name} focused={focused} />
         ),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDim,
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontFamily: fontFamily.bodyMedium,
-          marginTop: 4,
-        },
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopWidth: 1,
-          borderTopColor: colors.borderLight,
-          height: 88,
-          paddingBottom: 28,
-          paddingTop: 10,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
         headerStyle: {
           backgroundColor: colors.background,
           elevation: 0,
@@ -192,6 +186,7 @@ export const AppNavigator: React.FC = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {showSwitcher && <SportSwitcherChip />}
             <NotificationBell />
+            <ProfileButton />
           </View>
         ),
       })}
@@ -206,12 +201,24 @@ export const AppNavigator: React.FC = () => {
         component={SessionsScreen}
         options={{ title: 'Sessions' }}
       />
+      {hasLeaderboard && (
+        <Tab.Screen
+          name="Leaderboard"
+          component={LeaderboardScreen}
+          options={{ title: 'Awards' }}
+        />
+      )}
+      <Tab.Screen
+        name="Progress"
+        component={ProgressNavigator}
+        options={{ title: 'Progress' }}
+      />
       {hasTrainingPlans && (
         <Tab.Screen
           name="MyPlan"
           component={PlanAndReportScreen}
           options={{
-            title: 'My Plan',
+            title: 'Plans',
             tabBarBadge: hasNewPlan ? '' : undefined,
             tabBarBadgeStyle: hasNewPlan
               ? {
@@ -224,23 +231,6 @@ export const AppNavigator: React.FC = () => {
           }}
         />
       )}
-      <Tab.Screen
-        name="Progress"
-        component={ProgressNavigator}
-        options={{ title: 'Progress' }}
-      />
-      {hasLeaderboard && (
-        <Tab.Screen
-          name="Leaderboard"
-          component={LeaderboardScreen}
-          options={{ title: 'Leaderboard' }}
-        />
-      )}
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ title: 'Profile' }}
-      />
     </Tab.Navigator>
   );
 };

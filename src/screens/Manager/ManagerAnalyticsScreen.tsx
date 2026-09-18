@@ -24,6 +24,7 @@ import {
   shadows,
   typography,
 } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 // ── KPI Card ─────────────────────────────────────────────────────────
 const KpiCard: React.FC<{
@@ -170,7 +171,10 @@ export const ManagerAnalyticsScreen: React.FC = () => {
     <SafeAreaView style={s.safeArea} edges={['top']}>
       <ScrollView
         style={s.scrollView}
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={[
+          s.scrollContent,
+          { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+        ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

@@ -12,7 +12,6 @@ export type AppTabParamList = {
   MyPlan: undefined;
   Progress: NavigatorScreenParams<ProgressStackParamList>;
   Leaderboard: undefined;
-  Profile: undefined;
 };
 
 export type SessionsStackParamList = {
@@ -80,6 +79,8 @@ export type RootStackParamList = {
   SportSelect: undefined;
   App: NavigatorScreenParams<AppTabParamList> | undefined;
   NotificationCenter: undefined;
+  /** The swimmer's Profile, opened from the header avatar (no longer a tab). */
+  Profile: undefined;
   ChangePassword: undefined;
   /** Forced on first sign-in after approval or a reset; replaces the whole app until done. */
   SetPassword: undefined;

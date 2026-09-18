@@ -30,6 +30,7 @@ import {
   typography,
   ANIMATION,
 } from '../../theme';
+import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
 type TabKey = 'performance';
 
@@ -309,7 +310,10 @@ export const ManagerCoachesScreen: React.FC = () => {
     <SafeAreaView style={s.safeArea} edges={['top']}>
       <View style={s.container}>
         <ScrollView
-          contentContainerStyle={s.scrollContent}
+          contentContainerStyle={[
+            s.scrollContent,
+            { paddingBottom: GLASS_TABBAR_CONTENT_INSET },
+          ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
