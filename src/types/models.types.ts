@@ -372,6 +372,48 @@ export interface CoachSessionsStatusCounts {
   Cancelled: number;
 }
 
+/* ═══ القياس — Measurements ═══ */
+
+/** A stroke the club offers (a SWIM_TYPE skill). */
+export interface MeasurementStrokeInterface {
+  id: number;
+  name: string;
+}
+
+/** A distance the club offers (a DISTANCE skill); the API sends meters as a string. */
+export interface MeasurementDistanceInterface {
+  id: number;
+  name: string;
+  numeric_value: string | null;
+}
+
+export interface MeasurementOptionsInterface {
+  strokes: MeasurementStrokeInterface[];
+  distances: MeasurementDistanceInterface[];
+}
+
+/** One timed swim recorded for a swimmer in a session. */
+export interface MeasurementInterface {
+  id: number;
+  session_id: number;
+  swimmer_id: number;
+  stroke_skill_id: number;
+  distance_skill_id: number;
+  /** Seconds with two decimals, as a string ("32.45"). */
+  time_seconds: string;
+  recorded_by: number;
+  created_at: string;
+  stroke_skill: MeasurementStrokeInterface | null;
+  distance_skill: MeasurementDistanceInterface | null;
+}
+
+export interface MeasurementPayload {
+  swimmer_id: number;
+  stroke_skill_id: number;
+  distance_skill_id: number;
+  time_seconds: number;
+}
+
 /* ═══ Attendance Types ═══ */
 
 export interface AttendanceRosterItem {

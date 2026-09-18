@@ -13,6 +13,7 @@ import { useTrainingPlanStore } from './trainingPlan.store';
 import { useProfileStore } from './profile.store';
 import { useSessionSummaryStore } from './sessionSummary.store';
 import { useAwardCelebrationStore } from './awardCelebration.store';
+import { useMeasurementStore } from './measurement.store';
 
 interface AuthState {
   user: UserInterface | null;
@@ -111,6 +112,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useTrainingPlanStore.getState().reset();
       useSessionSummaryStore.getState().reset();
       useAwardCelebrationStore.getState().reset();
+      useMeasurementStore.getState().reset();
       useProfileStore.getState().reset();
       await brandingService.clearBrandingCache();
       await useBrandingStore.getState().clearSlug();
@@ -137,6 +139,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       useTrainingPlanStore.getState().reset();
       useSessionSummaryStore.getState().reset();
       useAwardCelebrationStore.getState().reset();
+      useMeasurementStore.getState().reset();
       useProfileStore.getState().reset();
       await brandingService.clearBrandingCache();
       await useBrandingStore.getState().clearSlug();
