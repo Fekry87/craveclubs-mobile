@@ -5,3 +5,4 @@ export { CoachCreateSessionScreen } from './CoachCreateSessionScreen';
 export { CoachProfileScreen } from './CoachProfileScreen';
 export { CoachSessionAttendanceScreen } from './CoachSessionAttendanceScreen';
 export { SessionCalendarScreen } from './SessionCalendarScreen';
+export { CoachGroupMeasurementScreen } from './CoachGroupMeasurementScreen';

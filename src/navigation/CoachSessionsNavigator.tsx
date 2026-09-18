@@ -8,6 +8,7 @@ import {
   CoachSessionLiveScreen,
   CoachCreateSessionScreen,
   CoachSessionAttendanceScreen,
+  CoachGroupMeasurementScreen,
 } from '../screens/Coach';
 import { Icon } from '../components/common/Icon';
 import { CoachSessionsStackParamList } from './types';
@@ -82,6 +83,15 @@ export const CoachSessionsNavigator: React.FC = () => {
         component={CoachCreateSessionScreen}
         options={{
           title: 'New Session',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton />,
+        }}
+      />
+      <Stack.Screen
+        name="CoachGroupMeasurement"
+        component={CoachGroupMeasurementScreen}
+        options={{
+          title: 'Group measurement',
           headerBackVisible: false,
           headerLeft: () => <BackButton />,
         }}
