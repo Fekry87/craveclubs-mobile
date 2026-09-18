@@ -3,6 +3,7 @@ import { ENDPOINTS } from '../endpoints';
 import { PaginatedResponseType } from '../../types/api.types';
 import {
   MeasurementDayInterface,
+  MeasurementProgressInterface,
   MeasurementInterface,
   MeasurementOptionsInterface,
   MeasurementPayload,
@@ -53,6 +54,14 @@ export const measurementService = {
     const { data } = await apiClient.get<PaginatedResponseType<MeasurementDayInterface>>(
       ENDPOINTS.SWIMMER.MEASUREMENTS,
       { params: { page, per_page: perPage } },
+    );
+    return data;
+  },
+
+  /** Weekly pace-per-50m averages by stroke, for the progress chart. */
+  async getProgress(): Promise<MeasurementProgressInterface> {
+    const { data } = await apiClient.get<MeasurementProgressInterface>(
+      ENDPOINTS.SWIMMER.MEASUREMENTS_PROGRESS,
     );
     return data;
   },

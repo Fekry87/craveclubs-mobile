@@ -24,6 +24,7 @@ export const ENDPOINTS = {
     WEEKLY_REPORT: '/swimmer/weekly-report',
     // القياس: the swimmer's own times, one entry per training day.
     MEASUREMENTS: '/swimmer/measurements',
+    MEASUREMENTS_PROGRESS: '/swimmer/measurements/progress',
     // Man of the Day / Week / Month: the unseen queue, the dismissal, the hall of fame.
     AWARDS_PENDING: '/swimmer/awards/pending',
     AWARD_SEEN: (id: number) => `/swimmer/awards/${id}/seen` as const,

@@ -14,6 +14,7 @@ import { ErrorView } from '../../components/common/ErrorView';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Icon } from '../../components/common/Icon';
 import { MeasurementRows } from '../../components/features/measurements/MeasurementRows';
+import { MeasurementProgressChart } from '../../components/features/measurements/MeasurementProgressChart';
 import { useMyMeasurementsStore } from '../../store/myMeasurements.store';
 import { MeasurementDayInterface } from '../../types/models.types';
 import { formatDate, getRelativeDate } from '../../utils/formatters';
@@ -91,6 +92,8 @@ export const MyMeasurementsScreen: React.FC = () => {
   const unavailable = useMyMeasurementsStore((st) => st.unavailable);
   const fetchDays = useMyMeasurementsStore((st) => st.fetchDays);
   const refresh = useMyMeasurementsStore((st) => st.refresh);
+  const progress = useMyMeasurementsStore((st) => st.progress);
+  const fetchProgress = useMyMeasurementsStore((st) => st.fetchProgress);
 
   /** Dates the swimmer opened or closed by hand; the newest day starts open. */
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
@@ -98,7 +101,8 @@ export const MyMeasurementsScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       refresh();
-    }, [refresh]),
+      fetchProgress();
+    }, [refresh, fetchProgress]),
   );
 
   const handleToggle = useCallback(
@@ -140,6 +144,11 @@ export const MyMeasurementsScreen: React.FC = () => {
       keyExtractor={(item) => item.date}
       renderItem={renderItem}
       contentContainerStyle={[s.list, days.length === 0 && s.listEmpty]}
+      ListHeaderComponent={
+        progress && progress.weeks.length > 0 ? (
+          <MeasurementProgressChart progress={progress} />
+        ) : null
+      }
       onEndReached={handleEndReached}
       onEndReachedThreshold={0.5}
       refreshControl={

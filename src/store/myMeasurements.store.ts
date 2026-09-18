@@ -1,5 +1,8 @@
 import { create } from 'zustand';
-import { MeasurementDayInterface } from '../types/models.types';
+import {
+  MeasurementDayInterface,
+  MeasurementProgressInterface,
+} from '../types/models.types';
 import { measurementService } from '../api/services/measurement.service';
 
 const PAGE_SIZE = 15;
@@ -15,8 +18,11 @@ interface MyMeasurementsState {
   error: string | null;
   /** The club does not have the feature (403): the tab says so instead of erroring. */
   unavailable: boolean;
+  /** Weekly pace averages for the chart; null until loaded, silent on failure. */
+  progress: MeasurementProgressInterface | null;
 
   fetchDays: (page?: number) => Promise<void>;
+  fetchProgress: () => Promise<void>;
   refresh: (showSpinner?: boolean) => Promise<void>;
   reset: () => void;
 }
@@ -30,6 +36,7 @@ const initial = {
   isRefreshing: false,
   error: null as string | null,
   unavailable: false,
+  progress: null as MeasurementProgressInterface | null,
 };
 
 /** Append a page of days; the server paginates by day, so a date never repeats — but stay safe. */
@@ -68,6 +75,15 @@ export const useMyMeasurementsStore = create<MyMeasurementsState>((set, get) => 
         error:
           status === 403 || get().days.length > 0 ? null : "We couldn't load your times.",
       });
+    }
+  },
+
+  fetchProgress: async () => {
+    try {
+      const progress = await measurementService.getProgress();
+      set({ progress });
+    } catch {
+      // Silent: the chart is a bonus on top of the list; the list reports errors.
     }
   },
 

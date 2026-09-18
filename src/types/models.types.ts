@@ -429,6 +429,25 @@ export interface MeasurementDayInterface {
   measurements: SwimmerMeasurementInterface[];
 }
 
+/** One stroke's weekly aggregate on the swimmer's progress chart. */
+export interface MeasurementProgressEntryInterface {
+  stroke_id: number;
+  count: number;
+  /** Average pace per 50m that week, in seconds. */
+  avg_pace: number;
+}
+
+export interface MeasurementProgressWeekInterface {
+  /** Monday of the ISO week, YYYY-MM-DD. */
+  start: string;
+  entries: MeasurementProgressEntryInterface[];
+}
+
+export interface MeasurementProgressInterface {
+  strokes: MeasurementStrokeInterface[];
+  weeks: MeasurementProgressWeekInterface[];
+}
+
 export interface MeasurementPayload {
   swimmer_id: number;
   stroke_skill_id: number;
