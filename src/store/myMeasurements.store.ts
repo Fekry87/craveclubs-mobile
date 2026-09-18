@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import {
   MeasurementDayInterface,
+  MeasurementPeriod,
   MeasurementProgressInterface,
 } from '../types/models.types';
 import { measurementService } from '../api/services/measurement.service';
@@ -18,11 +19,14 @@ interface MyMeasurementsState {
   error: string | null;
   /** The club does not have the feature (403): the tab says so instead of erroring. */
   unavailable: boolean;
-  /** Weekly pace averages for the chart; null until loaded, silent on failure. */
+  /** Pace averages for the chart; null until loaded, silent on failure. */
   progress: MeasurementProgressInterface | null;
+  /** The chart's current bucketing; the swimmer switches it. */
+  progressPeriod: MeasurementPeriod;
+  isProgressLoading: boolean;
 
   fetchDays: (page?: number) => Promise<void>;
-  fetchProgress: () => Promise<void>;
+  fetchProgress: (period?: MeasurementPeriod) => Promise<void>;
   refresh: (showSpinner?: boolean) => Promise<void>;
   reset: () => void;
 }
@@ -37,6 +41,8 @@ const initial = {
   error: null as string | null,
   unavailable: false,
   progress: null as MeasurementProgressInterface | null,
+  progressPeriod: 'week' as MeasurementPeriod,
+  isProgressLoading: false,
 };
 
 /** Append a page of days; the server paginates by day, so a date never repeats — but stay safe. */
@@ -78,12 +84,16 @@ export const useMyMeasurementsStore = create<MyMeasurementsState>((set, get) => 
     }
   },
 
-  fetchProgress: async () => {
+  fetchProgress: async (period) => {
+    const nextPeriod = period ?? get().progressPeriod;
+    set({ progressPeriod: nextPeriod, isProgressLoading: true });
     try {
-      const progress = await measurementService.getProgress();
-      set({ progress });
+      const progress = await measurementService.getProgress(nextPeriod);
+      // A slower request for an old period must not overwrite a newer one.
+      if (get().progressPeriod === nextPeriod) set({ progress, isProgressLoading: false });
     } catch {
       // Silent: the chart is a bonus on top of the list; the list reports errors.
+      if (get().progressPeriod === nextPeriod) set({ isProgressLoading: false });
     }
   },
 

@@ -1,14 +1,18 @@
 import { StyleSheet } from 'react-native';
 import { colors, spacing, fontFamily, borderRadius, typography, shadows } from '../../../../theme';
 
-/** Bar geometry, shared with the height math in index.tsx. */
-export const BAR_MAX = 120;
-export const BAR_MIN = 22;
-/** Space under the bars for the week label. */
-export const WEEK_LABEL_SPACE = 24;
-/** Bar-column geometry, shared with the fits-or-scrolls math in index.tsx. */
-export const COLUMN_WIDTH = 56;
-export const COLUMN_GAP = 16;
+/** Chart geometry, shared with the plotting math in index.tsx. */
+export const CHART_HEIGHT = 210;
+/** Top of the plot (room above the highest dot for its value label). */
+export const PLOT_TOP = 26;
+/** Bottom of the plot (room below for the date labels). */
+export const PLOT_BOTTOM = 168;
+/** Headroom so the fastest/slowest dots don't glue to the plot edges. */
+export const V_MARGIN = 12;
+/** Horizontal padding before the first / after the last point. */
+export const PAD_X = 30;
+/** Minimum gap between points; a tighter fit than this scrolls. */
+export const STEP_MIN = 74;
 
 export const styles = StyleSheet.create({
   card: {
@@ -57,6 +61,34 @@ export const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
 
+  /* ─── Day / Week / Month toggle ─── */
+  toggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.surfaceLight,
+    borderRadius: borderRadius.md,
+    padding: 3,
+    marginBottom: spacing.sm + 2,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    borderRadius: borderRadius.md - 3,
+  },
+  toggleBtnActive: {
+    backgroundColor: colors.white,
+    ...shadows.sm,
+  },
+  toggleText: {
+    fontSize: 13,
+    fontFamily: fontFamily.bodyMedium,
+    color: colors.textMuted,
+  },
+  toggleTextActive: {
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.text,
+  },
+
   /* ─── Stroke chips ─── */
   chipsRow: {
     flexDirection: 'row',
@@ -80,68 +112,24 @@ export const styles = StyleSheet.create({
   /* ─── Chart ─── */
   chartArea: {
     marginTop: spacing.md,
+    height: CHART_HEIGHT,
   },
-  barsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: COLUMN_GAP,
+  chartLoading: {
+    opacity: 0.4,
   },
-  // Everything fits: spread the weeks across the card, no scrolling.
-  barsRowSpread: {
-    flexGrow: 1,
-    justifyContent: 'space-evenly',
-    gap: 0,
-  },
-  column: {
-    alignItems: 'center',
-    width: COLUMN_WIDTH,
-  },
-  barValue: {
-    fontSize: 11,
-    fontFamily: fontFamily.bodySemiBold,
-    color: colors.textMuted,
-    fontVariant: ['tabular-nums'],
-    marginBottom: 4,
-  },
-  bar: {
-    width: 30,
-    borderRadius: 8,
-  },
-  weekLabel: {
-    fontSize: 11,
-    fontFamily: fontFamily.bodyMedium,
-    color: colors.textDim,
-    marginTop: 6,
-    height: WEEK_LABEL_SPACE - 6,
-  },
-
-  /* ─── Average line ─── */
-  averageLine: {
+  avgLabel: {
     position: 'absolute',
     left: 0,
-    right: 0,
     zIndex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
+    backgroundColor: colors.white,
+    paddingHorizontal: 4,
+    borderRadius: 4,
   },
-  averageDash: {
-    flex: 1,
-    borderTopWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colors.textDim,
-  },
-  averageText: {
+  avgText: {
     fontSize: 10,
     fontFamily: fontFamily.bodyMedium,
     color: colors.textMuted,
     fontVariant: ['tabular-nums'],
-    // Legible over whichever bar it lands on.
-    backgroundColor: colors.white,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 4,
-    overflow: 'hidden',
   },
 
   footerText: {
