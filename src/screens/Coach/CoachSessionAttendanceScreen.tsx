@@ -26,12 +26,11 @@ import { useAuthStore } from '../../store/auth.store';
 import { CoachSessionsStackParamList } from '../../navigation/types';
 import {
   AttendanceRosterItem,
-  AwardType,
   SessionAttendanceResponse,
   SessionCompletePayload,
   SwimmerAwardInterface,
 } from '../../types/models.types';
-import { AWARD_LABELS, awardIcon } from '../../utils/awards';
+import { AWARD_ICON } from '../../utils/awards';
 import {
   colors,
   spacing,
@@ -79,8 +78,8 @@ const SwimmerAttendanceRow: React.FC<{
   rating: number;
   readOnly: boolean;
   index: number;
-  /** The award just given from this row, so the row can confirm it inline. */
-  awarded: AwardType | null;
+  /** The name of the award just given from this row, so it can confirm inline. */
+  awarded: string | null;
   /** Undefined hides the trophy (club without the leaderboard feature). */
   onAward?: (swimmer: AttendanceRosterItem) => void;
   onToggle: (swimmerId: number, present: boolean) => void;
@@ -130,8 +129,8 @@ const SwimmerAttendanceRow: React.FC<{
         {/* Award: a tinted pill once given, the trophy button until then */}
         {awarded ? (
           <View style={s.awardedPill}>
-            <Icon name={awardIcon(awarded)} size={13} color={colors.warningDark} />
-            <Text style={s.awardedText}>{AWARD_LABELS[awarded]}</Text>
+            <Icon name={AWARD_ICON} size={13} color={colors.warningDark} />
+            <Text style={s.awardedText} numberOfLines={1}>{awarded}</Text>
           </View>
         ) : onAward ? (
           <TouchableOpacity
@@ -254,7 +253,7 @@ export const CoachSessionAttendanceScreen: React.FC<Props> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [awardTarget, setAwardTarget] = useState<AttendanceRosterItem | null>(null);
-  const [awardedMap, setAwardedMap] = useState<Record<number, AwardType>>({});
+  const [awardedMap, setAwardedMap] = useState<Record<number, string>>({});
 
   // Animation hooks (top level)
   const headerEntry = useAnimatedEntry(0);
@@ -316,7 +315,7 @@ export const CoachSessionAttendanceScreen: React.FC<Props> = ({
   }, []);
 
   const handleAwarded = useCallback((award: SwimmerAwardInterface) => {
-    setAwardedMap((prev) => ({ ...prev, [award.swimmer_id]: award.award_type }));
+    setAwardedMap((prev) => ({ ...prev, [award.swimmer_id]: award.award_name }));
     setAwardTarget(null);
   }, []);
 

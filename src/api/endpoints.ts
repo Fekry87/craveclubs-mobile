@@ -48,6 +48,7 @@ export const ENDPOINTS = {
       `/coach/swimmers/${id}/evaluate` as const,
     // Give a swimmer in one of the coach's own groups an award.
     AWARDS: '/coach/awards',
+    AWARD_TYPES: '/coach/award-types',
     // القياس: the club's strokes and distances, and a session's timed swims.
     MEASUREMENT_OPTIONS: '/coach/measurement-options',
     SESSION_MEASUREMENTS: (sessionId: number) =>

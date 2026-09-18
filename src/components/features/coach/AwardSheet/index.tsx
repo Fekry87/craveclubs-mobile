@@ -1,16 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { FormSheet } from '../../../common/FormSheet';
 import { Icon } from '../../../common/Icon';
+import { Button } from '../../../common/Button';
 import { SelectCard } from '../../registration/SelectCard';
 import { coachService } from '../../../../api/services/coach.service';
-import { AwardType, SwimmerAwardInterface } from '../../../../types/models.types';
 import {
-  AWARD_HINTS,
-  AWARD_ICONS,
-  AWARD_LABELS,
-  AWARD_TYPES,
-} from '../../../../utils/awards';
+  AwardTypeOptionInterface,
+  SwimmerAwardInterface,
+} from '../../../../types/models.types';
+import { AWARD_ICON } from '../../../../utils/awards';
 import { colors } from '../../../../theme';
 import { styles } from './styles';
 
@@ -48,10 +47,10 @@ const describeAwardError = (err: unknown): string => {
 };
 
 /**
- * Bottom sheet the coach opens from a roster row: pick Man of the Day, Week
- * or Month, then "Give award". Reuses `FormSheet` (close discards, the pinned
- * button commits) and `SelectCard` (the same single-choice card the
- * registration steps use), so it looks like the rest of the app.
+ * Bottom sheet the coach opens from a roster row: pick one of the club's own
+ * award titles (fetched from `GET /coach/award-types`), then "Give award".
+ * Reuses `FormSheet` (close discards, the pinned button commits) and
+ * `SelectCard` (the same single-choice card the registration steps use).
  */
 export const AwardSheet: React.FC<AwardSheetProps> = ({
   visible,
@@ -60,32 +59,49 @@ export const AwardSheet: React.FC<AwardSheetProps> = ({
   onClose,
   onAwarded,
 }) => {
-  const [type, setType] = useState<AwardType | null>(null);
+  const [types, setTypes] = useState<AwardTypeOptionInterface[] | null>(null);
+  const [typesError, setTypesError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // A fresh sheet for every swimmer.
+  const loadTypes = useCallback(async () => {
+    setTypesError(null);
+    try {
+      const list = await coachService.getAwardTypes();
+      setTypes(list);
+    } catch {
+      setTypes([]);
+      setTypesError("We couldn't load the club's awards.");
+    }
+  }, []);
+
+  // A fresh sheet for every swimmer; load the titles once per open.
   useEffect(() => {
     if (visible) {
-      setType(null);
+      setSelectedId(null);
       setError(null);
       setSaving(false);
+      if (types === null) loadTypes();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reacts to opening only
   }, [visible, swimmerId]);
 
   const handleGive = useCallback(async () => {
-    if (!type || swimmerId === null) return;
+    if (selectedId === null || swimmerId === null) return;
     setSaving(true);
     setError(null);
     try {
-      const award = await coachService.giveAward(swimmerId, type);
+      const award = await coachService.giveAward(swimmerId, selectedId);
       onAwarded(award);
     } catch (err: unknown) {
       setError(describeAwardError(err));
     } finally {
       setSaving(false);
     }
-  }, [type, swimmerId, onAwarded]);
+  }, [selectedId, swimmerId, onAwarded]);
+
+  const hasTypes = (types?.length ?? 0) > 0;
 
   return (
     <FormSheet
@@ -94,7 +110,7 @@ export const AwardSheet: React.FC<AwardSheetProps> = ({
       onClose={saving ? () => undefined : onClose}
       onSave={handleGive}
       saveTitle="Give award"
-      saveDisabled={!type}
+      saveDisabled={selectedId === null}
       saving={saving}
     >
       <Text style={styles.intro}>
@@ -102,21 +118,45 @@ export const AwardSheet: React.FC<AwardSheetProps> = ({
         swimmer. The XP is added to their total right away.
       </Text>
 
-      {AWARD_TYPES.map((value, index) => (
-        <SelectCard
-          key={value}
-          title={AWARD_LABELS[value]}
-          subtitle={AWARD_HINTS[value]}
-          selected={type === value}
-          onPress={() => setType(value)}
-          index={index}
-          leading={
-            <View style={styles.iconTile}>
-              <Icon name={AWARD_ICONS[value]} size={22} color={colors.warningDark} />
-            </View>
-          }
-        />
-      ))}
+      {types === null && (
+        <View style={styles.status}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      )}
+
+      {types !== null && typesError && (
+        <View style={styles.status}>
+          <Text style={styles.statusText}>{typesError}</Text>
+          <Button title="Try again" variant="secondary" onPress={loadTypes} />
+        </View>
+      )}
+
+      {types !== null && !typesError && !hasTypes && (
+        <View style={styles.status}>
+          <Icon name={AWARD_ICON} size={28} color={colors.textDim} />
+          <Text style={styles.statusTitle}>No awards yet</Text>
+          <Text style={styles.statusText}>
+            Your club manager adds award titles in the portal, under Leaderboard.
+          </Text>
+        </View>
+      )}
+
+      {hasTypes &&
+        types?.map((option, index) => (
+          <SelectCard
+            key={option.id}
+            title={option.name}
+            subtitle={`${option.xp_value} XP`}
+            selected={selectedId === option.id}
+            onPress={() => setSelectedId(option.id)}
+            index={index}
+            leading={
+              <View style={styles.iconTile}>
+                <Icon name={AWARD_ICON} size={22} color={colors.warningDark} />
+              </View>
+            }
+          />
+        ))}
 
       {error && <Text style={styles.error}>{error}</Text>}
     </FormSheet>

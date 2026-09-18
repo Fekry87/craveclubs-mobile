@@ -4,7 +4,7 @@ import { Button } from '../../../common/Button';
 import { Icon } from '../../../common/Icon';
 import { SwimmerAvatar } from '../../../common/SwimmerAvatar';
 import { PendingAwardInterface } from '../../../../types/models.types';
-import { awardIcon, awardLabel, firstNameOf } from '../../../../utils/awards';
+import { AWARD_ICON, firstNameOf } from '../../../../utils/awards';
 import { colors, ANIMATION } from '../../../../theme';
 import { styles, AVATAR } from './styles';
 
@@ -181,7 +181,7 @@ export const AwardCelebrationCard: React.FC<AwardCelebrationCardProps> = ({
 
   if (!award) return null;
 
-  const label = awardLabel(award.award_type);
+  const label = award.award_name;
   const firstName = firstNameOf(award.swimmer_name);
   const headline = award.is_mine ? `You're ${label}!` : `${label}!`;
   const subline = award.is_mine
@@ -269,7 +269,7 @@ export const AwardCelebrationCard: React.FC<AwardCelebrationCardProps> = ({
           <Animated.View style={{ opacity: textOpacity, alignItems: 'center' }}>
             <View style={styles.awardPill}>
               <Icon
-                name={awardIcon(award.award_type)}
+                name={AWARD_ICON}
                 size={14}
                 color={colors.warningDark}
               />

@@ -19,6 +19,20 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  status: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+  },
+  statusTitle: {
+    ...typography.bodyMedium,
+    color: colors.text,
+  },
+  statusText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
   error: {
     ...typography.caption,
     color: colors.error,
