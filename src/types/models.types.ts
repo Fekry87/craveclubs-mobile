@@ -196,7 +196,12 @@ export interface XpBreakdownInterface {
 
 /* ═══ Awards (Man of the Day / Week / Month) ═══ */
 
-export type AwardType = 'day' | 'week' | 'month';
+/** An award title the club offers, from `GET /coach/award-types`. */
+export interface AwardTypeOptionInterface {
+  id: number;
+  name: string;
+  xp_value: number;
+}
 
 /** One award as `GET /swimmer/awards/recent` and `POST /coach/awards` present it. */
 export interface SwimmerAwardInterface {
@@ -205,7 +210,9 @@ export interface SwimmerAwardInterface {
   swimmer_name: string;
   /** The swimmer user's avatar; null when they have no login or no photo. */
   swimmer_avatar_url: string | null;
-  award_type: AwardType;
+  award_type_id: number | null;
+  /** The title, snapshotted at award time (the club can rename or delete the type). */
+  award_name: string;
   xp_value: number;
   awarded_by: string | null;
   awarded_at: string | null;

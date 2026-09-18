@@ -14,7 +14,7 @@ import {
   SessionCompletePayload,
   SessionCreatePayload,
   SessionAttendanceResponse,
-  AwardType,
+  AwardTypeOptionInterface,
   SwimmerAwardInterface,
 } from '../../types/models.types';
 import { localDateString } from '../../utils/formatters';
@@ -141,17 +141,25 @@ export const coachService = {
   },
 
   /* ═══ Awards ═══ */
+  /** The club's award titles, in the club's order (the coach picks one). */
+  async getAwardTypes(): Promise<AwardTypeOptionInterface[]> {
+    const { data } = await apiClient.get<{ data: AwardTypeOptionInterface[] }>(
+      ENDPOINTS.COACH.AWARD_TYPES,
+    );
+    return data.data ?? [];
+  },
+
   /**
-   * Name a swimmer Man of the Day / Week / Month. The server answers 422 on
+   * Give a swimmer one of the club's awards. The server answers 422 on
    * `swimmer_id` when the swimmer is not in one of this coach's groups.
    */
   async giveAward(
     swimmerId: number,
-    awardType: AwardType,
+    awardTypeId: number,
   ): Promise<SwimmerAwardInterface> {
     const { data } = await apiClient.post<GiveAwardResponse>(
       ENDPOINTS.COACH.AWARDS,
-      { swimmer_id: swimmerId, award_type: awardType },
+      { swimmer_id: swimmerId, award_type_id: awardTypeId },
     );
     return data.award;
   },

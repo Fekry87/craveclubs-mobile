@@ -4,7 +4,7 @@ import { Card } from '../../../common/Card';
 import { Icon } from '../../../common/Icon';
 import { SwimmerAvatar } from '../../../common/SwimmerAvatar';
 import { SwimmerAwardInterface } from '../../../../types/models.types';
-import { AWARD_SHORT_LABELS, awardIcon, awardLabel } from '../../../../utils/awards';
+import { AWARD_ICON } from '../../../../utils/awards';
 import { getRelativeDate } from '../../../../utils/formatters';
 import { colors } from '../../../../theme';
 import { styles } from './styles';
@@ -17,7 +17,7 @@ interface AwardRowProps {
 const AwardRow: React.FC<AwardRowProps> = React.memo(({ award, first }) => (
   <View
     style={[styles.row, !first && styles.rowDivider]}
-    accessibilityLabel={`${award.swimmer_name}, ${awardLabel(award.award_type)}, ${award.xp_value} XP`}
+    accessibilityLabel={`${award.swimmer_name}, ${award.award_name}, ${award.xp_value} XP`}
   >
     <View style={styles.avatarWrap}>
       <SwimmerAvatar
@@ -32,14 +32,13 @@ const AwardRow: React.FC<AwardRowProps> = React.memo(({ award, first }) => (
         {award.swimmer_name}
       </Text>
       <Text style={styles.meta} numberOfLines={1}>
-        {awardLabel(award.award_type)}
+        {award.award_name}
         {award.awarded_at ? ` · ${getRelativeDate(award.awarded_at)}` : ''}
       </Text>
     </View>
     <View style={styles.right}>
       <View style={styles.typePill}>
-        <Icon name={awardIcon(award.award_type)} size={11} color={colors.warningDark} />
-        <Text style={styles.typePillText}>{AWARD_SHORT_LABELS[award.award_type]}</Text>
+        <Icon name={AWARD_ICON} size={11} color={colors.warningDark} />
       </View>
       <Text style={[styles.xp, { color: colors.primary }]}>+{award.xp_value} XP</Text>
     </View>
