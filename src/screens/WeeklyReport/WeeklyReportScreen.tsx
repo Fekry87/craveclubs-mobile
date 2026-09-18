@@ -9,7 +9,9 @@ import {
   Animated,
   DimensionValue,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../types/navigation.types';
 import { Card } from '../../components/common/Card';
 import { Icon } from '../../components/common/Icon';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -257,6 +259,8 @@ const LoadingSkeleton: React.FC = () => (
    ═══════════════════════════════════════════════════ */
 
 export const WeeklyReportScreen: React.FC = () => {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [currentWeek, setCurrentWeek] = useState(getCurrentISOWeek);
   const [report, setReport] = useState<WeeklyReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -518,6 +522,12 @@ export const WeeklyReportScreen: React.FC = () => {
                 <Card
                   key={evaluation.session_id}
                   style={s.sessionCard}
+                  // Like every other session card in the app: tap for the full page.
+                  onPress={() =>
+                    navigation.navigate('SessionDetail', {
+                      sessionId: evaluation.session_id,
+                    })
+                  }
                 >
                   {/* Header row: day + date */}
                   <View style={s.sessionHeaderRow}>

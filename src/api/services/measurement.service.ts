@@ -1,6 +1,8 @@
 import apiClient from '../client';
 import { ENDPOINTS } from '../endpoints';
+import { PaginatedResponseType } from '../../types/api.types';
 import {
+  MeasurementDayInterface,
   MeasurementInterface,
   MeasurementOptionsInterface,
   MeasurementPayload,
@@ -39,6 +41,18 @@ export const measurementService = {
     const { data } = await apiClient.post<MeasurementInterface>(
       ENDPOINTS.COACH.SESSION_MEASUREMENTS(sessionId),
       payload,
+    );
+    return data;
+  },
+
+  /** The signed-in swimmer's times, one entry per training day, newest first. */
+  async getMine(
+    page: number = 1,
+    perPage: number = 15,
+  ): Promise<PaginatedResponseType<MeasurementDayInterface>> {
+    const { data } = await apiClient.get<PaginatedResponseType<MeasurementDayInterface>>(
+      ENDPOINTS.SWIMMER.MEASUREMENTS,
+      { params: { page, per_page: perPage } },
     );
     return data;
   },
