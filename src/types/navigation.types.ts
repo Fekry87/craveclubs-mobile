@@ -39,6 +39,8 @@ export type CoachSessionsStackParamList = {
   CoachSessionLive: { sessionId: number };
   CoachCreateSession: undefined;
   CoachSessionAttendance: { sessionId: number };
+  /** قياس مجموعة: one stopwatch, several swimmers, a Finish per lane. */
+  CoachGroupMeasurement: { sessionId: number };
 };
 
 /* ═══ Manager Navigation ═══ */

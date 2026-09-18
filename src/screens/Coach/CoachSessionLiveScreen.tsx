@@ -5,6 +5,7 @@ import {
   ScrollView,
   FlatList,
   TextInput,
+  TouchableOpacity,
   Alert,
   StyleSheet,
   Animated,
@@ -358,6 +359,19 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
             </View>
           </View>
 
+          {measurementsEnabled && roster.length > 0 && (
+            <TouchableOpacity
+              style={s.groupMeasureBtn}
+              onPress={() => navigation.navigate('CoachGroupMeasurement', { sessionId })}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+            >
+              <Icon name="timer-line" size={18} color={colors.primary} />
+              <Text style={s.groupMeasureText}>Group measurement</Text>
+              <Icon name="arrow-right-s-line" size={18} color={colors.primary} />
+            </TouchableOpacity>
+          )}
+
           {isRosterLoading && roster.length === 0 ? (
             <Card style={s.sectionCard}>
               <Loader message="Loading roster..." />
@@ -570,6 +584,21 @@ const s = StyleSheet.create({
     fontSize: 13,
     fontFamily: fontFamily.bodySemiBold,
     color: colors.swimmer,
+  },
+  groupMeasureBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    height: 46,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primaryDim,
+    marginBottom: spacing.sm + 4,
+  },
+  groupMeasureText: {
+    fontSize: 14,
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.primary,
   },
   rosterHeader: {
     flexDirection: 'row',
