@@ -6,6 +6,9 @@ export const BAR_MAX = 120;
 export const BAR_MIN = 22;
 /** Space under the bars for the week label. */
 export const WEEK_LABEL_SPACE = 24;
+/** Bar-column geometry, shared with the fits-or-scrolls math in index.tsx. */
+export const COLUMN_WIDTH = 56;
+export const COLUMN_GAP = 16;
 
 export const styles = StyleSheet.create({
   card: {
@@ -54,6 +57,26 @@ export const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
 
+  /* ─── Stroke chips ─── */
+  chipsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingRight: spacing.xs,
+  },
+  chip: {
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  chipText: {
+    fontSize: 14,
+    fontFamily: fontFamily.bodySemiBold,
+    color: colors.textMuted,
+  },
+
   /* ─── Chart ─── */
   chartArea: {
     marginTop: spacing.md,
@@ -61,14 +84,17 @@ export const styles = StyleSheet.create({
   barsRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: spacing.md,
-    paddingHorizontal: spacing.xs,
-    minWidth: '100%',
-    justifyContent: 'flex-end',
+    gap: COLUMN_GAP,
+  },
+  // Everything fits: spread the weeks across the card, no scrolling.
+  barsRowSpread: {
+    flexGrow: 1,
+    justifyContent: 'space-evenly',
+    gap: 0,
   },
   column: {
     alignItems: 'center',
-    width: 56,
+    width: COLUMN_WIDTH,
   },
   barValue: {
     fontSize: 11,
