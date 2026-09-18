@@ -93,6 +93,7 @@ export const MyMeasurementsScreen: React.FC = () => {
   const fetchDays = useMyMeasurementsStore((st) => st.fetchDays);
   const refresh = useMyMeasurementsStore((st) => st.refresh);
   const progress = useMyMeasurementsStore((st) => st.progress);
+  const isProgressLoading = useMyMeasurementsStore((st) => st.isProgressLoading);
   const fetchProgress = useMyMeasurementsStore((st) => st.fetchProgress);
 
   /** Dates the swimmer opened or closed by hand; the newest day starts open. */
@@ -145,8 +146,12 @@ export const MyMeasurementsScreen: React.FC = () => {
       renderItem={renderItem}
       contentContainerStyle={[s.list, days.length === 0 && s.listEmpty]}
       ListHeaderComponent={
-        progress && progress.weeks.length > 0 ? (
-          <MeasurementProgressChart progress={progress} />
+        progress && progress.points.length > 0 ? (
+          <MeasurementProgressChart
+            progress={progress}
+            loading={isProgressLoading}
+            onPeriodChange={fetchProgress}
+          />
         ) : null
       }
       onEndReached={handleEndReached}

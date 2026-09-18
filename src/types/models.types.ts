@@ -429,23 +429,27 @@ export interface MeasurementDayInterface {
   measurements: SwimmerMeasurementInterface[];
 }
 
-/** One stroke's weekly aggregate on the swimmer's progress chart. */
+/** How the progress chart buckets time. */
+export type MeasurementPeriod = 'day' | 'week' | 'month';
+
+/** One stroke's aggregate in a progress bucket. */
 export interface MeasurementProgressEntryInterface {
   stroke_id: number;
   count: number;
-  /** Average pace per 50m that week, in seconds. */
+  /** Average pace per 50m in the bucket, in seconds. */
   avg_pace: number;
 }
 
-export interface MeasurementProgressWeekInterface {
-  /** Monday of the ISO week, YYYY-MM-DD. */
+export interface MeasurementProgressPointInterface {
+  /** The bucket's start (the day, ISO-Monday week, or first of the month), YYYY-MM-DD. */
   start: string;
   entries: MeasurementProgressEntryInterface[];
 }
 
 export interface MeasurementProgressInterface {
+  period: MeasurementPeriod;
   strokes: MeasurementStrokeInterface[];
-  weeks: MeasurementProgressWeekInterface[];
+  points: MeasurementProgressPointInterface[];
 }
 
 export interface MeasurementPayload {
