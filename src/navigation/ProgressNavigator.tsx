@@ -3,7 +3,7 @@ import { TouchableOpacity } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { Icon } from '../components/common/Icon';
-import { ProgressScreen, EvaluationsScreen } from '../screens/Progress';
+import { ProgressAndMeasurementsScreen, EvaluationsScreen } from '../screens/Progress';
 import { ProgressStackParamList } from './types';
 import { colors, fontFamily } from '../theme';
 
@@ -41,7 +41,7 @@ export const ProgressNavigator: React.FC = () => {
     >
       <Stack.Screen
         name="ProgressMain"
-        component={ProgressScreen}
+        component={ProgressAndMeasurementsScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

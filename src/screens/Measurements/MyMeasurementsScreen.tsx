@@ -78,8 +78,8 @@ const DayCard: React.FC<DayCardProps> = React.memo(({ day, expanded, onToggle })
 
 /**
  * القياس — the swimmer's recorded times, one card per training day (newest
- * first); a card opens to the times swum that day. Lives under My Plan as the
- * third segment. Read-only: coaches record the times during a session.
+ * first); a card opens to the times swum that day. Lives under Progress as the
+ * "My Measurements" tab. Read-only: coaches record the times during a session.
  */
 export const MyMeasurementsScreen: React.FC = () => {
   const days = useMyMeasurementsStore((st) => st.days);
