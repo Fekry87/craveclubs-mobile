@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Animated,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   useWindowDimensions,
 } from 'react-native';
@@ -49,6 +50,25 @@ export const FormSheet: React.FC<FormSheetProps> = ({
   const { height } = useWindowDimensions();
   const slide = useRef(new Animated.Value(height)).current;
 
+  // The KeyboardAvoidingView shrinks the space above the keyboard, but the
+  // sheet's height cap was still the whole window: with the keyboard up, a
+  // tall sheet overflowed the top of the screen (title and first fields gone)
+  // and its scroll area no longer matched what was visible. Cap it to the
+  // space that is really left.
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return undefined;
+    const show = Keyboard.addListener('keyboardWillShow', (event) =>
+      setKeyboardHeight(event.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener('keyboardWillHide', () => setKeyboardHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  const keyboardOpen = keyboardHeight > 0;
+
   useEffect(() => {
     if (visible) {
       slide.setValue(height);
@@ -77,7 +97,10 @@ export const FormSheet: React.FC<FormSheetProps> = ({
           <Animated.View
             style={[
               styles.sheet,
-              { maxHeight: height - insets.top - spacing.lg, transform: [{ translateY: slide }] },
+              {
+                maxHeight: height - insets.top - spacing.lg - keyboardHeight,
+                transform: [{ translateY: slide }],
+              },
             ]}
             accessibilityViewIsModal
           >
@@ -102,12 +125,19 @@ export const FormSheet: React.FC<FormSheetProps> = ({
             <ScrollView
               contentContainerStyle={styles.content}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
               showsVerticalScrollIndicator={false}
             >
               {children}
             </ScrollView>
 
-            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+            <View
+              style={[
+                styles.footer,
+                // The home-indicator inset is under the keyboard while it is up.
+                { paddingBottom: keyboardOpen ? spacing.sm + 4 : Math.max(insets.bottom, spacing.md) },
+              ]}
+            >
               <Button title={saveTitle} onPress={onSave} disabled={saveDisabled || saving} loading={saving} />
             </View>
           </Animated.View>

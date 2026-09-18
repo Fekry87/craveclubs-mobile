@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,16 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTrainingPlanStore } from '../../store/trainingPlan.store';
 import { MyPlanScreen } from './MyPlanScreen';
 import { WeeklyReportScreen } from '../WeeklyReport/WeeklyReportScreen';
+import { MyMeasurementsScreen } from '../Measurements/MyMeasurementsScreen';
+import { useAuthStore } from '../../store/auth.store';
 import { colors, spacing, fontFamily, shadows } from '../../theme';
 
-type Segment = 'plan' | 'report';
+type Segment = 'plan' | 'report' | 'measurements';
+
+interface SegmentConfig {
+  key: Segment;
+  label: string;
+}
 
 const SEGMENT_RADIUS = 12;
 const SEGMENT_PADDING = 3;
@@ -24,6 +31,21 @@ export const PlanAndReportScreen: React.FC = () => {
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   const markPlanViewed = useTrainingPlanStore((s) => s.markPlanViewed);
+
+  // القياس lives on the club's Skills feature; without it there is nothing to list.
+  const measurementsEnabled = useAuthStore(
+    (st) => st.user?.features?.skills_enabled === true,
+  );
+  const segments = useMemo<SegmentConfig[]>(
+    () => [
+      { key: 'plan', label: 'My Plan' },
+      { key: 'report', label: 'My Report' },
+      ...(measurementsEnabled
+        ? [{ key: 'measurements' as const, label: 'Measurements' }]
+        : []),
+    ],
+    [measurementsEnabled],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -37,12 +59,12 @@ export const PlanAndReportScreen: React.FC = () => {
       if (segment === activeSegment) return;
       setActiveSegment(segment);
       Animated.timing(slideAnim, {
-        toValue: segment === 'plan' ? 0 : 1,
+        toValue: segments.findIndex((item) => item.key === segment),
         duration: 200,
         useNativeDriver: false,
       }).start();
     },
-    [activeSegment, slideAnim],
+    [activeSegment, slideAnim, segments],
   );
 
   const onControlLayout = useCallback((e: LayoutChangeEvent) => {
@@ -51,12 +73,15 @@ export const PlanAndReportScreen: React.FC = () => {
 
   // Indicator dimensions based on measured width
   const indicatorWidth = controlWidth > 0
-    ? (controlWidth - SEGMENT_PADDING * 2) / 2
+    ? (controlWidth - SEGMENT_PADDING * 2) / segments.length
     : 0;
 
   const indicatorLeft = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [SEGMENT_PADDING, SEGMENT_PADDING + indicatorWidth],
+    inputRange: [0, Math.max(1, segments.length - 1)],
+    outputRange: [
+      SEGMENT_PADDING,
+      SEGMENT_PADDING + indicatorWidth * Math.max(1, segments.length - 1),
+    ],
   });
 
   return (
@@ -75,44 +100,41 @@ export const PlanAndReportScreen: React.FC = () => {
               ]}
             />
           )}
-          <TouchableOpacity
-            style={s.segmentBtn}
-            onPress={() => handleSegmentChange('plan')}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                s.segmentText,
-                activeSegment === 'plan' && s.segmentTextActive,
-              ]}
+          {segments.map((segment) => (
+            <TouchableOpacity
+              key={segment.key}
+              style={s.segmentBtn}
+              onPress={() => handleSegmentChange(segment.key)}
+              activeOpacity={0.7}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: activeSegment === segment.key }}
             >
-              My Plan
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.segmentBtn}
-            onPress={() => handleSegmentChange('report')}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                s.segmentText,
-                activeSegment === 'report' && s.segmentTextActive,
-              ]}
-            >
-              My Report
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  s.segmentText,
+                  activeSegment === segment.key && s.segmentTextActive,
+                ]}
+                numberOfLines={1}
+              >
+                {segment.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
-      {/* Content — both mounted, toggle visibility to preserve state */}
+      {/* Content — all mounted, toggle visibility to preserve state */}
       <View style={[s.content, activeSegment !== 'plan' && s.hidden]}>
         <MyPlanScreen />
       </View>
       <View style={[s.content, activeSegment !== 'report' && s.hidden]}>
         <WeeklyReportScreen />
       </View>
+      {measurementsEnabled && (
+        <View style={[s.content, activeSegment !== 'measurements' && s.hidden]}>
+          <MyMeasurementsScreen />
+        </View>
+      )}
     </View>
   );
 };
@@ -147,6 +169,7 @@ const s = StyleSheet.create({
   segmentBtn: {
     flex: 1,
     paddingVertical: spacing.sm + 2,
+    paddingHorizontal: 2,
     alignItems: 'center',
     zIndex: 1,
   },

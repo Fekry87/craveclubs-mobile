@@ -12,6 +12,7 @@ import { RouteProp, useFocusEffect, useRoute } from '@react-navigation/native';
 import { Card } from '../../components/common/Card';
 import { Icon } from '../../components/common/Icon';
 import { InfoRow } from '../../components/common/InfoRow';
+import { MeasurementRows } from '../../components/features/measurements/MeasurementRows';
 import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
@@ -355,6 +356,16 @@ export const SessionDetailScreen: React.FC = () => {
                 ) : null}
               </View>
             )}
+          </Card>
+        </Animated.View>
+      )}
+
+      {/* ═══ القياس — the times the coach recorded for you in this session ═══ */}
+      {current.my_measurements && current.my_measurements.length > 0 && (
+        <Animated.View style={[s.section, resultEntry]}>
+          <SectionTitle>Your times</SectionTitle>
+          <Card>
+            <MeasurementRows measurements={current.my_measurements} />
           </Card>
         </Animated.View>
       )}

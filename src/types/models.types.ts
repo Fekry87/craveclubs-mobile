@@ -122,6 +122,8 @@ export interface SessionDetailInterface {
     created_at: string;
   } | null;
   group_evaluation: { rating: number; notes: string | null } | null;
+  /** القياس: this swimmer's times in the session. Absent on older backends. */
+  my_measurements?: SwimmerMeasurementInterface[];
   xp: {
     per_attendance: number;
     /** null until attendance is taken. */
@@ -405,6 +407,26 @@ export interface MeasurementInterface {
   created_at: string;
   stroke_skill: MeasurementStrokeInterface | null;
   distance_skill: MeasurementDistanceInterface | null;
+}
+
+/** A measurement as its swimmer reads it (no `recorded_by`). */
+export interface SwimmerMeasurementInterface {
+  id: number;
+  session_id: number;
+  time_seconds: string;
+  created_at: string;
+  stroke_skill: MeasurementStrokeInterface | null;
+  distance_skill: MeasurementDistanceInterface | null;
+  /** Only on the by-day list. */
+  session?: { id: number; title: string | null } | null;
+}
+
+/** One training day on the swimmer's Measurements tab. */
+export interface MeasurementDayInterface {
+  /** YYYY-MM-DD — the session's date. */
+  date: string;
+  count: number;
+  measurements: SwimmerMeasurementInterface[];
 }
 
 export interface MeasurementPayload {
