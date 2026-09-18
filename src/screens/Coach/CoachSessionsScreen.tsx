@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
-  SectionList,
+  FlatList,
   ScrollView,
   RefreshControl,
   ActivityIndicator,
@@ -115,6 +115,19 @@ const groupSessionsByDate = (
   return sections;
 };
 
+/** A row of the screen's flat list. */
+type ListRow =
+  | { kind: 'tabs' }
+  | { kind: 'status' }
+  | { kind: 'date'; section: DateSection }
+  | { kind: 'sessions'; sessions: CoachSessionInterface[] };
+
+/**
+ * The segment bar is the first data row. With a ListHeaderComponent the list
+ * puts the header at child 0, so the first data row is child 1.
+ */
+const STICKY_TABS = [1];
+
 const isHighlightDate = (dateStr: string): boolean => {
   const label = getRelativeDate(dateStr);
   return label === 'Today' || label === 'Tomorrow';
@@ -143,24 +156,17 @@ const EMPTY_CONFIG: Record<
   },
 };
 
-/* ═══ List Header Component ═══ */
+/* ═══ List Header: greeting + live banner (scrolls away) ═══ */
 
 interface ListHeaderProps {
   firstName: string;
   liveSessions: CoachSessionInterface[];
-  activeSegment: SegmentKey;
-  /** null until the server (or a first load) says how many. */
-  segmentCounts: Record<SegmentKey, number | null>;
-  onSegmentPress: (key: SegmentKey) => void;
   onLivePress: (id: number) => void;
 }
 
 const ListHeader: React.FC<ListHeaderProps> = ({
   firstName,
   liveSessions,
-  activeSegment,
-  segmentCounts,
-  onSegmentPress,
   onLivePress,
 }) => (
   <View style={s.headerContainer}>
@@ -185,7 +191,24 @@ const ListHeader: React.FC<ListHeaderProps> = ({
       </View>
     )}
 
-    {/* Segment Bar */}
+  </View>
+);
+
+/* ═══ Segment Bar: the list's first row, pinned to the top while scrolling ═══ */
+
+interface SegmentBarProps {
+  activeSegment: SegmentKey;
+  /** null until the server (or a first load) says how many. */
+  segmentCounts: Record<SegmentKey, number | null>;
+  onSegmentPress: (key: SegmentKey) => void;
+}
+
+const SegmentBar: React.FC<SegmentBarProps> = ({
+  activeSegment,
+  segmentCounts,
+  onSegmentPress,
+}) => (
+  <View style={s.stickyBar}>
     <View style={s.segmentBar}>
       {SEGMENTS.map((seg) => {
         const isActive = activeSegment === seg.key;
@@ -397,71 +420,132 @@ export const CoachSessionsScreen: React.FC = () => {
 
   const emptyConfig = EMPTY_CONFIG[activeSegment];
 
-  /* ─── SectionList renderers ─── */
-  const renderSectionHeader = useCallback(
-    ({ section }: { section: DateSection }) => {
-      const dateLabel = getRelativeDate(section.title);
-      const highlight = isHighlightDate(section.title);
-      const sessionCount = section.data[0].sessions.length;
+  /*
+   * One flat list: the segment bar is its first row and the only sticky one,
+   * so the greeting scrolls away and the tabs stay at the top. (A SectionList
+   * can only pin every section header or none.) The empty / loading / error
+   * state is a row too, because the list is never empty with the bar in it.
+   */
+  const rows = useMemo<ListRow[]>(() => {
+    const out: ListRow[] = [{ kind: 'tabs' }];
+    if (groupedSections.length === 0) {
+      out.push({ kind: 'status' });
+      return out;
+    }
+    groupedSections.forEach((section) => {
+      out.push({ kind: 'date', section });
+      out.push({ kind: 'sessions', sessions: section.data[0].sessions });
+    });
+    return out;
+  }, [groupedSections]);
 
-      return (
-        <View>
-          {section.startsPast && (
-            <View style={s.pastHeader}>
-              <Icon name="time-line" size={18} color={colors.textMuted} />
-              <Text style={s.pastHeaderTitle}>Past sessions</Text>
+  const renderDateHeader = useCallback((section: DateSection) => {
+    const dateLabel = getRelativeDate(section.title);
+    const highlight = isHighlightDate(section.title);
+    const sessionCount = section.data[0].sessions.length;
+
+    return (
+      <View>
+        {section.startsPast && (
+          <View style={s.pastHeader}>
+            <Icon name="time-line" size={18} color={colors.textMuted} />
+            <Text style={s.pastHeaderTitle}>Past sessions</Text>
+          </View>
+        )}
+        <View style={section.isPast ? s.pastDateHeader : s.sectionHeader}>
+          <Text
+            style={
+              section.isPast
+                ? s.pastDateTitle
+                : [s.dateTitle, highlight && s.dateTitleHighlight]
+            }
+          >
+            {dateLabel}
+          </Text>
+          {sessionCount > 1 && (
+            <View style={s.sessionCountBadge}>
+              <Text style={s.sessionCountText}>
+                {sessionCount} sessions
+              </Text>
             </View>
           )}
-          <View style={section.isPast ? s.pastDateHeader : s.sectionHeader}>
-            <Text
-              style={
-                section.isPast
-                  ? s.pastDateTitle
-                  : [s.dateTitle, highlight && s.dateTitleHighlight]
-              }
-            >
-              {dateLabel}
-            </Text>
-            {sessionCount > 1 && (
-              <View style={s.sessionCountBadge}>
-                <Text style={s.sessionCountText}>
-                  {sessionCount} sessions
-                </Text>
-              </View>
-            )}
-          </View>
         </View>
-      );
-    },
-    [],
+      </View>
+    );
+  }, []);
+
+  const renderStatus = useCallback(
+    () => (
+      <View style={s.statusRow}>
+        {segment.error ? (
+          <ErrorView
+            message={segment.error}
+            onRetry={() => fetchSegment(activeSegment)}
+          />
+        ) : !segment.loaded || segment.isLoading ? (
+          <Loader message="Loading sessions..." />
+        ) : (
+          <EmptyState
+            icon={emptyConfig.icon}
+            title={emptyConfig.title}
+            message={emptyConfig.message}
+          />
+        )}
+      </View>
+    ),
+    [segment.error, segment.loaded, segment.isLoading, activeSegment, fetchSegment, emptyConfig],
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: DateGroup }) => {
-      if (item.sessions.length === 1) {
-        return (
-          <CoachSessionCard
-            session={item.sessions[0]}
-            onPress={() => handleSessionPress(item.sessions[0].id)}
-            index={0}
-          />
-        );
+    ({ item }: { item: ListRow }) => {
+      switch (item.kind) {
+        case 'tabs':
+          return (
+            <SegmentBar
+              activeSegment={activeSegment}
+              segmentCounts={segmentCounts}
+              onSegmentPress={handleSegmentPress}
+            />
+          );
+        case 'status':
+          return renderStatus();
+        case 'date':
+          return renderDateHeader(item.section);
+        default:
+          return item.sessions.length === 1 ? (
+            <CoachSessionCard
+              session={item.sessions[0]}
+              onPress={() => handleSessionPress(item.sessions[0].id)}
+              index={0}
+            />
+          ) : (
+            <SwiperRow
+              sessions={item.sessions}
+              onSessionPress={handleSessionPress}
+            />
+          );
       }
-
-      return (
-        <SwiperRow
-          sessions={item.sessions}
-          onSessionPress={handleSessionPress}
-        />
-      );
     },
-    [handleSessionPress],
+    [
+      activeSegment,
+      segmentCounts,
+      handleSegmentPress,
+      handleSessionPress,
+      renderStatus,
+      renderDateHeader,
+    ],
   );
 
-  const keyExtractor = useCallback(
-    (item: DateGroup) => `${item.sessions[0].id}`,
-    [],
-  );
+  const keyExtractor = useCallback((item: ListRow) => {
+    switch (item.kind) {
+      case 'date':
+        return `date-${item.section.title}`;
+      case 'sessions':
+        return `sessions-${item.sessions[0].id}`;
+      default:
+        return item.kind;
+    }
+  }, []);
 
   /* ─── List header renderer ─── */
   const renderListHeader = useCallback(
@@ -469,29 +553,22 @@ export const CoachSessionsScreen: React.FC = () => {
       <ListHeader
         firstName={firstName}
         liveSessions={liveSessions}
-        activeSegment={activeSegment}
-        segmentCounts={segmentCounts}
-        onSegmentPress={handleSegmentPress}
         onLivePress={handleLivePress}
       />
     ),
-    [firstName, liveSessions, activeSegment, segmentCounts, handleSegmentPress, handleLivePress],
+    [firstName, liveSessions, handleLivePress],
   );
-
-  /* ─── Loading & Error states ─── */
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      {/* Sessions SectionList grouped by date */}
-      <SectionList
-        sections={groupedSections}
+      <FlatList
+        data={rows}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
-        renderSectionHeader={renderSectionHeader}
         ListHeaderComponent={renderListHeader}
+        stickyHeaderIndices={STICKY_TABS}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
-        stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
             refreshing={segment.isRefreshing}
@@ -500,31 +577,12 @@ export const CoachSessionsScreen: React.FC = () => {
             tintColor={colors.primary}
           />
         }
-        ListEmptyComponent={
-          segment.error ? (
-            <ErrorView
-              message={segment.error}
-              onRetry={() => fetchSegment(activeSegment)}
-            />
-          ) : !segment.loaded || segment.isLoading ? (
-            <Loader message="Loading sessions..." />
-          ) : (
-            <EmptyState
-              icon={emptyConfig.icon}
-              title={emptyConfig.title}
-              message={emptyConfig.message}
-            />
-          )
-        }
         ListFooterComponent={
           segment.isLoading && segment.items.length > 0 ? (
             <ActivityIndicator style={s.footerLoader} color={colors.primary} />
           ) : null
         }
-        contentContainerStyle={[
-          s.listContent,
-          groupedSections.length === 0 && s.listContentEmpty,
-        ]}
+        contentContainerStyle={s.listContent}
       />
 
       {/* FAB — Create Session */}
@@ -558,8 +616,9 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.xxl,
   },
-  listContentEmpty: {
-    flex: 1,
+  statusRow: {
+    minHeight: 340,
+    justifyContent: 'center',
   },
 
   /* ─── Header container ─── */
@@ -594,6 +653,13 @@ const s = StyleSheet.create({
   },
 
   /* ─── Segment bar ─── */
+  // Full-bleed and opaque, so cards pass under it cleanly while it is pinned.
+  stickyBar: {
+    marginHorizontal: -spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    backgroundColor: colors.background,
+  },
   segmentBar: {
     flexDirection: 'row',
     padding: spacing.xs,

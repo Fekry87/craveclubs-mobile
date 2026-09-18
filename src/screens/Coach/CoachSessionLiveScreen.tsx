@@ -54,6 +54,8 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
 
   const [attendanceMap, setAttendanceMap] = useState<Record<number, boolean>>({});
   const [ratingsMap, setRatingsMap] = useState<Record<number, number>>({});
+  const [notesMap, setNotesMap] = useState<Record<number, string>>({});
+  const [expandedSwimmerId, setExpandedSwimmerId] = useState<number | null>(null);
   const [summaryNotes, setSummaryNotes] = useState('');
   const [groupRating, setGroupRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,7 +97,73 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
     }));
   }, []);
 
+  const handleToggleExpand = useCallback((swimmerId: number) => {
+    setExpandedSwimmerId((current) => (current === swimmerId ? null : swimmerId));
+  }, []);
+
+  const handleChangeNote = useCallback((swimmerId: number, note: string) => {
+    setNotesMap((prev) => ({ ...prev, [swimmerId]: note }));
+  }, []);
+
+  const submitSession = useCallback(async () => {
+    setIsSubmitting(true);
+    const payload: SessionCompletePayload = {
+      summary_notes: summaryNotes || undefined,
+      attendance: roster.map((s) => ({
+        swimmer_id: s.id,
+        present: attendanceMap[s.id] ?? true,
+      })),
+      // An evaluation is a rating with an optional comment — the API has no
+      // comment-only evaluation, so an unrated swimmer's comment is not sent.
+      evaluations: roster
+        .filter((s) => (ratingsMap[s.id] ?? 0) > 0)
+        .map((s) => ({
+          swimmer_id: s.id,
+          rating: ratingsMap[s.id],
+          notes:
+            (attendanceMap[s.id] ?? true) && notesMap[s.id]?.trim()
+              ? notesMap[s.id].trim()
+              : undefined,
+        })),
+      group_evaluation:
+        groupRating > 0 ? { rating: groupRating } : undefined,
+    };
+    await completeSession(sessionId, payload);
+    setIsSubmitting(false);
+    // Pop to sessions list — NOT goBack (which would go to detail of a now-completed session)
+    navigation.popToTop();
+  }, [
+    summaryNotes,
+    roster,
+    attendanceMap,
+    ratingsMap,
+    notesMap,
+    groupRating,
+    completeSession,
+    sessionId,
+    navigation,
+  ]);
+
   const handleEndSession = useCallback(() => {
+    // A comment only travels with a rating. Say so before it is lost.
+    const unrated = roster.filter(
+      (s) =>
+        (attendanceMap[s.id] ?? true) &&
+        (notesMap[s.id]?.trim() ?? '') !== '' &&
+        (ratingsMap[s.id] ?? 0) === 0,
+    );
+    if (unrated.length > 0) {
+      Alert.alert(
+        'Comments without a rating',
+        `${unrated.map((s) => s.first_name).join(', ')} ${
+          unrated.length === 1 ? 'has' : 'have'
+        } a comment but no star rating. A comment is saved with the rating, so add one first.`,
+        [{ text: 'OK' }],
+      );
+      setExpandedSwimmerId(unrated[0].id);
+      return;
+    }
+
     Alert.alert(
       'End Session',
       'Complete this session and save all attendance, ratings, and notes?',
@@ -104,41 +172,11 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
         {
           text: 'End Session',
           style: 'destructive',
-          onPress: async () => {
-            setIsSubmitting(true);
-            const payload: SessionCompletePayload = {
-              summary_notes: summaryNotes || undefined,
-              attendance: roster.map((s) => ({
-                swimmer_id: s.id,
-                present: attendanceMap[s.id] ?? true,
-              })),
-              evaluations: roster
-                .filter((s) => (ratingsMap[s.id] ?? 0) > 0)
-                .map((s) => ({
-                  swimmer_id: s.id,
-                  rating: ratingsMap[s.id],
-                })),
-              group_evaluation:
-                groupRating > 0 ? { rating: groupRating } : undefined,
-            };
-            await completeSession(sessionId, payload);
-            setIsSubmitting(false);
-            // Pop to sessions list — NOT goBack (which would go to detail of a now-completed session)
-            navigation.popToTop();
-          },
+          onPress: submitSession,
         },
       ],
     );
-  }, [
-    summaryNotes,
-    roster,
-    attendanceMap,
-    ratingsMap,
-    groupRating,
-    completeSession,
-    sessionId,
-    navigation,
-  ]);
+  }, [roster, attendanceMap, ratingsMap, notesMap, submitSession]);
 
   const renderSwimmerItem = useCallback(
     ({ item }: { item: SwimmerProfileInterface }) => (
@@ -148,11 +186,24 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
         level={item.level}
         isPresent={attendanceMap[item.id] ?? true}
         rating={ratingsMap[item.id] ?? 0}
+        note={notesMap[item.id] ?? ''}
+        isExpanded={expandedSwimmerId === item.id}
         onToggleAttendance={handleToggleAttendance}
         onRate={handleRate}
+        onToggleExpand={handleToggleExpand}
+        onChangeNote={handleChangeNote}
       />
     ),
-    [attendanceMap, ratingsMap, handleToggleAttendance, handleRate],
+    [
+      attendanceMap,
+      ratingsMap,
+      notesMap,
+      expandedSwimmerId,
+      handleToggleAttendance,
+      handleRate,
+      handleToggleExpand,
+      handleChangeNote,
+    ],
   );
 
   const keyExtractor = useCallback(
@@ -189,6 +240,8 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
         style={s.scrollView}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
       >
         {/* ── Live Session Header ── */}
         <Animated.View style={[s.headerCard, headerEntry]}>
@@ -276,7 +329,7 @@ export const CoachSessionLiveScreen: React.FC<Props> = ({
               {/* Column labels */}
               <View style={s.rosterHeader}>
                 <Text style={[s.rosterHeaderLabel, s.rosterHeaderName]}>
-                  Swimmer
+                  Swimmer · tap to comment
                 </Text>
                 <Text style={s.rosterHeaderLabel}>
                   Here?
