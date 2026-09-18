@@ -3,12 +3,64 @@ import {
   CoachDashboardInterface,
   CoachSessionInterface,
   CoachGroupInterface,
-  CoachSessionsStatusCounts,
   SessionCompletePayload,
   SessionCreatePayload,
   SwimmerProfileInterface,
 } from '../types/models.types';
-import { coachService } from '../api/services/coach.service';
+import { coachService, CoachSessionScope } from '../api/services/coach.service';
+
+export const COACH_SESSIONS_PAGE_SIZE = 20;
+
+/**
+ * A refresh reloads everything already scrolled into view in one request, up to
+ * this many rows (the endpoint's page-size ceiling is 100). A multiple of the
+ * page size, so the next "load more" page lines up with what is already there.
+ */
+const REFRESH_MAX_ROWS = COACH_SESSIONS_PAGE_SIZE * 5;
+
+export interface CoachSessionCounts {
+  all: number;
+  upcoming: number;
+  completed: number;
+}
+
+interface SegmentState {
+  items: CoachSessionInterface[];
+  /** Last page loaded; 0 before the first load. */
+  page: number;
+  lastPage: number;
+  loaded: boolean;
+  isLoading: boolean;
+  isRefreshing: boolean;
+  error: string | null;
+}
+
+const emptySegment = (): SegmentState => ({
+  items: [],
+  page: 0,
+  lastPage: 1,
+  loaded: false,
+  isLoading: false,
+  isRefreshing: false,
+  error: null,
+});
+
+const emptySegments = (): Record<CoachSessionScope, SegmentState> => ({
+  all: emptySegment(),
+  upcoming: emptySegment(),
+  completed: emptySegment(),
+});
+
+const SEGMENT_KEYS: CoachSessionScope[] = ['all', 'upcoming', 'completed'];
+
+/** Append a page, dropping rows already listed (rows shift if sessions change between pages). */
+const mergeById = (
+  current: CoachSessionInterface[],
+  next: CoachSessionInterface[],
+): CoachSessionInterface[] => {
+  const seen = new Set(current.map((s) => s.id));
+  return [...current, ...next.filter((s) => !seen.has(s.id))];
+};
 
 interface CoachState {
   /* Dashboard */
@@ -16,13 +68,15 @@ interface CoachState {
   isDashboardLoading: boolean;
   dashboardError: string | null;
 
-  /* Sessions list */
-  sessions: CoachSessionInterface[];
-  statusCounts: CoachSessionsStatusCounts | null;
-  isSessionsLoading: boolean;
-  sessionsError: string | null;
-  currentPage: number;
-  totalPages: number;
+  /**
+   * Sessions list: one list per tab, each filtered, sorted and paginated by
+   * the server — the same fix the swimmer's session.store got. A single
+   * newest-first list split into tabs on the device put only generated future
+   * sessions on page one, so Completed read 0 until the coach scrolled.
+   */
+  segments: Record<CoachSessionScope, SegmentState>;
+  /** Badge counts for every tab, from the last response. */
+  sessionCounts: CoachSessionCounts | null;
 
   /* Selected session detail */
   selectedSession: CoachSessionInterface | null;
@@ -43,8 +97,11 @@ interface CoachState {
 
   /* Actions */
   fetchDashboard: () => Promise<void>;
-  fetchSessions: (page?: number, status?: string) => Promise<void>;
-  refreshSessions: (status?: string) => Promise<void>;
+  fetchSegment: (segment: CoachSessionScope, page?: number) => Promise<void>;
+  /** Reload a tab, keeping as many rows as were already loaded. */
+  refreshSegment: (segment: CoachSessionScope, showSpinner?: boolean) => Promise<void>;
+  /** Silent refresh of every tab that has been opened. */
+  refreshSessions: () => Promise<void>;
   fetchSessionDetail: (id: number) => Promise<void>;
   startSession: (id: number) => Promise<void>;
   completeSession: (id: number, payload: SessionCompletePayload) => Promise<void>;
@@ -55,17 +112,29 @@ interface CoachState {
   reset: () => void;
 }
 
+type SetState = (
+  partial: Partial<CoachState> | ((state: CoachState) => Partial<CoachState>),
+) => void;
+
+const patchSegment = (
+  set: SetState,
+  segment: CoachSessionScope,
+  patch: Partial<SegmentState>,
+) =>
+  set((state) => ({
+    segments: {
+      ...state.segments,
+      [segment]: { ...state.segments[segment], ...patch },
+    },
+  }));
+
 export const useCoachStore = create<CoachState>((set, get) => ({
   dashboard: null,
   isDashboardLoading: false,
   dashboardError: null,
 
-  sessions: [],
-  statusCounts: null,
-  isSessionsLoading: false,
-  sessionsError: null,
-  currentPage: 1,
-  totalPages: 1,
+  segments: emptySegments(),
+  sessionCounts: null,
 
   selectedSession: null,
   isDetailLoading: false,
@@ -95,45 +164,85 @@ export const useCoachStore = create<CoachState>((set, get) => ({
     }
   },
 
-  fetchSessions: async (page: number = 1, status?: string) => {
-    const hadData = get().sessions.length > 0;
-    if (!hadData) set({ isSessionsLoading: true, sessionsError: null });
+  fetchSegment: async (segment, page = 1) => {
+    if (get().segments[segment].isLoading) return;
+    patchSegment(set, segment, { isLoading: true, error: null });
     try {
-      const response = await coachService.getSessions(page, 20, status);
-      set((state) => ({
-        sessions:
-          page === 1
-            ? response.data
-            : [...state.sessions, ...response.data],
-        statusCounts: response.status_counts,
-        currentPage: response.current_page,
-        totalPages: response.last_page,
-        isSessionsLoading: false,
-        sessionsError: null,
-      }));
+      const response = await coachService.getSessions(
+        page,
+        COACH_SESSIONS_PAGE_SIZE,
+        segment,
+      );
+      set((state) => {
+        const seg = state.segments[segment];
+        return {
+          segments: {
+            ...state.segments,
+            [segment]: {
+              ...seg,
+              items: page === 1 ? response.data : mergeById(seg.items, response.data),
+              page: response.current_page,
+              lastPage: response.last_page,
+              loaded: true,
+              isLoading: false,
+              error: null,
+            },
+          },
+          sessionCounts: response.counts ?? state.sessionCounts,
+        };
+      });
     } catch {
-      if (!hadData) {
-        set({ isSessionsLoading: false, sessionsError: 'Failed to load sessions.' });
-      } else {
-        set({ isSessionsLoading: false });
-      }
+      // A failed "load more" keeps the rows already shown; only an empty tab
+      // shows the error.
+      patchSegment(set, segment, {
+        isLoading: false,
+        error: get().segments[segment].items.length > 0 ? null : 'Failed to load sessions.',
+      });
     }
   },
 
-  /** Silent refresh — keeps existing data visible on failure. */
-  refreshSessions: async (status?: string) => {
-    try {
-      const response = await coachService.getSessions(1, 20, status);
-      set({
-        sessions: response.data,
-        statusCounts: response.status_counts,
-        currentPage: response.current_page,
-        totalPages: response.last_page,
-        sessionsError: null,
-      });
-    } catch {
-      // Silent fail — keep existing data
+  refreshSegment: async (segment, showSpinner = false) => {
+    const current = get().segments[segment];
+    if (!current.loaded) {
+      await get().fetchSegment(segment);
+      return;
     }
+    if (current.isLoading || current.isRefreshing) return;
+
+    const rows = Math.min(
+      REFRESH_MAX_ROWS,
+      Math.max(COACH_SESSIONS_PAGE_SIZE, current.page * COACH_SESSIONS_PAGE_SIZE),
+    );
+    if (showSpinner) patchSegment(set, segment, { isRefreshing: true });
+    try {
+      const response = await coachService.getSessions(1, rows, segment);
+      set((state) => ({
+        segments: {
+          ...state.segments,
+          [segment]: {
+            ...state.segments[segment],
+            items: response.data,
+            // Re-express what was loaded in page-size pages, so the next
+            // "load more" continues right after the last row.
+            page: Math.max(1, Math.ceil(response.data.length / COACH_SESSIONS_PAGE_SIZE)),
+            lastPage: Math.max(1, Math.ceil(response.total / COACH_SESSIONS_PAGE_SIZE)),
+            isRefreshing: false,
+            error: null,
+          },
+        },
+        sessionCounts: response.counts ?? state.sessionCounts,
+      }));
+    } catch {
+      // Silent: keep showing what is there.
+      patchSegment(set, segment, { isRefreshing: false });
+    }
+  },
+
+  refreshSessions: async () => {
+    const { segments, refreshSegment } = get();
+    await Promise.all(
+      SEGMENT_KEYS.filter((key) => segments[key].loaded).map((key) => refreshSegment(key)),
+    );
   },
 
   fetchSessionDetail: async (id: number) => {
@@ -194,10 +303,9 @@ export const useCoachStore = create<CoachState>((set, get) => ({
     set({ isCreating: true, createError: null });
     try {
       const session = await coachService.createSession(payload);
-      set((state) => ({
-        sessions: [session, ...state.sessions],
-        isCreating: false,
-      }));
+      set({ isCreating: false });
+      // Where the new session belongs is the server's call (tab, order, counts).
+      get().refreshSessions();
       return session;
     } catch {
       set({ isCreating: false, createError: 'Failed to create session.' });
@@ -214,12 +322,8 @@ export const useCoachStore = create<CoachState>((set, get) => ({
       dashboard: null,
       isDashboardLoading: false,
       dashboardError: null,
-      sessions: [],
-      statusCounts: null,
-      isSessionsLoading: false,
-      sessionsError: null,
-      currentPage: 1,
-      totalPages: 1,
+      segments: emptySegments(),
+      sessionCounts: null,
       selectedSession: null,
       isDetailLoading: false,
       detailError: null,

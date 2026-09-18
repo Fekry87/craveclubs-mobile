@@ -91,6 +91,8 @@ export interface CoachSessionsResponseType {
   per_page: number;
   total: number;
   status_counts: CoachSessionsStatusCounts;
+  /** Tab badge counts. Only sent with a `scope`; absent on older backends. */
+  counts?: { all: number; upcoming: number; completed: number };
 }
 
 export type CoachSessionDetailResponseType = CoachSessionInterface;
