@@ -13,6 +13,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import { RootStackParamList } from '../../types/navigation.types';
 import { Card } from '../../components/common/Card';
 import { Loader } from '../../components/common/Loader';
@@ -42,28 +43,34 @@ const SectionTitle: React.FC<{ children: string }> = ({ children }) => (
   <Text style={s.sectionTitle}>{children}</Text>
 );
 
-/* ─── Subscription helpers ─── */
+/* ─── Subscription helpers (module-level, so they use i18n directly) ─── */
+const tp = (key: string, opts?: Record<string, unknown>): string =>
+  i18n.t(key, { ns: 'profile', ...opts });
+
 const subscriptionTone = (status: SwimmerSubscriptionInterface['status']) => {
   switch (status) {
     case 'expired':
-      return { bg: colors.errorDim, fg: colors.error, label: 'Expired' };
+      return { bg: colors.errorDim, fg: colors.error, label: tp('subscription.expired') };
     case 'expiring':
-      return { bg: colors.warningDim, fg: colors.warningDark, label: 'Expiring soon' };
+      return { bg: colors.warningDim, fg: colors.warningDark, label: tp('subscription.expiringSoon') };
     default:
-      return { bg: colors.swimmerDim, fg: colors.swimmerDark, label: 'Active' };
+      return { bg: colors.swimmerDim, fg: colors.swimmerDark, label: tp('subscription.active') };
   }
 };
 
 const daysLeftLabel = (days: number): string => {
-  if (days < 0) return `Expired ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} ago`;
-  if (days === 0) return 'Ends today';
-  if (days === 1) return '1 day left';
-  return `${days} days left`;
+  if (days < 0) {
+    const n = Math.abs(days);
+    return tp(n === 1 ? 'subscription.expiredAgoOne' : 'subscription.expiredAgoOther', { count: n });
+  }
+  if (days === 0) return tp('subscription.endsToday');
+  if (days === 1) return tp('subscription.oneDayLeft');
+  return tp('subscription.daysLeft', { count: days });
 };
 
 const openUrl = (url: string) => {
   Linking.openURL(url).catch(() => {
-    Alert.alert('Unavailable', 'This action is not supported on your device.');
+    Alert.alert(tp('alerts.unavailableTitle'), tp('alerts.unavailableBody'));
   });
 };
 
@@ -97,10 +104,10 @@ export const ProfileScreen: React.FC = () => {
   const clubEntry = useAnimatedEntry(7);
 
   const handleLogout = useCallback(() => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('alerts.signOutTitle'), t('alerts.signOutBody'), [
+      { text: t('actions.cancel', { ns: 'common' }), style: 'cancel' },
       {
-        text: 'Sign Out',
+        text: t('alerts.signOut'),
         style: 'destructive',
         onPress: async () => {
           setLoggingOut(true);
@@ -108,7 +115,7 @@ export const ProfileScreen: React.FC = () => {
         },
       },
     ]);
-  }, [logout]);
+  }, [logout, t]);
 
   /* ─── Profile photo: shown everywhere the swimmer appears, so changing it here
      changes it for the coach and the club too ─── */
@@ -119,14 +126,14 @@ export const ProfileScreen: React.FC = () => {
         await setPhoto(dataUrl);
       } catch {
         Alert.alert(
-          dataUrl ? 'Photo not saved' : 'Photo not removed',
-          "We couldn't update your photo. Check your connection and try again.",
+          dataUrl ? t('alerts.photoNotSavedTitle') : t('alerts.photoNotRemovedTitle'),
+          t('alerts.photoErrorBody'),
         );
       } finally {
         setPhotoBusy(false);
       }
     },
-    [setPhoto],
+    [setPhoto, t],
   );
 
   const handleChangePhoto = useCallback(() => {
@@ -137,13 +144,13 @@ export const ProfileScreen: React.FC = () => {
         if (picked) await applyPhoto(picked.dataUrl);
       },
       onRemove: () => {
-        Alert.alert('Remove photo?', 'Your initials will be shown instead.', [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Remove', style: 'destructive', onPress: () => applyPhoto(null) },
+        Alert.alert(t('alerts.removePhotoTitle'), t('alerts.removePhotoBody'), [
+          { text: t('actions.cancel', { ns: 'common' }), style: 'cancel' },
+          { text: t('alerts.remove'), style: 'destructive', onPress: () => applyPhoto(null) },
         ]);
       },
     });
-  }, [data?.profile.avatar_url, applyPhoto]);
+  }, [data?.profile.avatar_url, applyPhoto, t]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -155,7 +162,7 @@ export const ProfileScreen: React.FC = () => {
             style={s.headerIconBtn}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="Delete account"
+            accessibilityLabel={t('alerts.deleteAccount')}
           >
             <Icon name="delete-bin-6-line" size={22} color={colors.textMuted} />
           </TouchableOpacity>
@@ -165,14 +172,14 @@ export const ProfileScreen: React.FC = () => {
             activeOpacity={0.7}
             disabled={loggingOut}
             accessibilityRole="button"
-            accessibilityLabel="Sign out"
+            accessibilityLabel={t('alerts.signOut')}
           >
             <Icon name="logout-box-r-line" size={22} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
       ),
     });
-  }, [navigation, handleLogout, loggingOut]);
+  }, [navigation, handleLogout, loggingOut, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -187,11 +194,11 @@ export const ProfileScreen: React.FC = () => {
     setRefreshing(false);
   }, [fetchProfile]);
 
-  if (isLoading && !data) return <Loader message="Loading profile..." />;
+  if (isLoading && !data) return <Loader message={t('states.loading')} />;
   if ((error && !data) || !user) {
-    return <ErrorView message={error || 'User not found.'} onRetry={fetchProfile} />;
+    return <ErrorView message={error || t('states.userNotFound')} onRetry={fetchProfile} />;
   }
-  if (!data) return <ErrorView message="No profile data." onRetry={fetchProfile} />;
+  if (!data) return <ErrorView message={t('states.noData')} onRetry={fetchProfile} />;
 
   const { profile, subscription, coach, groups, branch, signup, xp, stats } = data;
   const tone = subscription ? subscriptionTone(subscription.status) : null;
@@ -230,8 +237,8 @@ export const ProfileScreen: React.FC = () => {
                     <Text style={s.subMeta}>
                       {[
                         trainingTypeLabel(subscription.training_type),
-                        `${subscription.duration_months}-month plan`,
-                        `ends ${formatMediumDate(subscription.ends_at)}`,
+                        t('subscription.monthPlan', { count: subscription.duration_months }),
+                        t('subscription.ends', { date: formatMediumDate(subscription.ends_at) }),
                       ]
                         .filter(Boolean)
                         .join(' · ')}
@@ -241,7 +248,7 @@ export const ProfileScreen: React.FC = () => {
                     <Text style={s.subPaid}>
                       {formatMoney(subscription.amount_paid)}
                       {subscription.discount_percent > 0 && (
-                        ` · ${subscription.discount_percent}% off`
+                        ` · ${t('subscription.discount', { percent: subscription.discount_percent })}`
                       )}
                     </Text>
                   </View>
@@ -268,7 +275,7 @@ export const ProfileScreen: React.FC = () => {
                   {daysLeftLabel(subscription.days_left)}
                 </Text>
                 <Text style={s.subStarted}>
-                  Since {formatMediumDate(subscription.started_at)}
+                  {t('subscription.since', { date: formatMediumDate(subscription.started_at) })}
                 </Text>
               </View>
 
@@ -277,8 +284,8 @@ export const ProfileScreen: React.FC = () => {
                   <Icon name="information-line" size={16} color={tone.fg} />
                   <Text style={[s.subNoticeText, { color: tone.fg }]}>
                     {subscription.status === 'expired'
-                      ? 'Your plan has ended — contact your club to renew and keep training.'
-                      : 'Renew with your club before it ends to avoid a break in training.'}
+                      ? t('subscription.noticeExpired')
+                      : t('subscription.noticeExpiring')}
                   </Text>
                 </View>
               )}
@@ -293,14 +300,14 @@ export const ProfileScreen: React.FC = () => {
             <StatCard
               icon="flashlight-fill"
               value={xp.total_xp.toLocaleString()}
-              label={`XP · Rank #${xp.rank} of ${xp.total_swimmers}`}
+              label={t('statsLabels.xpRank', { rank: xp.rank, total: xp.total_swimmers })}
               color="primary"
               index={0}
             />
             <StatCard
               icon="checkbox-circle-fill"
               value={formatPercentage(stats.attendance_rate)}
-              label={`Attendance · ${stats.sessions_attended}/${stats.total_sessions}`}
+              label={t('statsLabels.attendance', { attended: stats.sessions_attended, total: stats.total_sessions })}
               color="success"
               index={1}
             />
@@ -309,14 +316,14 @@ export const ProfileScreen: React.FC = () => {
             <StatCard
               icon="star-fill"
               value={formatRating(stats.average_rating)}
-              label={`Avg rating · ${stats.evaluation_count} reviews`}
+              label={t('statsLabels.avgRating', { count: stats.evaluation_count })}
               color="warning"
               index={2}
             />
             <StatCard
               icon="fire-fill"
               value={xp.current_streak.toString()}
-              label={xp.current_streak === 1 ? 'Session streak' : 'Sessions streak'}
+              label={xp.current_streak === 1 ? t('statsLabels.streakOne') : t('statsLabels.streakOther')}
               color="swimmer"
               index={3}
             />
@@ -324,10 +331,10 @@ export const ProfileScreen: React.FC = () => {
           <View style={s.levelRow}>
             <View style={[s.levelDot, { backgroundColor: xp.level.color }]} />
             <Text style={s.levelText}>
-              Level {xp.level.level} · {xp.level.name}
+              {t('statsLabels.level', { level: xp.level.level, name: xp.level.name })}
               {xp.level.next_level_name
-                ? ` · ${xp.level.xp_to_next} XP to ${xp.level.next_level_name}`
-                : ' · Max level'}
+                ? t('statsLabels.xpToNext', { xp: xp.level.xp_to_next, next: xp.level.next_level_name })
+                : t('statsLabels.maxLevel')}
             </Text>
           </View>
         </Animated.View>
@@ -348,11 +355,11 @@ export const ProfileScreen: React.FC = () => {
                   <Text style={s.coachMeta} numberOfLines={2}>
                     {[
                       coach.specialization,
-                      coach.experience_years ? `${coach.experience_years} yrs experience` : null,
-                      groupNames ? `Coaches ${groupNames}` : null,
+                      coach.experience_years ? t('coachCard.yrsExperience', { count: coach.experience_years }) : null,
+                      groupNames ? t('coachCard.coaches', { groups: groupNames }) : null,
                     ]
                       .filter(Boolean)
-                      .join(' · ') || 'Your assigned coach'}
+                      .join(' · ') || t('coachCard.assigned')}
                   </Text>
                   {coach.rating !== null && (
                     <View style={s.coachRating}>
@@ -367,7 +374,7 @@ export const ProfileScreen: React.FC = () => {
                     onPress={() => openUrl(`tel:${coach.phone}`)}
                     activeOpacity={0.8}
                     accessibilityRole="button"
-                    accessibilityLabel={`Call ${coach.name}`}
+                    accessibilityLabel={t('alerts.call', { name: coach.name })}
                   >
                     <Icon name="phone-fill" size={18} color={colors.white} />
                   </TouchableOpacity>
@@ -433,8 +440,8 @@ export const ProfileScreen: React.FC = () => {
                 icon="run-fill"
                 label={t('rows.heightWeight')}
                 value={[
-                  signup?.height_cm ? `${signup.height_cm} cm` : null,
-                  signup?.weight_kg ? `${signup.weight_kg} kg` : null,
+                  signup?.height_cm ? t('measure.cm', { value: signup.height_cm }) : null,
+                  signup?.weight_kg ? t('measure.kg', { value: signup.weight_kg }) : null,
                 ]
                   .filter(Boolean)
                   .join(' · ')}

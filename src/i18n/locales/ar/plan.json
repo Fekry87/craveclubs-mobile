@@ -21,6 +21,11 @@
     "sessionDetails": "تفاصيل الجلسات",
     "currentPlan": "خطة التدريب الحالية",
     "present": "حاضر",
-    "absent": "غائب"
+    "absent": "غائب",
+    "perfect": "مثالي",
+    "missed": "غياب",
+    "error": "حصل خطأ. اضغط لإعادة المحاولة.",
+    "phase": "المرحلة {{number}} — {{focus}}",
+    "weekRange": "من الأسبوع {{start}} إلى {{end}}"
   }
 }

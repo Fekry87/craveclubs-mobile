@@ -12,6 +12,11 @@
   "latestEvaluations": "آخر التقييمات",
   "seeAll": "عرض الكل",
   "trainingSession": "جلسة تدريب",
+  "dailyRatings": {
+    "title": "التقييم اليومي",
+    "empty": "لا توجد بيانات تقييم بعد",
+    "week": "أسبوع {{current}} من {{total}}"
+  },
   "evaluations": {
     "loading": "جارٍ تحميل التقييمات...",
     "error": "فشل تحميل التقييمات.",

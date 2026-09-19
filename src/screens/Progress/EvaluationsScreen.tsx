@@ -17,7 +17,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { progressService } from '../../api/services/progress.service';
 import { EvaluationInterface } from '../../types/models.types';
-import { formatDate } from '../../utils/formatters';
+import { formatDayMonthYear } from '../../utils/formatters';
 import { colors, spacing, fontFamily, borderRadius } from '../../theme';
 
 interface EvalCardProps {
@@ -29,12 +29,9 @@ const EvalCard: React.FC<EvalCardProps> = React.memo(({ evaluation, index }) => 
   const { t } = useTranslation('progress');
   const entryStyle = useAnimatedEntry(index);
   const emptyStars = 5 - evaluation.rating;
-  const date = new Date(evaluation.session?.date ?? evaluation.created_at ?? Date.now());
-  const dateLabel = date.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  const dateLabel = formatDayMonthYear(
+    evaluation.session?.date ?? evaluation.created_at ?? new Date().toISOString(),
+  );
 
   return (
     <Animated.View style={entryStyle}>

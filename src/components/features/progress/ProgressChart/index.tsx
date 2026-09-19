@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../../common/Card';
 import { MonthlyRatingInterface } from '../../../../types/models.types';
+import { monthShort } from '../../../../utils/formatters';
 import { ANIMATION, gradients } from '../../../../theme';
 import { styles } from './styles';
 
@@ -45,15 +47,12 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
   title,
   data,
 }) => {
+  const { t } = useTranslation('progress');
   const maxHeight = 100;
 
   const getMonthLabel = (monthStr: string): string => {
     const [, month] = monthStr.split('-');
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return months[parseInt(month, 10) - 1] || month;
+    return monthShort(parseInt(month, 10) - 1) || month;
   };
 
   const recentData = data.slice(-6);
@@ -62,7 +61,7 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
     <Card>
       <Text style={styles.title}>{title}</Text>
       {recentData.length === 0 ? (
-        <Text style={styles.emptyText}>No rating data yet</Text>
+        <Text style={styles.emptyText}>{t('dailyRatings.empty')}</Text>
       ) : (
         <View style={styles.chartContainer}>
           {recentData.map((item, index) => (

@@ -221,7 +221,7 @@ export const SessionDetailScreen: React.FC = () => {
             icon="time-line"
             label={t('detail.time')}
             value={formatTimeRange(current.start_time, current.end_time)}
-            hint={duration ? `${duration} session` : undefined}
+            hint={duration ? t('detail.sessionLength', { duration }) : undefined}
             isLast={!branch && !current.location}
           />
           {branch && (

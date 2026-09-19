@@ -6,8 +6,8 @@
   "markAllRead": "تعليم الكل كمقروء",
   "time": {
     "justNow": "الآن",
-    "minutesAgo": "منذ {{count}} د",
-    "hoursAgo": "منذ {{count}} س",
-    "daysAgo": "منذ {{count}} ي"
+    "minutesAgo": "من {{count}} دقيقة",
+    "hoursAgo": "من {{count}} ساعة",
+    "daysAgo": "من {{count}} يوم"
   }
 }

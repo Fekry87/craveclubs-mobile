@@ -30,5 +30,109 @@
     "password": "Password",
     "changePassword": "Change password",
     "language": "Language"
+  },
+  "states": {
+    "loading": "Loading profile...",
+    "userNotFound": "User not found.",
+    "noData": "No profile data."
+  },
+  "subscription": {
+    "expired": "Expired",
+    "expiringSoon": "Expiring soon",
+    "active": "Active",
+    "monthPlan": "{{count}}-month plan",
+    "ends": "ends {{date}}",
+    "discount": "{{percent}}% off",
+    "since": "Since {{date}}",
+    "daysLeft": "{{count}} days left",
+    "oneDayLeft": "1 day left",
+    "endsToday": "Ends today",
+    "expiredAgoOne": "Expired {{count}} day ago",
+    "expiredAgoOther": "Expired {{count}} days ago",
+    "noticeExpired": "Your plan has ended — contact your club to renew and keep training.",
+    "noticeExpiring": "Renew with your club before it ends to avoid a break in training."
+  },
+  "statsLabels": {
+    "xpRank": "XP · Rank #{{rank}} of {{total}}",
+    "attendance": "Attendance · {{attended}}/{{total}}",
+    "avgRating": "Avg rating · {{count}} reviews",
+    "streakOne": "Session streak",
+    "streakOther": "Sessions streak",
+    "level": "Level {{level}} · {{name}}",
+    "xpToNext": " · {{xp}} XP to {{next}}",
+    "maxLevel": " · Max level"
+  },
+  "coachCard": {
+    "yrsExperience": "{{count}} yrs experience",
+    "coaches": "Coaches {{groups}}",
+    "assigned": "Your assigned coach"
+  },
+  "measure": {
+    "cm": "{{value}} cm",
+    "kg": "{{value}} kg"
+  },
+  "alerts": {
+    "unavailableTitle": "Unavailable",
+    "unavailableBody": "This action is not supported on your device.",
+    "signOutTitle": "Sign out",
+    "signOutBody": "Are you sure you want to sign out?",
+    "signOut": "Sign out",
+    "photoNotSavedTitle": "Photo not saved",
+    "photoNotRemovedTitle": "Photo not removed",
+    "photoErrorBody": "We couldn't update your photo. Check your connection and try again.",
+    "removePhotoTitle": "Remove photo?",
+    "removePhotoBody": "Your initials will be shown instead.",
+    "remove": "Remove",
+    "deleteAccount": "Delete account",
+    "call": "Call {{name}}"
+  },
+  "deleteAccount": {
+    "title": "Delete account?",
+    "descBefore": "Your account will be deactivated immediately. You have ",
+    "days": "30 days",
+    "descAfter": " to reactivate it by signing in again. After 30 days, all your data will be permanently deleted and cannot be recovered.",
+    "keep": "Keep account",
+    "confirm": "Delete account"
+  },
+  "photoMenu": {
+    "permissionTitle": "Permission needed",
+    "cameraPermission": "Camera access is required to take a photo.",
+    "libraryPermission": "Photo library access is required to choose a photo.",
+    "title": "Profile photo",
+    "subtitle": "Choose an option",
+    "takePhoto": "Take photo",
+    "chooseGallery": "Choose from gallery",
+    "removePhoto": "Remove photo"
+  },
+  "changePassword": {
+    "forcedTitle": "Set your password",
+    "forcedIntro": "Your club gave you a temporary password. Choose your own to keep your account private — you'll use it from now on.",
+    "intro": "Choose a new password you'll remember. You'll stay signed in on this device; other devices will need the new password.",
+    "currentLabel": "Current password",
+    "tempLabel": "Temporary password",
+    "currentPlaceholder": "Current password",
+    "tempPlaceholder": "The password your club gave you",
+    "newLabel": "New password",
+    "newPlaceholder": "At least 8 characters",
+    "confirmLabel": "Confirm new password",
+    "confirmPlaceholder": "Re-enter new password",
+    "signedInAs": "Signed in as",
+    "accountHint": "Your club sees this same address when it resets your password. If it doesn't match the one they gave you, sign out and sign in again with those details.",
+    "submitForced": "Set password",
+    "submit": "Change password",
+    "notYou": "Not you? Sign out",
+    "doneTitle": "Done",
+    "doneForcedBody": "Your password is set. You're all signed in.",
+    "doneBody": "Your password has been changed.",
+    "validation": {
+      "enterCurrent": "Enter your current password",
+      "minLength": "New password must be at least 8 characters",
+      "different": "New password must be different",
+      "mismatch": "Passwords do not match"
+    },
+    "errors": {
+      "generic": "Could not change your password. Please try again.",
+      "currentMismatch": "That password doesn't match the account you're signed in as. Check the account below, or ask your club to reset it."
+    }
   }
 }

@@ -15,7 +15,7 @@ import {
   MeasurementPeriod,
   MeasurementProgressInterface,
 } from '../../../../types/models.types';
-import { formatShortDate, formatSwimTime } from '../../../../utils/formatters';
+import { formatShortDate, formatSwimTime, monthShort } from '../../../../utils/formatters';
 import { colors, fontFamily } from '../../../../theme';
 import {
   styles,
@@ -51,7 +51,7 @@ const AREA_GRADIENT = 'measureProgressFill';
 
 const labelFor = (start: string, period: MeasurementPeriod): string =>
   period === 'month'
-    ? new Date(`${start}T00:00:00`).toLocaleDateString('en-US', { month: 'short' })
+    ? monthShort(new Date(`${start}T00:00:00`).getMonth())
     : formatShortDate(`${start}T00:00:00`);
 
 /**
