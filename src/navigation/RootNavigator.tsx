@@ -165,7 +165,12 @@ export const RootNavigator: React.FC = () => {
       ) : (
         <Stack.Screen name="Auth" component={LoginScreen} />
       )}
-      {/* Notification center — accessible when authenticated */}
+      {/* Authenticated-only screens. Gated so a pushed Profile/detail unmounts
+          on logout instead of lingering over the login screen ("User not
+          found"). Navigation resets to Auth when they disappear. */}
+      {isAuthenticated && (
+        <>
+      {/* Notification center */}
       <Stack.Screen
         name="NotificationCenter"
         component={NotificationCenterScreen}
@@ -255,6 +260,8 @@ export const RootNavigator: React.FC = () => {
           headerShadowVisible: false,
         }}
       />
+        </>
+      )}
       {/* Registration is accessible from both auth & unauth states */}
       <Stack.Screen name="Registration" component={RegistrationNavigator} />
     </Stack.Navigator>
