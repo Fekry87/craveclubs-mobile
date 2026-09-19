@@ -171,13 +171,6 @@ export const GroupOption: React.FC<OptionProps<Group>> = ({ item, selected, onPr
       onPress={onPress}
       index={index}
       disabled={item.is_full}
-      leading={
-        <View
-          style={[styles.iconTile, { backgroundColor: selected ? colors.white : colors.surfaceLight }]}
-        >
-          <Icon name="group-line" size={22} color={selected ? colors.primary : colors.textMuted} />
-        </View>
-      }
     >
       {/* Type (and Full) pills under the name */}
       <View style={styles.pillRow}>
