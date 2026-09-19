@@ -1,0 +1,26 @@
+{
+  "tabs": {
+    "plan": "خطتي",
+    "report": "تقريري"
+  },
+  "loading": "جارٍ تحميل خطة التدريب...",
+  "emptyTitle": "لا توجد خطة تدريب",
+  "emptyMessage": "لا توجد لديك خطة تدريب نشطة بعد. الكابتن هيحدّدلك واحدة.",
+  "paused": "الخطة متوقفة مؤقتًا",
+  "weeksOne": "أسبوع واحد",
+  "weeksOther": "{{count}} أسابيع",
+  "perWeek": "{{count}}× أسبوعيًا",
+  "goals": "الأهداف",
+  "phases": "المراحل",
+  "exercises": "التمارين",
+  "report": {
+    "emptyTitle": "لا توجد جلسات هذا الأسبوع",
+    "emptyMessage": "جرّب تشوف الأسبوع اللي فات",
+    "sessions": "الجلسات",
+    "avgRating": "متوسط التقييم",
+    "sessionDetails": "تفاصيل الجلسات",
+    "currentPlan": "خطة التدريب الحالية",
+    "present": "حاضر",
+    "absent": "غائب"
+  }
+}

@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/common/Card';
 import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Icon } from '../../components/common/Icon';
+import { DirectionalIcon } from '../../components/common/DirectionalIcon';
 import { StatCard } from '../../components/features/progress/StatCard';
 import { DailyRatingsChart } from '../../components/features/progress/DailyRatingsChart';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
@@ -30,6 +32,7 @@ import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/
 type ProgressNavProp = NativeStackNavigationProp<ProgressStackParamList, 'ProgressMain'>;
 
 export const ProgressScreen: React.FC = () => {
+  const { t } = useTranslation('progress');
   const { user } = useAuthStore();
   const navigation = useNavigation<ProgressNavProp>();
   const [stats, setStats] = useState<StatsResponseType | null>(null);
@@ -60,7 +63,7 @@ export const ProgressScreen: React.FC = () => {
       hasDataRef.current = true;
     } catch {
       if (!hasDataRef.current) {
-        setError('Failed to load progress data.');
+        setError(t('error'));
       }
     } finally {
       setIsLoading(false);
@@ -84,9 +87,9 @@ export const ProgressScreen: React.FC = () => {
     navigation.navigate('Evaluations');
   }, [navigation]);
 
-  if (isLoading) return <Loader message="Loading progress..." />;
+  if (isLoading) return <Loader message={t('loading')} />;
   if (error) return <ErrorView message={error} onRetry={fetchData} />;
-  if (!stats) return <EmptyState icon="bar-chart-box-line" title="No data available" />;
+  if (!stats) return <EmptyState icon="bar-chart-box-line" title={t('noData')} />;
 
   // Show only latest 2 evaluations, sorted by date (newest first)
   const latestEvals = evaluations?.data.slice(0, 2) ?? [];
@@ -111,14 +114,14 @@ export const ProgressScreen: React.FC = () => {
         <StatCard
           icon="bar-chart-box-line"
           value={formatPercentage(stats.attendance_rate)}
-          label="Attendance"
+          label={t('stats.attendance')}
           color="primary"
           index={0}
         />
         <StatCard
           icon="star-fill"
           value={formatRating(stats.average_rating)}
-          label="Avg Rating"
+          label={t('stats.avgRating')}
           color="warning"
           index={1}
         />
@@ -128,14 +131,14 @@ export const ProgressScreen: React.FC = () => {
         <StatCard
           icon="drop-fill"
           value={stats.total_sessions.toString()}
-          label="Total Sessions"
+          label={t('stats.totalSessions')}
           color="swimmer"
           index={2}
         />
         <StatCard
           icon="award-fill"
           value={(stats.best_rating ?? 0).toString()}
-          label="Best Rating"
+          label={t('stats.bestRating')}
           color="success"
           index={3}
         />
@@ -148,14 +151,14 @@ export const ProgressScreen: React.FC = () => {
       {hasEvaluations && latestEvals.length > 0 && (
         <Animated.View style={[screenStyles.section, evalsEntry]}>
           <View style={screenStyles.sectionHeader}>
-            <Text style={screenStyles.sectionTitle}>Latest Evaluations</Text>
+            <Text style={screenStyles.sectionTitle}>{t('latestEvaluations')}</Text>
             <TouchableOpacity
               onPress={navigateToEvaluations}
               style={screenStyles.seeAllBtn}
               activeOpacity={0.7}
             >
-              <Text style={screenStyles.seeAllText}>See All</Text>
-              <Icon
+              <Text style={screenStyles.seeAllText}>{t('seeAll')}</Text>
+              <DirectionalIcon
                 name="arrow-right-s-line"
                 size={16}
                 color={colors.primary}
@@ -203,7 +206,7 @@ export const ProgressScreen: React.FC = () => {
                       </Text>
                     </View>
                     <Text style={screenStyles.evalGroupName}>
-                      {evaluation.session?.group?.name ?? 'Training Session'}
+                      {evaluation.session?.group?.name ?? t('trainingSession')}
                     </Text>
                     {evaluation.notes && (
                       <Text style={screenStyles.evalNotes} numberOfLines={2}>

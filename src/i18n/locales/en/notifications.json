@@ -1,0 +1,13 @@
+{
+  "loading": "Loading notifications…",
+  "error": "Couldn't load notifications",
+  "emptyTitle": "No notifications",
+  "emptyMessage": "You're all caught up! Notifications will appear here.",
+  "markAllRead": "Mark all read",
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  }
+}

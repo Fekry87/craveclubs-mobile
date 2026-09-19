@@ -1,0 +1,13 @@
+{
+  "loading": "جارٍ تحميل الإشعارات…",
+  "error": "تعذّر تحميل الإشعارات",
+  "emptyTitle": "لا توجد إشعارات",
+  "emptyMessage": "أنت متابع لكل حاجة! الإشعارات هتظهر هنا.",
+  "markAllRead": "تعليم الكل كمقروء",
+  "time": {
+    "justNow": "الآن",
+    "minutesAgo": "منذ {{count}} د",
+    "hoursAgo": "منذ {{count}} س",
+    "daysAgo": "منذ {{count}} ي"
+  }
+}

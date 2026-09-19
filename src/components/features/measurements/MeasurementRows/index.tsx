@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '../../../common/Icon';
 import { SwimmerMeasurementInterface } from '../../../../types/models.types';
 import { formatDistance, formatSwimTime } from '../../../../utils/formatters';
@@ -20,7 +21,9 @@ interface MeasurementRowsProps {
 export const MeasurementRows: React.FC<MeasurementRowsProps> = ({
   measurements,
   showSession = false,
-}) => (
+}) => {
+  const { t } = useTranslation('progress');
+  return (
   <View>
     {measurements.map((m, index) => (
       <View
@@ -32,7 +35,7 @@ export const MeasurementRows: React.FC<MeasurementRowsProps> = ({
         </View>
         <View style={styles.text}>
           <Text style={styles.event} numberOfLines={1}>
-            {m.stroke_skill?.name ?? 'Swim'} · {formatDistance(m.distance_skill)}
+            {m.stroke_skill?.name ?? t('measurements.swimFallback')} · {formatDistance(m.distance_skill)}
           </Text>
           {showSession && m.session?.title ? (
             <Text style={styles.session} numberOfLines={1}>
@@ -44,4 +47,5 @@ export const MeasurementRows: React.FC<MeasurementRowsProps> = ({
       </View>
     ))}
   </View>
-);
+  );
+};

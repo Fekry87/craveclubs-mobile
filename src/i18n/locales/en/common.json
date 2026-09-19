@@ -4,6 +4,11 @@
     "generic": "Something went wrong. Please try again.",
     "tryAgain": "Try again"
   },
+  "relative": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday"
+  },
   "actions": {
     "cancel": "Cancel",
     "save": "Save",

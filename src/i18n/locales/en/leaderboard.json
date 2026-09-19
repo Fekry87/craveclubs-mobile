@@ -1,0 +1,16 @@
+{
+  "loading": "Loading leaderboard...",
+  "error": "Failed to load leaderboard.",
+  "noData": "No leaderboard data",
+  "topSwimmers": "Top Swimmers",
+  "you": "You",
+  "xpToNext": " XP to be a {{level}}",
+  "recentAwards": "Recent Awards",
+  "allSwimmers": "All Swimmers",
+  "stats": {
+    "rating": "Rating",
+    "attend": "Attend",
+    "streak": "Streak",
+    "awards": "Awards"
+  }
+}

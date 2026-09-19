@@ -8,6 +8,7 @@ import {
   Animated,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/common/Card';
 import { Icon } from '../../components/common/Icon';
 import { Loader } from '../../components/common/Loader';
@@ -25,6 +26,7 @@ interface EvalCardProps {
 }
 
 const EvalCard: React.FC<EvalCardProps> = React.memo(({ evaluation, index }) => {
+  const { t } = useTranslation('progress');
   const entryStyle = useAnimatedEntry(index);
   const emptyStars = 5 - evaluation.rating;
   const date = new Date(evaluation.session?.date ?? evaluation.created_at ?? Date.now());
@@ -64,7 +66,7 @@ const EvalCard: React.FC<EvalCardProps> = React.memo(({ evaluation, index }) => 
               </Text>
             </View>
             <Text style={screenStyles.evalGroupName}>
-              {evaluation.session?.group?.name ?? 'Training Session'}
+              {evaluation.session?.group?.name ?? t('trainingSession')}
             </Text>
             {evaluation.notes && (
               <Text style={screenStyles.evalNotes} numberOfLines={2}>
@@ -80,6 +82,7 @@ const EvalCard: React.FC<EvalCardProps> = React.memo(({ evaluation, index }) => 
 });
 
 export const EvaluationsScreen: React.FC = () => {
+  const { t } = useTranslation('progress');
   const [evaluations, setEvaluations] = useState<EvaluationInterface[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +101,7 @@ export const EvaluationsScreen: React.FC = () => {
       hasDataRef.current = true;
     } catch {
       if (!hasDataRef.current) {
-        setError('Failed to load evaluations.');
+        setError(t('evaluations.error'));
       }
     } finally {
       setIsLoading(false);
@@ -119,7 +122,7 @@ export const EvaluationsScreen: React.FC = () => {
   }, [fetchEvaluations]);
 
   if (isLoading && evaluations.length === 0) {
-    return <Loader message="Loading evaluations..." />;
+    return <Loader message={t('evaluations.loading')} />;
   }
 
   if (error && evaluations.length === 0) {
@@ -149,8 +152,8 @@ export const EvaluationsScreen: React.FC = () => {
         ListEmptyComponent={
           <EmptyState
             icon="star-line"
-            title="No Evaluations Yet"
-            message="Your coach evaluations will appear here after sessions."
+            title={t('evaluations.emptyTitle')}
+            message={t('evaluations.emptyMessage')}
           />
         }
       />

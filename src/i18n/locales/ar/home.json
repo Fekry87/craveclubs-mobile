@@ -1,0 +1,21 @@
+{
+  "greetingPrefix": "أهلاً ",
+  "greetingSuffix": "! 👋",
+  "greetingSub": "جاهز تبدأ يومك في المية؟",
+  "stats": {
+    "xp": "XP",
+    "avgRating": "متوسط التقييم",
+    "attended": "الحضور"
+  },
+  "todaysSessions": "جلسات اليوم",
+  "seeAll": "عرض الكل",
+  "noSessions": {
+    "title": "لا توجد جلسات اليوم",
+    "message": "استمتع بيوم راحتك! تابعنا بكرة."
+  },
+  "latestEvaluation": "آخر تقييم",
+  "trainingSession": "جلسة تدريب",
+  "loading": "جارٍ تحميل اللوحة...",
+  "error": "فشل تحميل اللوحة.",
+  "noData": "لا توجد بيانات."
+}

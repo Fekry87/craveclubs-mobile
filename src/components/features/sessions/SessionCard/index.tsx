@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Animated } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../../common/Card';
 import { Icon, IconName } from '../../../common/Icon';
 import { TrainingSessionInterface } from '../../../../types/models.types';
@@ -29,42 +30,24 @@ const getStatusConfig = (): Record<string, StatusConfig> => ({
   Cancelled: { color: colors.error, bg: colors.errorDim, icon: 'close-line' },
 });
 
-// Motivational messages to encourage attendance (upcoming)
-const MOTIVATION_MESSAGES = [
-  { text: 'Show up & level up!', icon: 'rocket-fill' as IconName },
-  { text: 'Every lap counts!', icon: 'fire-fill' as IconName },
-  { text: 'Dive in & earn XP!', icon: 'flashlight-fill' as IconName },
-  { text: 'Keep your streak alive!', icon: 'fire-fill' as IconName },
-  { text: 'Champions train daily!', icon: 'trophy-fill' as IconName },
-  { text: 'Make a splash!', icon: 'drop-fill' as IconName },
+// Icons pair by index with the translated message arrays in sessions.json.
+const MOTIVATION_ICONS: IconName[] = [
+  'rocket-fill', 'fire-fill', 'flashlight-fill', 'fire-fill', 'trophy-fill', 'drop-fill',
 ];
-
-// Celebration messages for attended sessions
-const CELEBRATION_MESSAGES = [
-  { text: 'Great job, champ!', icon: 'trophy-fill' as IconName },
-  { text: 'You crushed it!', icon: 'fire-fill' as IconName },
-  { text: 'Keep swimming!', icon: 'drop-fill' as IconName },
-  { text: 'Way to go!', icon: 'star-fill' as IconName },
-  { text: 'Amazing effort!', icon: 'rocket-fill' as IconName },
+const CELEBRATION_ICONS: IconName[] = [
+  'trophy-fill', 'fire-fill', 'drop-fill', 'star-fill', 'rocket-fill',
 ];
+const MISSED_ICONS: IconName[] = ['run-fill', 'fire-fill', 'flashlight-fill'];
 
-// Encouraging messages for missed sessions
-const MISSED_MESSAGES = [
-  { text: 'Catch the next one!', icon: 'run-fill' as IconName },
-  { text: "You'll get it next time!", icon: 'fire-fill' as IconName },
-  { text: 'Come back stronger!', icon: 'flashlight-fill' as IconName },
-];
-
-const getMotivation = (sessionId: number) => {
-  return MOTIVATION_MESSAGES[sessionId % MOTIVATION_MESSAGES.length];
-};
-
-const getCelebration = (sessionId: number) => {
-  return CELEBRATION_MESSAGES[sessionId % CELEBRATION_MESSAGES.length];
-};
-
-const getMissedMessage = (sessionId: number) => {
-  return MISSED_MESSAGES[sessionId % MISSED_MESSAGES.length];
+/** Pick a stable message + its paired icon for this session. */
+const pickMessage = (
+  texts: string[],
+  icons: IconName[],
+  sessionId: number,
+): { text: string; icon: IconName } => {
+  const list = texts.length > 0 ? texts : [''];
+  const i = sessionId % list.length;
+  return { text: list[i], icon: icons[sessionId % icons.length] };
 };
 
 export const SessionCard: React.FC<SessionCardProps> = React.memo(({
@@ -72,11 +55,16 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
   onPress,
   index = 0,
 }) => {
+  const { t } = useTranslation('sessions');
   const entryStyle = useAnimatedEntry(Math.min(index, 10));
   const pulseStyle = usePulseGlow(session.status === 'Live');
   const statusConfig = getStatusConfig();
   const config = statusConfig[session.status] || statusConfig.Scheduled;
-  const motivation = getMotivation(session.id);
+  const motivation = pickMessage(
+    t('card.motivation', { returnObjects: true }) as string[],
+    MOTIVATION_ICONS,
+    session.id,
+  );
   const relativeDate = getRelativeDate(session.date);
   const isUpcoming =
     session.status === 'Scheduled' || session.status === 'Live';
@@ -87,10 +75,18 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
   // saying "+25 XP" next to a detail page saying "+5 XP" is worse than no number.
   const xpLabel =
     session.xp_per_attendance != null && session.xp_per_attendance > 0
-      ? `+${session.xp_per_attendance} XP`
-      : 'XP';
-  const celebration = getCelebration(session.id);
-  const missedMsg = getMissedMessage(session.id);
+      ? t('card.xpValue', { n: session.xp_per_attendance })
+      : t('card.xp');
+  const celebration = pickMessage(
+    t('card.celebration', { returnObjects: true }) as string[],
+    CELEBRATION_ICONS,
+    session.id,
+  );
+  const missedMsg = pickMessage(
+    t('card.missedMsg', { returnObjects: true }) as string[],
+    MISSED_ICONS,
+    session.id,
+  );
 
   return (
     <Animated.View style={entryStyle}>
@@ -111,7 +107,7 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
             ]}
           >
             <Text style={[styles.statusText, { color: config.color }]}>
-              {session.status}
+              {t(`status.${session.status}`)}
             </Text>
           </Animated.View>
         </View>
@@ -154,7 +150,7 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
               </View>
               <View>
                 <Text style={styles.xpValue}>{xpLabel}</Text>
-                <Text style={styles.xpLabel}>Attend to earn</Text>
+                <Text style={styles.xpLabel}>{t('card.attendToEarn')}</Text>
               </View>
             </View>
             <View style={styles.motivationRight}>
@@ -178,7 +174,7 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
               </View>
               <View>
                 <Text style={styles.earnedValue}>{xpLabel}</Text>
-                <Text style={styles.earnedLabel}>Earned</Text>
+                <Text style={styles.earnedLabel}>{t('card.earned')}</Text>
               </View>
             </View>
             <View style={styles.motivationRight}>
@@ -201,9 +197,9 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
               <Icon name="close-circle-line" size={16} color={colors.error} />
             </View>
             <View style={styles.cancelledBody}>
-              <Text style={styles.cancelledValue}>Session cancelled</Text>
+              <Text style={styles.cancelledValue}>{t('card.cancelled')}</Text>
               <Text style={styles.cancelledReason} numberOfLines={2}>
-                {session.cancellation_reason || 'Your club cancelled this session.'}
+                {session.cancellation_reason || t('card.cancelledDefault')}
               </Text>
             </View>
           </View>
@@ -216,8 +212,8 @@ export const SessionCard: React.FC<SessionCardProps> = React.memo(({
                 <Icon name="close-line" size={14} color={colors.error} />
               </View>
               <View>
-                <Text style={styles.missedValue}>0 XP</Text>
-                <Text style={styles.missedLabel}>Missed</Text>
+                <Text style={styles.missedValue}>{t('card.zeroXp')}</Text>
+                <Text style={styles.missedLabel}>{t('card.missed')}</Text>
               </View>
             </View>
             <View style={styles.motivationRight}>

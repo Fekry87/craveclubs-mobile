@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import { Icon, IconName } from '../../components/common/Icon';
 import { Loader } from '../../components/common/Loader';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -62,12 +64,14 @@ const getTimeAgo = (dateStr: string): string => {
   const now = Date.now();
   const diff = now - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
+  const nt = (key: string, count?: number) =>
+    i18n.t(`time.${key}`, { ns: 'notifications', count });
+  if (mins < 1) return nt('justNow');
+  if (mins < 60) return nt('minutesAgo', mins);
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return nt('hoursAgo', hrs);
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return nt('daysAgo', days);
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -127,6 +131,7 @@ const NotificationRow: React.FC<{
 
 /* ═══ Main Screen ═══ */
 export const NotificationCenterScreen: React.FC = () => {
+  const { t } = useTranslation('notifications');
   const {
     notifications,
     unreadCount,
@@ -229,7 +234,7 @@ export const NotificationCenterScreen: React.FC = () => {
               style={s.headerBtn}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Text style={s.headerBtnText}>Mark all read</Text>
+              <Text style={s.headerBtnText}>{t('markAllRead')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -246,13 +251,13 @@ export const NotificationCenterScreen: React.FC = () => {
 
   /* ── States ── */
   if (isLoading && notifications.length === 0) {
-    return <Loader message="Loading notifications…" />;
+    return <Loader message={t('loading')} />;
   }
 
   if (error && notifications.length === 0) {
     return (
       <ErrorView
-        message="Couldn't load notifications"
+        message={t('error')}
         onRetry={() => fetchNotifications()}
       />
     );
@@ -262,8 +267,8 @@ export const NotificationCenterScreen: React.FC = () => {
     return (
       <EmptyState
         icon="inbox-line"
-        title="No Notifications"
-        message="You're all caught up! Notifications will appear here."
+        title={t('emptyTitle')}
+        message={t('emptyMessage')}
       />
     );
   }

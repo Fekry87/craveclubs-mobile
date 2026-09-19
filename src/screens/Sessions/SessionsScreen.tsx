@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../../types/navigation.types';
 import { SessionCard } from '../../components/features/sessions/SessionCard';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -25,40 +26,25 @@ type SegmentKey = SessionSegment;
 
 interface SegmentConfig {
   key: SegmentKey;
-  label: string;
   icon: IconName;
 }
 
 const SEGMENTS: SegmentConfig[] = [
-  { key: 'all', label: 'All', icon: 'list-check-2' },
-  { key: 'upcoming', label: 'Upcoming', icon: 'calendar-event-line' },
-  { key: 'completed', label: 'Completed', icon: 'check-line' },
+  { key: 'all', icon: 'list-check-2' },
+  { key: 'upcoming', icon: 'calendar-event-line' },
+  { key: 'completed', icon: 'check-line' },
 ];
 
-const EMPTY_CONFIG: Record<
-  SegmentKey,
-  { icon: IconName; title: string; message: string }
-> = {
-  all: {
-    icon: 'calendar-event-line',
-    title: 'No Sessions Yet',
-    message: 'Your training sessions will show up here.',
-  },
-  upcoming: {
-    icon: 'rocket-fill',
-    title: 'No Upcoming Sessions',
-    message: 'Check back soon — new sessions are coming!',
-  },
-  completed: {
-    icon: 'trophy-line',
-    title: 'No Completed Sessions',
-    message: 'Start attending sessions to see your history!',
-  },
+const EMPTY_ICON: Record<SegmentKey, IconName> = {
+  all: 'calendar-event-line',
+  upcoming: 'rocket-fill',
+  completed: 'trophy-line',
 };
 
 export const SessionsScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation('sessions');
   const [activeSegment, setActiveSegment] = useState<SegmentKey>('upcoming');
 
   const segments = useSessionStore((st) => st.segments);
@@ -86,7 +72,7 @@ export const SessionsScreen: React.FC = () => {
     }
   }, [activeSegment, segment, fetchSegment]);
 
-  const emptyConfig = EMPTY_CONFIG[activeSegment];
+  const emptyIcon = EMPTY_ICON[activeSegment];
 
   /** Server count when known; otherwise what that tab has loaded, if anything. */
   const badgeCount = (key: SegmentKey): number | null =>
@@ -124,7 +110,7 @@ export const SessionsScreen: React.FC = () => {
                   isActive && { color: colors.primary },
                 ]}
               >
-                {seg.label}
+                {t(`tabs.${seg.key}`)}
               </Text>
               {/* Count badge */}
               {badgeCount(seg.key) !== null && (
@@ -182,12 +168,12 @@ export const SessionsScreen: React.FC = () => {
               onRetry={() => fetchSegment(activeSegment)}
             />
           ) : !segment.loaded || segment.isLoading ? (
-            <Loader message="Loading sessions..." />
+            <Loader message={t('loading')} />
           ) : (
             <EmptyState
-              icon={emptyConfig.icon}
-              title={emptyConfig.title}
-              message={emptyConfig.message}
+              icon={emptyIcon}
+              title={t(`empty.${activeSegment}.title`)}
+              message={t(`empty.${activeSegment}.message`)}
             />
           )
         }

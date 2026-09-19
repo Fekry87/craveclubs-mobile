@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SegmentedTabs, SegmentItem } from '../../components/common/SegmentedTabs';
 import { ProgressScreen } from './ProgressScreen';
 import { MyMeasurementsScreen } from '../Measurements/MyMeasurementsScreen';
@@ -15,6 +16,7 @@ type Segment = 'progress' | 'measurements';
  * progress screen alone with no sub-tabs.
  */
 export const ProgressAndMeasurementsScreen: React.FC = () => {
+  const { t } = useTranslation('progress');
   const [active, setActive] = useState<Segment>('progress');
 
   // القياس lives on the club's Skills feature; without it there is nothing to list.
@@ -24,10 +26,10 @@ export const ProgressAndMeasurementsScreen: React.FC = () => {
 
   const segments = useMemo<SegmentItem[]>(
     () => [
-      { key: 'progress', label: 'My Progress' },
-      { key: 'measurements', label: 'My Measurements' },
+      { key: 'progress', label: t('tabs.progress') },
+      { key: 'measurements', label: t('tabs.measurements') },
     ],
-    [],
+    [t],
   );
 
   if (!measurementsEnabled) {

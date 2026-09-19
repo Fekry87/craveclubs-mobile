@@ -1,0 +1,21 @@
+{
+  "greetingPrefix": "Hey ",
+  "greetingSuffix": "!",
+  "greetingSub": "Ready to make a splash today?",
+  "stats": {
+    "xp": "XP",
+    "avgRating": "Avg Rating",
+    "attended": "Attended"
+  },
+  "todaysSessions": "Today's Sessions",
+  "seeAll": "See All",
+  "noSessions": {
+    "title": "No sessions today",
+    "message": "Enjoy your rest day! Check back tomorrow."
+  },
+  "latestEvaluation": "Latest Evaluation",
+  "trainingSession": "Training Session",
+  "loading": "Loading dashboard...",
+  "error": "Failed to load dashboard.",
+  "noData": "No data available."
+}
