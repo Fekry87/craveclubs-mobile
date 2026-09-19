@@ -15,6 +15,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation.types';
 import { Card } from '../../components/common/Card';
 import { Icon } from '../../components/common/Icon';
+import { DirectionalIcon } from '../../components/common/DirectionalIcon';
+import { monthShort, weekdayLong } from '../../utils/formatters';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ErrorView } from '../../components/common/ErrorView';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
@@ -70,57 +72,30 @@ function getNextWeek(week: string): string {
   return `${year}-W${String(weekNum + 1).padStart(2, '0')}`;
 }
 
-/* ── English day & month names ── */
-
-const DAY_NAMES: Record<number, string> = {
-  0: 'Sunday',
-  1: 'Monday',
-  2: 'Tuesday',
-  3: 'Wednesday',
-  4: 'Thursday',
-  5: 'Friday',
-  6: 'Saturday',
-};
-
-const MONTH_NAMES: Record<number, string> = {
-  0: 'Jan',
-  1: 'Feb',
-  2: 'Mar',
-  3: 'Apr',
-  4: 'May',
-  5: 'Jun',
-  6: 'Jul',
-  7: 'Aug',
-  8: 'Sep',
-  9: 'Oct',
-  10: 'Nov',
-  11: 'Dec',
-};
+/* ── Localized day & month names (Arabic month/weekday names, Western numerals) ── */
 
 function formatWeekLabel(weekStart: string, weekEnd: string): string {
   const start = new Date(weekStart);
   const end = new Date(weekEnd);
   const startDay = start.getDate();
   const endDay = end.getDate();
-  const startMonth = MONTH_NAMES[start.getMonth()] ?? '';
-  const endMonth = MONTH_NAMES[end.getMonth()] ?? '';
+  const startMonth = monthShort(start.getMonth());
+  const endMonth = monthShort(end.getMonth());
   const year = end.getFullYear();
   if (startMonth === endMonth) {
-    return `${startMonth} ${startDay} – ${endDay}, ${year}`;
+    return `${startDay} – ${endDay} ${endMonth} ${year}`;
   }
-  return `${startMonth} ${startDay} – ${endMonth} ${endDay}, ${year}`;
+  return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${year}`;
 }
 
 function formatSessionDate(dateStr: string): string {
   const d = new Date(dateStr);
-  const day = d.getDate();
-  const month = MONTH_NAMES[d.getMonth()] ?? '';
-  return `${month} ${day}`;
+  return `${d.getDate()} ${monthShort(d.getMonth())}`;
 }
 
 function getDayName(dateStr: string): string {
   const d = new Date(dateStr);
-  return DAY_NAMES[d.getDay()] ?? '';
+  return weekdayLong(d.getDay());
 }
 
 /* ═══════════════════════════════════════════════════
@@ -296,7 +271,7 @@ export const WeeklyReportScreen: React.FC = () => {
         setReport(data);
         await setCachedReport(week, data);
       } catch {
-        setError('Something went wrong. Tap to retry.');
+        setError(t('report.error'));
       } finally {
         setIsLoading(false);
         setRefreshing(false);
@@ -511,8 +486,8 @@ export const WeeklyReportScreen: React.FC = () => {
                   </Text>
                   <Text style={s.summaryLabel}>
                     {report.sessions_missed === 0
-                      ? 'Perfect'
-                      : 'Missed'}
+                      ? t('report.perfect')
+                      : t('report.missed')}
                   </Text>
                 </View>
               </Card>
@@ -629,13 +604,17 @@ export const WeeklyReportScreen: React.FC = () => {
                 </Text>
                 <View style={s.planPhaseRow}>
                   <Text style={s.planPhaseText}>
-                    Phase {report.current_plan_phase.phase_number} —{' '}
-                    {report.current_plan_phase.focus}
+                    {t('report.phase', {
+                      number: report.current_plan_phase.phase_number,
+                      focus: report.current_plan_phase.focus,
+                    })}
                   </Text>
                 </View>
                 <Text style={s.planWeekRange}>
-                  Week {report.current_plan_phase.week_start} to{' '}
-                  {report.current_plan_phase.week_end}
+                  {t('report.weekRange', {
+                    start: report.current_plan_phase.week_start,
+                    end: report.current_plan_phase.week_end,
+                  })}
                 </Text>
               </Card>
             </Animated.View>
@@ -662,7 +641,7 @@ const WeekNav: React.FC<{
       style={s.weekNavBtn}
       activeOpacity={0.6}
     >
-      <Icon name="arrow-left-s-line" size={24} color={colors.primary} />
+      <DirectionalIcon name="arrow-left-s-line" size={24} color={colors.primary} />
     </TouchableOpacity>
 
     <Text style={s.weekNavLabel}>{weekLabel}</Text>
@@ -673,7 +652,7 @@ const WeekNav: React.FC<{
       activeOpacity={nextDisabled ? 1 : 0.6}
       disabled={nextDisabled}
     >
-      <Icon
+      <DirectionalIcon
         name="arrow-right-s-line"
         size={24}
         color={nextDisabled ? colors.textDim : colors.primary}

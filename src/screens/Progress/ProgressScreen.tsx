@@ -25,7 +25,7 @@ import { StatsResponseType, PaginatedResponseType } from '../../types/api.types'
 import { EvaluationInterface } from '../../types/models.types';
 import { ProgressStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../store/auth.store';
-import { formatPercentage, formatRating } from '../../utils/formatters';
+import { formatPercentage, formatRating, formatDayMonthYear } from '../../utils/formatters';
 import { colors, spacing, fontFamily } from '../../theme';
 import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
@@ -167,12 +167,9 @@ export const ProgressScreen: React.FC = () => {
           </View>
           {latestEvals.map((evaluation) => {
             const emptyStars = 5 - evaluation.rating;
-            const evalDate = new Date(evaluation.session?.date ?? evaluation.created_at ?? Date.now());
-            const dateLabel = evalDate.toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            });
+            const dateLabel = formatDayMonthYear(
+              evaluation.session?.date ?? evaluation.created_at ?? new Date().toISOString(),
+            );
             return (
               <Card
                 key={evaluation.id}

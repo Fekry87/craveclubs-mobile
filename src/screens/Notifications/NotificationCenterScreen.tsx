@@ -12,6 +12,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
+import { formatShortDate } from '../../utils/formatters';
 import { Icon, IconName } from '../../components/common/Icon';
 import { Loader } from '../../components/common/Loader';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -72,10 +73,7 @@ const getTimeAgo = (dateStr: string): string => {
   if (hrs < 24) return nt('hoursAgo', hrs);
   const days = Math.floor(hrs / 24);
   if (days < 7) return nt('daysAgo', days);
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
+  return formatShortDate(dateStr);
 };
 
 /* ═══ Single Notification Row ═══ */

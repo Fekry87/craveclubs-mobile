@@ -1,6 +1,5 @@
 import { EvaluationInterface, DailyRatingType } from '../types/models.types';
-
-const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const;
+import { weekdayInitial, monthYearLabel } from './formatters';
 
 /** Format a Date as "YYYY-MM-DD" */
 function toDateString(d: Date): string {
@@ -68,7 +67,7 @@ export function buildDailyRatings(
     days.push({
       date: dateStr,
       dayNumber: day,
-      dayLabel: DAY_LABELS[d.getDay()],
+      dayLabel: weekdayInitial(d.getDay()),
       rating: avgRating,
       count: ratings ? ratings.length : 0,
       isToday: dateStr === today,
@@ -104,7 +103,7 @@ export function groupIntoWeeks(
     padBefore.push({
       date: toDateString(d),
       dayNumber: d.getDate(),
-      dayLabel: DAY_LABELS[d.getDay()],
+      dayLabel: weekdayInitial(d.getDay()),
       rating: null,
       count: 0,
       isToday: toDateString(d) === today,
@@ -124,7 +123,7 @@ export function groupIntoWeeks(
     padAfter.push({
       date: toDateString(d),
       dayNumber: d.getDate(),
-      dayLabel: DAY_LABELS[d.getDay()],
+      dayLabel: weekdayInitial(d.getDay()),
       rating: null,
       count: 0,
       isToday: toDateString(d) === today,
@@ -156,12 +155,8 @@ export function getInitialWeekIndex(weeks: DailyRatingType[][]): number {
 }
 
 /**
- * Format month name from year/month.
+ * Localized "September 2026" / "سبتمبر 2026" from year + 0-indexed month.
  */
 export function formatMonthYear(year: number, month: number): string {
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
-  return `${months[month]} ${year}`;
+  return monthYearLabel(year, month);
 }

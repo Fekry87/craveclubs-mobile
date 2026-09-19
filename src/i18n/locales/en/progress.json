@@ -12,6 +12,11 @@
   "latestEvaluations": "Latest Evaluations",
   "seeAll": "See All",
   "trainingSession": "Training Session",
+  "dailyRatings": {
+    "title": "Daily Ratings",
+    "empty": "No rating data yet",
+    "week": "Week {{current}} of {{total}}"
+  },
   "evaluations": {
     "loading": "Loading evaluations...",
     "error": "Failed to load evaluations.",

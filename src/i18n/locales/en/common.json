@@ -16,6 +16,12 @@
     "ok": "OK",
     "close": "Close"
   },
+  "trainingTypes": {
+    "daily": { "tab": "Daily", "full": "Daily training" },
+    "two_days": { "tab": "2 days a week", "full": "Two days a week" },
+    "three_days": { "tab": "3 days a week", "full": "Three days a week" },
+    "private": { "tab": "Private", "full": "Private training" }
+  },
   "language": {
     "title": "Language",
     "english": "English",

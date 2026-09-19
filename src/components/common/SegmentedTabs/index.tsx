@@ -68,6 +68,9 @@ export const SegmentedTabs: React.FC<SegmentedTabsProps> = ({
           <Animated.View
             style={[
               s.segmentIndicator,
+              // `left` is auto-mirrored to the right edge under RTL by RN's
+              // doLeftAndRightSwapInRTL (left on by default), so the pill lands
+              // under the active label in both directions — do not swap by hand.
               { width: indicatorWidth, left: indicatorLeft },
             ]}
           />

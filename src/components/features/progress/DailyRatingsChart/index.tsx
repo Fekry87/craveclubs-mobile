@@ -16,8 +16,9 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../../common/Card';
-import { Icon } from '../../../common/Icon';
+import { DirectionalIcon } from '../../../common/DirectionalIcon';
 import { EvaluationInterface, DailyRatingType } from '../../../../types/models.types';
 import {
   buildDailyRatings,
@@ -103,6 +104,7 @@ interface DailyRatingsChartProps {
 export const DailyRatingsChart: React.FC<DailyRatingsChartProps> = ({
   evaluations,
 }) => {
+  const { t } = useTranslation('progress');
   const now = useMemo(() => new Date(), []);
   const year = now.getFullYear();
   const month = now.getMonth();
@@ -174,12 +176,12 @@ export const DailyRatingsChart: React.FC<DailyRatingsChartProps> = ({
     <Card>
       {/* ── Title row ── */}
       <View style={styles.titleRow}>
-        <Text style={styles.title}>Daily Ratings</Text>
+        <Text style={styles.title}>{t('dailyRatings.title')}</Text>
         <Text style={styles.monthLabel}>{formatMonthYear(year, month)}</Text>
       </View>
 
       {weeks.length === 0 ? (
-        <Text style={styles.emptyText}>No rating data yet</Text>
+        <Text style={styles.emptyText}>{t('dailyRatings.empty')}</Text>
       ) : (
         <>
           {/* ── Week navigator ── */}
@@ -190,14 +192,17 @@ export const DailyRatingsChart: React.FC<DailyRatingsChartProps> = ({
               disabled={!canGoBack}
               activeOpacity={0.6}
             >
-              <Icon
+              <DirectionalIcon
                 name="arrow-left-s-line"
                 size={18}
                 color={canGoBack ? colors.text : colors.textDim}
               />
             </TouchableOpacity>
             <Text style={styles.weekLabel}>
-              Week {activeWeekIndex + 1} of {totalWeeks}
+              {t('dailyRatings.week', {
+                current: activeWeekIndex + 1,
+                total: totalWeeks,
+              })}
             </Text>
             <TouchableOpacity
               style={[styles.weekNavBtn, !canGoForward && styles.weekNavBtnDisabled]}
@@ -205,7 +210,7 @@ export const DailyRatingsChart: React.FC<DailyRatingsChartProps> = ({
               disabled={!canGoForward}
               activeOpacity={0.6}
             >
-              <Icon
+              <DirectionalIcon
                 name="arrow-right-s-line"
                 size={18}
                 color={canGoForward ? colors.text : colors.textDim}

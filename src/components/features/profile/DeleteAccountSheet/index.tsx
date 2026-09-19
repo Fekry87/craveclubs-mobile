@@ -7,6 +7,7 @@ import {
   Animated,
   ActivityIndicator,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '../../../common/Icon';
 import { useAuthStore } from '../../../../store/auth.store';
 import { colors } from '../../../../theme';
@@ -21,6 +22,7 @@ export const DeleteAccountSheet: React.FC<DeleteAccountSheetProps> = ({
   visible,
   onClose,
 }) => {
+  const { t } = useTranslation('profile');
   const [error, setError] = useState<string | null>(null);
   const deleteAccount = useAuthStore((s) => s.deleteAccount);
   const isDeletingAccount = useAuthStore((s) => s.isDeletingAccount);
@@ -60,7 +62,7 @@ export const DeleteAccountSheet: React.FC<DeleteAccountSheetProps> = ({
       };
       setError(
         axiosError?.response?.data?.message ??
-          'Something went wrong. Please try again.',
+          t('error.generic', { ns: 'common' }),
       );
     }
   };
@@ -95,14 +97,13 @@ export const DeleteAccountSheet: React.FC<DeleteAccountSheetProps> = ({
           </View>
 
           {/* Title */}
-          <Text style={styles.title}>Delete Account?</Text>
+          <Text style={styles.title}>{t('deleteAccount.title')}</Text>
 
           {/* Description */}
           <Text style={styles.description}>
-            Your account will be deactivated immediately. You have{' '}
-            <Text style={styles.bold}>30 days</Text> to reactivate it by
-            signing in again. After 30 days, all your data will be permanently
-            deleted and cannot be recovered.
+            {t('deleteAccount.descBefore')}
+            <Text style={styles.bold}>{t('deleteAccount.days')}</Text>
+            {t('deleteAccount.descAfter')}
           </Text>
 
           {/* Error banner */}
@@ -121,7 +122,7 @@ export const DeleteAccountSheet: React.FC<DeleteAccountSheetProps> = ({
               activeOpacity={0.8}
               disabled={isDeletingAccount}
             >
-              <Text style={styles.keepButtonText}>Keep Account</Text>
+              <Text style={styles.keepButtonText}>{t('deleteAccount.keep')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -137,7 +138,7 @@ export const DeleteAccountSheet: React.FC<DeleteAccountSheetProps> = ({
               {isDeletingAccount ? (
                 <ActivityIndicator color={colors.white} size="small" />
               ) : (
-                <Text style={styles.deleteButtonText}>Delete Account</Text>
+                <Text style={styles.deleteButtonText}>{t('deleteAccount.confirm')}</Text>
               )}
             </TouchableOpacity>
           </View>

@@ -30,5 +30,109 @@
     "password": "كلمة المرور",
     "changePassword": "تغيير كلمة المرور",
     "language": "اللغة"
+  },
+  "states": {
+    "loading": "جارٍ تحميل الملف الشخصي...",
+    "userNotFound": "لم يتم العثور على المستخدم.",
+    "noData": "لا توجد بيانات للملف الشخصي."
+  },
+  "subscription": {
+    "expired": "منتهي",
+    "expiringSoon": "قرب ينتهي",
+    "active": "نشط",
+    "monthPlan": "اشتراك {{count}} شهور",
+    "ends": "ينتهي {{date}}",
+    "discount": "خصم {{percent}}%",
+    "since": "من {{date}}",
+    "daysLeft": "باقي {{count}} يوم",
+    "oneDayLeft": "باقي يوم واحد",
+    "endsToday": "بينتهي النهاردة",
+    "expiredAgoOne": "انتهى من يوم",
+    "expiredAgoOther": "انتهى من {{count}} يوم",
+    "noticeExpired": "اشتراكك انتهى — كلّم ناديك للتجديد وتكمّل تدريبك.",
+    "noticeExpiring": "جدّد مع ناديك قبل ما ينتهي عشان ما يحصلش انقطاع في التدريب."
+  },
+  "statsLabels": {
+    "xpRank": "XP · الترتيب #{{rank}} من {{total}}",
+    "attendance": "الحضور · {{attended}}/{{total}}",
+    "avgRating": "متوسط التقييم · {{count}} تقييم",
+    "streakOne": "جلسة متتالية",
+    "streakOther": "جلسات متتالية",
+    "level": "المستوى {{level}} · {{name}}",
+    "xpToNext": " · {{xp}} XP للوصول إلى {{next}}",
+    "maxLevel": " · أعلى مستوى"
+  },
+  "coachCard": {
+    "yrsExperience": "{{count}} سنة خبرة",
+    "coaches": "يدرّب {{groups}}",
+    "assigned": "الكابتن المسؤول عنك"
+  },
+  "measure": {
+    "cm": "{{value}} سم",
+    "kg": "{{value}} كجم"
+  },
+  "alerts": {
+    "unavailableTitle": "غير متاح",
+    "unavailableBody": "هذا الإجراء غير مدعوم على جهازك.",
+    "signOutTitle": "تسجيل الخروج",
+    "signOutBody": "متأكد إنك عايز تسجّل خروج؟",
+    "signOut": "تسجيل الخروج",
+    "photoNotSavedTitle": "لم يتم حفظ الصورة",
+    "photoNotRemovedTitle": "لم يتم حذف الصورة",
+    "photoErrorBody": "تعذّر تحديث صورتك. تأكّد من اتصالك وحاول مرة أخرى.",
+    "removePhotoTitle": "حذف الصورة؟",
+    "removePhotoBody": "هتظهر الأحرف الأولى من اسمك بدلًا منها.",
+    "remove": "حذف",
+    "deleteAccount": "حذف الحساب",
+    "call": "اتصل بـ {{name}}"
+  },
+  "deleteAccount": {
+    "title": "حذف الحساب؟",
+    "descBefore": "هيتم إلغاء تنشيط حسابك فورًا. عندك ",
+    "days": "30 يوم",
+    "descAfter": " لإعادة تنشيطه بتسجيل الدخول مرة أخرى. بعد 30 يوم، هيتم حذف كل بياناتك نهائيًا ولا يمكن استرجاعها.",
+    "keep": "الاحتفاظ بالحساب",
+    "confirm": "حذف الحساب"
+  },
+  "photoMenu": {
+    "permissionTitle": "مطلوب إذن",
+    "cameraPermission": "محتاجين إذن الكاميرا عشان تلتقط صورة.",
+    "libraryPermission": "محتاجين إذن الوصول للصور عشان تختار صورة.",
+    "title": "صورة الملف الشخصي",
+    "subtitle": "اختر إجراء",
+    "takePhoto": "التقاط صورة",
+    "chooseGallery": "اختيار من المعرض",
+    "removePhoto": "حذف الصورة"
+  },
+  "changePassword": {
+    "forcedTitle": "عيّن كلمة المرور",
+    "forcedIntro": "ناديك أعطاك كلمة مرور مؤقتة. اختر كلمة خاصة بك عشان تحافظ على حسابك — هتستخدمها من دلوقتي.",
+    "intro": "اختر كلمة مرور جديدة تفتكرها. هتفضل مسجّل دخول على الجهاز ده؛ الأجهزة التانية هتحتاج كلمة المرور الجديدة.",
+    "currentLabel": "كلمة المرور الحالية",
+    "tempLabel": "كلمة المرور المؤقتة",
+    "currentPlaceholder": "كلمة المرور الحالية",
+    "tempPlaceholder": "كلمة المرور اللي ناديك أعطاهالك",
+    "newLabel": "كلمة المرور الجديدة",
+    "newPlaceholder": "8 أحرف على الأقل",
+    "confirmLabel": "تأكيد كلمة المرور الجديدة",
+    "confirmPlaceholder": "أعد إدخال كلمة المرور الجديدة",
+    "signedInAs": "مسجّل دخول باسم",
+    "accountHint": "ناديك بيشوف نفس العنوان ده لما بيعيد تعيين كلمة مرورك. لو مش مطابق للي أعطوهولك، سجّل خروج وادخل تاني بالبيانات دي.",
+    "submitForced": "تعيين كلمة المرور",
+    "submit": "تغيير كلمة المرور",
+    "notYou": "مش إنت؟ سجّل خروج",
+    "doneTitle": "تم",
+    "doneForcedBody": "تم تعيين كلمة مرورك. إنت مسجّل دخول.",
+    "doneBody": "تم تغيير كلمة مرورك.",
+    "validation": {
+      "enterCurrent": "أدخل كلمة المرور الحالية",
+      "minLength": "كلمة المرور الجديدة لازم تكون 8 أحرف على الأقل",
+      "different": "كلمة المرور الجديدة لازم تكون مختلفة",
+      "mismatch": "كلمتا المرور غير متطابقتين"
+    },
+    "errors": {
+      "generic": "تعذّر تغيير كلمة مرورك. من فضلك حاول مرة أخرى.",
+      "currentMismatch": "كلمة المرور دي مش مطابقة للحساب المسجّل دخوله حاليًا. راجع الحساب بالأسفل، أو اطلب من ناديك إعادة تعيينها."
+    }
   }
 }

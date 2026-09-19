@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useAuthStore } from '../../store/auth.store';
@@ -41,12 +43,11 @@ const toFieldErrors = (err: unknown): Record<string, string> => {
 
   const message = data?.message;
   if (!message) {
-    return { form: 'Could not change your password. Please try again.' };
+    return { form: i18n.t('changePassword.errors.generic', { ns: 'profile' }) };
   }
   if (/current password/i.test(message)) {
     return {
-      current:
-        "That password doesn't match the account you're signed in as. Check the account below, or ask your club to reset it.",
+      current: i18n.t('changePassword.errors.currentMismatch', { ns: 'profile' }),
     };
   }
   if (/new password/i.test(message)) {
@@ -66,6 +67,7 @@ interface ChangePasswordScreenProps {
 }
 
 export const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ forced = false }) => {
+  const { t } = useTranslation('profile');
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const changePassword = useAuthStore((st) => st.changePassword);
@@ -88,14 +90,14 @@ export const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ forc
 
   const validate = useCallback((): boolean => {
     const e: Record<string, string> = {};
-    if (!current) e.current = 'Enter your current password';
-    if (next.length < 8) e.next = 'New password must be at least 8 characters';
+    if (!current) e.current = t('changePassword.validation.enterCurrent');
+    if (next.length < 8) e.next = t('changePassword.validation.minLength');
     if (next && current && next === current)
-      e.next = 'New password must be different';
-    if (confirm !== next) e.confirm = 'Passwords do not match';
+      e.next = t('changePassword.validation.different');
+    if (confirm !== next) e.confirm = t('changePassword.validation.mismatch');
     setErrors(e);
     return Object.keys(e).length === 0;
-  }, [current, next, confirm]);
+  }, [current, next, confirm, t]);
 
   const handleSubmit = useCallback(async () => {
     if (!validate()) return;
@@ -104,10 +106,10 @@ export const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ forc
       await changePassword(current, next);
       if (forced) {
         // The store lifts the gate; RootNavigator swaps this screen for the app.
-        Alert.alert('Done', "Your password is set. You're all signed in.");
+        Alert.alert(t('changePassword.doneTitle'), t('changePassword.doneForcedBody'));
       } else {
-        Alert.alert('Done', 'Your password has been changed.', [
-          { text: 'OK', onPress: () => navigation.goBack() },
+        Alert.alert(t('changePassword.doneTitle'), t('changePassword.doneBody'), [
+          { text: t('actions.ok', { ns: 'common' }), onPress: () => navigation.goBack() },
         ]);
       }
     } catch (err: unknown) {
@@ -115,7 +117,7 @@ export const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ forc
     } finally {
       setSubmitting(false);
     }
-  }, [validate, changePassword, current, next, navigation, forced]);
+  }, [validate, changePassword, current, next, navigation, forced, t]);
 
   return (
     <KeyboardAvoidingView
@@ -132,54 +134,48 @@ export const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ forc
         {forced ? (
           <View style={s.intro}>
             <Text style={s.introTitle} accessibilityRole="header">
-              Set your password
+              {t('changePassword.forcedTitle')}
             </Text>
-            <Text style={s.hint}>
-              Your club gave you a temporary password. Choose your own to keep
-              your account private — you'll use it from now on.
-            </Text>
+            <Text style={s.hint}>{t('changePassword.forcedIntro')}</Text>
           </View>
         ) : (
-          <Text style={s.hint}>
-            Choose a new password you'll remember. You'll stay signed in on this
-            device; other devices will need the new password.
-          </Text>
+          <Text style={s.hint}>{t('changePassword.intro')}</Text>
         )}
 
         <Input
-          label={forced ? 'Temporary password' : 'Current password'}
+          label={forced ? t('changePassword.tempLabel') : t('changePassword.currentLabel')}
           value={current}
-          onChangeText={(t) => {
-            setCurrent(t);
+          onChangeText={(text) => {
+            setCurrent(text);
             clearError('current');
           }}
-          placeholder={forced ? 'The password your club gave you' : 'Current password'}
+          placeholder={forced ? t('changePassword.tempPlaceholder') : t('changePassword.currentPlaceholder')}
           secureTextEntry
           autoCapitalize="none"
           error={errors.current}
         />
 
         <Input
-          label="New password"
+          label={t('changePassword.newLabel')}
           value={next}
-          onChangeText={(t) => {
-            setNext(t);
+          onChangeText={(text) => {
+            setNext(text);
             clearError('next');
           }}
-          placeholder="At least 8 characters"
+          placeholder={t('changePassword.newPlaceholder')}
           secureTextEntry
           autoCapitalize="none"
           error={errors.next}
         />
 
         <Input
-          label="Confirm new password"
+          label={t('changePassword.confirmLabel')}
           value={confirm}
-          onChangeText={(t) => {
-            setConfirm(t);
+          onChangeText={(text) => {
+            setConfirm(text);
             clearError('confirm');
           }}
-          placeholder="Re-enter new password"
+          placeholder={t('changePassword.confirmPlaceholder')}
           secureTextEntry
           autoCapitalize="none"
           error={errors.confirm}
@@ -189,22 +185,18 @@ export const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ forc
 
         {!!account && (
           <View style={s.account}>
-            <Text style={s.accountLabel}>Signed in as</Text>
+            <Text style={s.accountLabel}>{t('changePassword.signedInAs')}</Text>
             <Text style={s.accountValue} selectable>
               {account}
             </Text>
-            <Text style={s.accountHint}>
-              Your club sees this same address when it resets your password. If it
-              doesn't match the one they gave you, sign out and sign in again with
-              those details.
-            </Text>
+            <Text style={s.accountHint}>{t('changePassword.accountHint')}</Text>
           </View>
         )}
 
         <View style={s.spacer} />
 
         <Button
-          title={forced ? 'Set password' : 'Change password'}
+          title={forced ? t('changePassword.submitForced') : t('changePassword.submit')}
           onPress={handleSubmit}
           loading={submitting}
           disabled={submitting}
@@ -212,7 +204,7 @@ export const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ forc
 
         {forced && (
           <Text style={s.signOut} onPress={() => logout()} accessibilityRole="button">
-            Not you? Sign out
+            {t('changePassword.notYou')}
           </Text>
         )}
       </ScrollView>

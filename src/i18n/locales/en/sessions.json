@@ -81,6 +81,7 @@
     "noXp": "No XP for this session",
     "coachRating": "Coach's rating for you",
     "teamFeedback": "Team feedback",
-    "yourTimes": "Your times"
+    "yourTimes": "Your times",
+    "sessionLength": "{{duration}} session"
   }
 }

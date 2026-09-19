@@ -37,7 +37,7 @@ import { sessionService } from '../../api/services/session.service';
 import { DashboardResponseType, LeaderboardResponseType } from '../../types/api.types';
 import { TrainingSessionInterface } from '../../types/models.types';
 import { AppTabParamList } from '../../navigation/types';
-import { formatRating } from '../../utils/formatters';
+import { formatRating, formatDayMonthYear } from '../../utils/formatters';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, fontFamily } from '../../theme';
 import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
@@ -417,12 +417,9 @@ export const HomeScreen: React.FC = () => {
           {(() => {
             const evaluation = dashboard.recent_evaluations[0];
             const emptyStars = 5 - evaluation.rating;
-            const evalDate = new Date(evaluation.session?.date ?? evaluation.created_at ?? Date.now());
-            const dateLabel = evalDate.toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            });
+            const dateLabel = formatDayMonthYear(
+              evaluation.session?.date ?? evaluation.created_at ?? new Date().toISOString(),
+            );
             return (
               <Card key={evaluation.id} style={screenStyles.evalCard}>
                 <View style={screenStyles.evalRow}>

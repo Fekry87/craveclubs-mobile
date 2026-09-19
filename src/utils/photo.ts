@@ -1,6 +1,10 @@
 import { Alert, Platform, ActionSheetIOS } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import i18n from '../i18n';
+
+/** Localized string from the profile namespace. */
+const tp = (key: string): string => i18n.t(key, { ns: 'profile' });
 
 /** What a picked profile photo becomes: a local preview and what the API gets. */
 export interface PickedPhoto {
@@ -48,14 +52,14 @@ export const pickProfilePhoto = async (
   if (source === 'camera') {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Camera access is required to take a photo.');
+      Alert.alert(tp('photoMenu.permissionTitle'), tp('photoMenu.cameraPermission'));
       return null;
     }
     result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
   } else {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Photo library access is required to choose a photo.');
+      Alert.alert(tp('photoMenu.permissionTitle'), tp('photoMenu.libraryPermission'));
       return null;
     }
     result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
@@ -78,7 +82,12 @@ interface PhotoMenuOptions {
  */
 export const showPhotoMenu = ({ canRemove = false, onPick, onRemove }: PhotoMenuOptions) => {
   if (Platform.OS === 'ios') {
-    const options = ['Cancel', 'Take photo', 'Choose from gallery', ...(canRemove ? ['Remove photo'] : [])];
+    const options = [
+      i18n.t('actions.cancel', { ns: 'common' }),
+      tp('photoMenu.takePhoto'),
+      tp('photoMenu.chooseGallery'),
+      ...(canRemove ? [tp('photoMenu.removePhoto')] : []),
+    ];
     ActionSheetIOS.showActionSheetWithOptions(
       {
         options,
@@ -94,10 +103,10 @@ export const showPhotoMenu = ({ canRemove = false, onPick, onRemove }: PhotoMenu
     return;
   }
 
-  Alert.alert('Profile photo', 'Choose an option', [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Take photo', onPress: () => onPick('camera') },
-    { text: 'Choose from gallery', onPress: () => onPick('library') },
-    ...(canRemove ? [{ text: 'Remove photo', style: 'destructive' as const, onPress: () => onRemove?.() }] : []),
+  Alert.alert(tp('photoMenu.title'), tp('photoMenu.subtitle'), [
+    { text: i18n.t('actions.cancel', { ns: 'common' }), style: 'cancel' },
+    { text: tp('photoMenu.takePhoto'), onPress: () => onPick('camera') },
+    { text: tp('photoMenu.chooseGallery'), onPress: () => onPick('library') },
+    ...(canRemove ? [{ text: tp('photoMenu.removePhoto'), style: 'destructive' as const, onPress: () => onRemove?.() }] : []),
   ]);
 };

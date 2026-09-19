@@ -16,6 +16,12 @@
     "ok": "حسنًا",
     "close": "إغلاق"
   },
+  "trainingTypes": {
+    "daily": { "tab": "يومي", "full": "تدريب يومي" },
+    "two_days": { "tab": "يومين في الأسبوع", "full": "يومين في الأسبوع" },
+    "three_days": { "tab": "3 أيام في الأسبوع", "full": "3 أيام في الأسبوع" },
+    "private": { "tab": "خاص", "full": "تدريب خاص" }
+  },
   "language": {
     "title": "اللغة",
     "english": "English",

@@ -21,6 +21,11 @@
     "sessionDetails": "Session Details",
     "currentPlan": "Current Training Plan",
     "present": "Present",
-    "absent": "Absent"
+    "absent": "Absent",
+    "perfect": "Perfect",
+    "missed": "Missed",
+    "error": "Something went wrong. Tap to retry.",
+    "phase": "Phase {{number}} — {{focus}}",
+    "weekRange": "Week {{start}} to {{end}}"
   }
 }

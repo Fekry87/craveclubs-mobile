@@ -81,6 +81,7 @@
     "noXp": "لا توجد XP لهذه الجلسة",
     "coachRating": "تقييم الكابتن لك",
     "teamFeedback": "ملاحظات الفريق",
-    "yourTimes": "أوقاتك"
+    "yourTimes": "أوقاتك",
+    "sessionLength": "مدة الجلسة {{duration}}"
   }
 }

@@ -1,39 +1,81 @@
 import i18n from '../i18n';
 
+/**
+ * Locale-aware date parts. We format dates by hand (rather than
+ * `toLocaleDateString`) so the output is identical on iOS and Android/Hermes,
+ * and so Arabic uses Arabic month/weekday names with **Western numerals** —
+ * matching the numerals the rest of the app already shows (XP, times, ratings).
+ * Dates are day-first in Arabic (the natural reading order).
+ */
+const isArabic = (): boolean => (i18n.language || 'en').startsWith('ar');
+
+const MONTHS_SHORT_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_LONG_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+const WEEKDAYS_LONG_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const WEEKDAYS_SHORT_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS_AR = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const DAY_INITIALS_EN = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const DAY_INITIALS_AR = ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'];
+
+/** Localized short month name for a 0-indexed month. */
+export const monthShort = (monthIndex: number): string =>
+  (isArabic() ? MONTHS_AR : MONTHS_SHORT_EN)[monthIndex] ?? '';
+
+/** Localized "September 2026" / "سبتمبر 2026" (0-indexed month). */
+export const monthYearLabel = (year: number, monthIndex: number): string =>
+  `${(isArabic() ? MONTHS_AR : MONTHS_LONG_EN)[monthIndex] ?? ''} ${year}`;
+
+/** Localized full weekday name for a `getDay()` index (0 = Sunday). */
+export const weekdayLong = (dayOfWeek: number): string =>
+  (isArabic() ? WEEKDAYS_AR : WEEKDAYS_LONG_EN)[dayOfWeek] ?? '';
+
+/** Single-letter weekday for compact charts (0 = Sunday). */
+export const weekdayInitial = (dayOfWeek: number): string =>
+  (isArabic() ? DAY_INITIALS_AR : DAY_INITIALS_EN)[dayOfWeek] ?? '';
+
 export const formatDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  const m = d.getMonth();
+  const y = d.getFullYear();
+  const dow = d.getDay();
+  if (isArabic()) return `${WEEKDAYS_AR[dow]}، ${day} ${MONTHS_AR[m]} ${y}`;
+  return `${WEEKDAYS_SHORT_EN[dow]}, ${MONTHS_SHORT_EN[m]} ${day}, ${y}`;
 };
 
 export const formatShortDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  const m = d.getMonth();
+  return isArabic() ? `${day} ${MONTHS_AR[m]}` : `${MONTHS_SHORT_EN[m]} ${day}`;
 };
 
-/** "May 11, 2014" — for dates where the year matters (DOB, plan end, member since) */
+/** "Sep 24, 2026" / "24 سبتمبر 2026" — dates where the year matters (DOB, plan end, member since) */
 export const formatMediumDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  const m = d.getMonth();
+  const y = d.getFullYear();
+  return isArabic() ? `${day} ${MONTHS_AR[m]} ${y}` : `${MONTHS_SHORT_EN[m]} ${day}, ${y}`;
+};
+
+/** "24 Sep 2026" / "24 سبتمبر 2026" — day-first, for evaluation/notification rows. */
+export const formatDayMonthYear = (dateStr: string): string => {
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  const m = d.getMonth();
+  const y = d.getFullYear();
+  return isArabic() ? `${day} ${MONTHS_AR[m]} ${y}` : `${day} ${MONTHS_SHORT_EN[m]} ${y}`;
 };
 
 export const formatTime = (timeStr: string): string => {
   const [hours, minutes] = timeStr.split(':');
   const hour = parseInt(hours, 10);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const pm = hour >= 12;
+  const meridiem = isArabic() ? (pm ? 'م' : 'ص') : pm ? 'PM' : 'AM';
   const displayHour = hour % 12 || 12;
-  return `${displayHour}:${minutes} ${ampm}`;
+  return `${displayHour}:${minutes} ${meridiem}`;
 };
 
 export const formatTimeRange = (start: string, end: string): string => {
@@ -55,13 +97,16 @@ export const groupSchedule = (group: {
   return [days, times].filter(Boolean).join(' · ');
 };
 
-/** "2h", "1h 30m", "45m" — session lengths. */
+/** "2h", "1h 30m", "45m" (Arabic: "2س", "1س 30د", "45د") — session lengths. */
 export const formatDuration = (minutes: number | null | undefined): string => {
   if (minutes == null || minutes <= 0) return '';
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  if (h === 0) return `${m}m`;
-  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+  const ar = isArabic();
+  const hUnit = ar ? 'س' : 'h';
+  const mUnit = ar ? 'د' : 'm';
+  if (h === 0) return `${m}${mUnit}`;
+  return m === 0 ? `${h}${hUnit}` : `${h}${hUnit} ${m}${mUnit}`;
 };
 
 export const formatPercentage = (value: number | null | undefined): string => {
@@ -88,19 +133,14 @@ export const relativeDayDiff = (dateStr: string): number => {
 };
 
 export const getRelativeDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
   const diffDays = relativeDayDiff(dateStr);
 
   if (diffDays === 0) return i18n.t('relative.today', { ns: 'common' });
   if (diffDays === 1) return i18n.t('relative.tomorrow', { ns: 'common' });
   if (diffDays === -1) return i18n.t('relative.yesterday', { ns: 'common' });
 
-  // Show actual date: "25 Feb 2026"
-  return date.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  // Show actual date: "25 Feb 2026" / "25 فبراير 2026"
+  return formatDayMonthYear(dateStr);
 };
 
 export const getInitials = (firstName: string, lastName: string): string => {

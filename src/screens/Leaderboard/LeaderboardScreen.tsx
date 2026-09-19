@@ -461,6 +461,7 @@ const s = StyleSheet.create({
   myRankBadge: {
     position: 'absolute',
     bottom: -4,
+    // `right` auto-mirrors to the start side under RTL (RN swaps left/right).
     right: -6,
     backgroundColor: colors.primary,
     paddingHorizontal: 7,
