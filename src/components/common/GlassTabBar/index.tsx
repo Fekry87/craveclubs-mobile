@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  I18nManager,
 } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -82,7 +83,11 @@ export const GlassTabBar: React.FC<BottomTabBarProps> = ({
             >
               <View style={s.iconWrap}>
                 {options.tabBarIcon?.({ focused, color, size: 24 })}
-                {showBadge && <View style={s.badge} />}
+                {showBadge && (
+                  <View
+                    style={[s.badge, I18nManager.isRTL ? { left: -2 } : { right: -2 }]}
+                  />
+                )}
               </View>
               <Text style={[s.label, { color }]} numberOfLines={1}>
                 {label}

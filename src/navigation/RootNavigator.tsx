@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen, ClubEntryScreen } from '../screens/Auth';
 import { ForceUpdateScreen } from '../screens/Auth/ForceUpdateScreen';
@@ -16,6 +17,7 @@ import { useAuthStore } from '../store/auth.store';
 import { useBrandingStore } from '../store/branding.store';
 import { useSportModuleStore } from '../store/sportModule.store';
 import { useNotificationStore } from '../store/notification.store';
+import { useLanguageStore } from '../store/language.store';
 import { setOnUnauthorized } from '../api/client';
 // Note: store functions are accessed via getState() to avoid dependency instability
 import { checkAppVersion, VersionCheckResponse } from '../api/services/app.service';
@@ -44,6 +46,7 @@ const AuthenticatedNavigator: React.FC = () => {
 };
 
 export const RootNavigator: React.FC = () => {
+  const { t } = useTranslation('nav');
   const { isAuthenticated, isLoading, restoreSession, logout, user } =
     useAuthStore();
   const { isResolved, restoreSlug, refreshBranding } = useBrandingStore();
@@ -58,8 +61,10 @@ export const RootNavigator: React.FC = () => {
     availableModules.length > 1 && !currentModule;
 
   useEffect(() => {
-    // Restore persisted slug for shared builds, then restore auth session + sport modules
+    // Sync language store to the native layout direction (i18n already inits
+    // from it), then restore slug, auth session and sport modules.
     // eslint-disable-next-line -- run once on mount only; store functions are stable singletons
+    useLanguageStore.getState().restore();
     restoreSlug().then(() => {
       restoreSession();
       fetchAndInitModules();
@@ -176,7 +181,7 @@ export const RootNavigator: React.FC = () => {
         component={NotificationCenterScreen}
         options={{
           headerShown: true,
-          title: 'Notifications',
+          title: t('titles.notifications'),
           headerStyle: {
             backgroundColor: colors.background,
           },
@@ -194,7 +199,7 @@ export const RootNavigator: React.FC = () => {
         component={ProfileScreen}
         options={{
           headerShown: true,
-          title: 'Profile',
+          title: t('titles.profile'),
           headerStyle: {
             backgroundColor: colors.background,
           },
@@ -212,7 +217,7 @@ export const RootNavigator: React.FC = () => {
         component={ChangePasswordScreen}
         options={{
           headerShown: true,
-          title: 'Change password',
+          title: t('titles.changePassword'),
           headerStyle: {
             backgroundColor: colors.background,
           },
@@ -230,7 +235,7 @@ export const RootNavigator: React.FC = () => {
         component={SessionDetailScreen}
         options={{
           headerShown: true,
-          title: 'Session',
+          title: t('titles.session'),
           headerStyle: {
             backgroundColor: colors.background,
           },
@@ -248,7 +253,7 @@ export const RootNavigator: React.FC = () => {
         component={EvaluationsScreen}
         options={{
           headerShown: true,
-          title: 'All Evaluations',
+          title: t('titles.allEvaluations'),
           headerStyle: {
             backgroundColor: colors.background,
           },

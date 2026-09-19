@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useTranslation } from 'react-i18next';
 import { ManagerAnalyticsScreen, ManagerCoachesScreen } from '../screens/Manager';
 import { ProfileScreen } from '../screens/Profile';
 import { Icon, IconName } from '../components/common/Icon';
@@ -52,6 +53,7 @@ const TabIcon: React.FC<{ routeName: string; focused: boolean }> = ({
 };
 
 export const ManagerAppNavigator: React.FC = () => {
+  const { t } = useTranslation('nav');
   return (
     <Tab.Navigator
       tabBar={(props) => <GlassTabBar {...props} />}
@@ -79,17 +81,17 @@ export const ManagerAppNavigator: React.FC = () => {
       <Tab.Screen
         name="ManagerAnalytics"
         component={ManagerAnalyticsScreen}
-        options={{ title: 'Analytics', headerShown: false }}
+        options={{ title: t('tabs.analytics'), headerShown: false }}
       />
       <Tab.Screen
         name="ManagerCoaches"
         component={ManagerCoachesScreen}
-        options={{ title: 'Coaches', headerShown: false }}
+        options={{ title: t('tabs.coaches'), headerShown: false }}
       />
       <Tab.Screen
         name="ManagerProfile"
         component={ProfileScreen}
-        options={{ title: 'Profile' }}
+        options={{ title: t('tabs.profile') }}
       />
     </Tab.Navigator>
   );

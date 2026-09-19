@@ -10,7 +10,7 @@ import {
   CoachSessionAttendanceScreen,
   CoachGroupMeasurementScreen,
 } from '../screens/Coach';
-import { Icon } from '../components/common/Icon';
+import { DirectionalIcon } from '../components/common/DirectionalIcon';
 import { CoachSessionsStackParamList } from './types';
 import { colors, fontFamily } from '../theme';
 
@@ -25,7 +25,7 @@ const BackButton: React.FC = () => {
       style={backStyles.btn}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
-      <Icon name="arrow-left-s-line" size={28} color={colors.text} />
+      <DirectionalIcon name="arrow-left-s-line" size={28} color={colors.text} />
     </TouchableOpacity>
   );
 };

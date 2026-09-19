@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, I18nManager } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Icon } from '../Icon';
@@ -25,7 +25,7 @@ export const NotificationBell: React.FC = () => {
         color={unreadCount > 0 ? colors.primary : colors.textMuted}
       />
       {unreadCount > 0 && (
-        <View style={s.badge}>
+        <View style={[s.badge, I18nManager.isRTL ? { left: -2 } : { right: -2 }]}>
           {unreadCount <= 99 ? (
             <Text style={s.badgeText}>{unreadCount}</Text>
           ) : (
@@ -48,7 +48,6 @@ const s = StyleSheet.create({
   badge: {
     position: 'absolute',
     top: 0,
-    right: -2,
     minWidth: 16,
     height: 16,
     borderRadius: 8,

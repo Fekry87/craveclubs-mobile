@@ -1,7 +1,7 @@
 import React from 'react';
 import * as Sentry from '@sentry/react-native';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, I18nManager } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
@@ -16,8 +16,18 @@ import {
   DMSans_600SemiBold,
   DMSans_700Bold,
 } from '@expo-google-fonts/dm-sans';
+import {
+  IBMPlexSansArabic_400Regular,
+  IBMPlexSansArabic_500Medium,
+  IBMPlexSansArabic_600SemiBold,
+  IBMPlexSansArabic_700Bold,
+} from '@expo-google-fonts/ibm-plex-sans-arabic';
+import './src/i18n';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme';
+
+// Allow RTL so a switch to Arabic can mirror the layout after reload.
+I18nManager.allowRTL(true);
 
 import { clubConfig } from './src/config/club';
 console.log('App starting for club:', clubConfig.name || '(shared build)');
@@ -38,6 +48,10 @@ function App() {
     DMSans_500Medium,
     DMSans_600SemiBold,
     DMSans_700Bold,
+    IBMPlexSansArabic_400Regular,
+    IBMPlexSansArabic_500Medium,
+    IBMPlexSansArabic_600SemiBold,
+    IBMPlexSansArabic_700Bold,
     remixicon: require('./assets/fonts/remixicon.ttf'),
   });
 

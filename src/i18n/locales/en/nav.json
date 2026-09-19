@@ -1,0 +1,20 @@
+{
+  "tabs": {
+    "home": "Home",
+    "sessions": "Sessions",
+    "awards": "Awards",
+    "progress": "Progress",
+    "plans": "Plans",
+    "schedule": "Schedule",
+    "profile": "Profile",
+    "analytics": "Analytics",
+    "coaches": "Coaches"
+  },
+  "titles": {
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "changePassword": "Change password",
+    "session": "Session",
+    "allEvaluations": "All Evaluations"
+  }
+}

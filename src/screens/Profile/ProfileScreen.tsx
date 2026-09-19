@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../../types/navigation.types';
 import { Card } from '../../components/common/Card';
 import { Loader } from '../../components/common/Loader';
@@ -21,11 +22,13 @@ import { InfoRow } from '../../components/common/InfoRow';
 import { NotificationBell } from '../../components/common/NotificationBell';
 import { ProfileHeader } from '../../components/features/profile/ProfileHeader';
 import { DeleteAccountSheet } from '../../components/features/profile/DeleteAccountSheet';
+import { LanguageSheet } from '../../components/features/profile/LanguageSheet';
 import { StatCard } from '../../components/features/progress/StatCard';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { useAuthStore } from '../../store/auth.store';
 import { useProfileStore } from '../../store/profile.store';
 import { useBrandingStore } from '../../store/branding.store';
+import { useLanguageStore } from '../../store/language.store';
 import { SwimmerSubscriptionInterface } from '../../types/api.types';
 import { trainingTypeLabel } from '../../utils/trainingTypes';
 import { formatMediumDate, formatMoney, formatPercentage, formatRating, getInitials } from '../../utils/formatters';
@@ -74,13 +77,16 @@ export const ProfileScreen: React.FC = () => {
   // the swimmer opens it as a pushed screen with no bar (normal padding).
   const underTabBar = useContext(BottomTabBarHeightContext) != null;
   const bottomInset = underTabBar ? GLASS_TABBAR_CONTENT_INSET : spacing.xl;
+  const { t } = useTranslation('profile');
   const { user, logout } = useAuthStore();
   const { data, isLoading, error, fetchProfile, setPhoto } = useProfileStore();
   const branding = useBrandingStore((st) => st.branding);
+  const language = useLanguageStore((st) => st.language);
   const [refreshing, setRefreshing] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
+  const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
 
   const subscriptionEntry = useAnimatedEntry(1);
   const statsEntry = useAnimatedEntry(2);
@@ -282,7 +288,7 @@ export const ProfileScreen: React.FC = () => {
 
         {/* ═══ Progress snapshot ═══ */}
         <Animated.View style={[s.section, statsEntry]}>
-          <SectionTitle>My progress</SectionTitle>
+          <SectionTitle>{t('sections.myProgress')}</SectionTitle>
           <View style={s.statsRow}>
             <StatCard
               icon="flashlight-fill"
@@ -329,7 +335,7 @@ export const ProfileScreen: React.FC = () => {
         {/* ═══ My coach ═══ */}
         {coach && (
           <Animated.View style={[s.section, coachEntry]}>
-            <SectionTitle>My coach</SectionTitle>
+            <SectionTitle>{t('sections.myCoach')}</SectionTitle>
             <Card>
               <View style={s.coachRow}>
                 <View style={[s.coachAvatar, { backgroundColor: colors.primaryDim }]}>
@@ -373,15 +379,15 @@ export const ProfileScreen: React.FC = () => {
 
         {/* ═══ Training ═══ */}
         <Animated.View style={[s.section, trainingEntry]}>
-          <SectionTitle>Training</SectionTitle>
+          <SectionTitle>{t('sections.training')}</SectionTitle>
           <Card>
             {groupNames ? (
-              <InfoRow icon="group-fill" label="Group" value={groupNames} />
+              <InfoRow icon="group-fill" label={t('rows.group')} value={groupNames} />
             ) : null}
             {branch && (
               <InfoRow
                 icon="map-pin-fill"
-                label="Branch"
+                label={t('rows.branch')}
                 value={branch.name}
                 hint={[branch.address, branch.city].filter(Boolean).join(', ')}
                 onPress={() =>
@@ -392,20 +398,20 @@ export const ProfileScreen: React.FC = () => {
               />
             )}
             {branch?.working_hours ? (
-              <InfoRow icon="time-fill" label="Pool hours" value={branch.working_hours} />
+              <InfoRow icon="time-fill" label={t('rows.poolHours')} value={branch.working_hours} />
             ) : null}
             {profile.level && (
-              <InfoRow icon="shield-user-fill" label="Level" value={profile.level} />
+              <InfoRow icon="shield-user-fill" label={t('rows.level')} value={profile.level} />
             )}
             {scheduleParts.length > 0 && (
-              <InfoRow icon="calendar-event-fill" label="My schedule" value={scheduleParts.join(' · ')} />
+              <InfoRow icon="calendar-event-fill" label={t('rows.mySchedule')} value={scheduleParts.join(' · ')} />
             )}
             {signup?.primary_goal && (
-              <InfoRow icon="flag-fill" label="My goal" value={signup.primary_goal} />
+              <InfoRow icon="flag-fill" label={t('rows.myGoal')} value={signup.primary_goal} />
             )}
             <InfoRow
               icon="medal-fill"
-              label="Member since"
+              label={t('rows.memberSince')}
               value={data.member_since ? formatMediumDate(data.member_since) : '—'}
               isLast
             />
@@ -414,18 +420,18 @@ export const ProfileScreen: React.FC = () => {
 
         {/* ═══ Personal ═══ */}
         <Animated.View style={[s.section, personalEntry]}>
-          <SectionTitle>Personal</SectionTitle>
+          <SectionTitle>{t('sections.personal')}</SectionTitle>
           <Card>
             {profile.date_of_birth && (
-              <InfoRow icon="cake-2-fill" label="Date of birth" value={formatMediumDate(profile.date_of_birth)} />
+              <InfoRow icon="cake-2-fill" label={t('rows.dateOfBirth')} value={formatMediumDate(profile.date_of_birth)} />
             )}
             {signup?.gender && (
-              <InfoRow icon="user-fill" label="Gender" value={titleCase(signup.gender)} />
+              <InfoRow icon="user-fill" label={t('rows.gender')} value={titleCase(signup.gender)} />
             )}
             {(signup?.height_cm || signup?.weight_kg) && (
               <InfoRow
                 icon="run-fill"
-                label="Height · weight"
+                label={t('rows.heightWeight')}
                 value={[
                   signup?.height_cm ? `${signup.height_cm} cm` : null,
                   signup?.weight_kg ? `${signup.weight_kg} kg` : null,
@@ -436,8 +442,8 @@ export const ProfileScreen: React.FC = () => {
             )}
             <InfoRow
               icon="heart-pulse-fill"
-              label="Medical notes"
-              value={profile.medical_notes || 'None on file'}
+              label={t('rows.medicalNotes')}
+              value={profile.medical_notes || t('rows.noneOnFile')}
               isLast
             />
           </Card>
@@ -446,13 +452,13 @@ export const ProfileScreen: React.FC = () => {
         {/* ═══ Guardian ═══ */}
         {profile.guardian_name && (
           <Animated.View style={[s.section, guardianEntry]}>
-            <SectionTitle>Guardian</SectionTitle>
+            <SectionTitle>{t('sections.guardian')}</SectionTitle>
             <Card>
-              <InfoRow icon="hand-heart-fill" label="Name" value={profile.guardian_name} />
+              <InfoRow icon="hand-heart-fill" label={t('rows.name')} value={profile.guardian_name} />
               {profile.guardian_phone && (
                 <InfoRow
                   icon="phone-fill"
-                  label="Phone"
+                  label={t('rows.phone')}
                   value={profile.guardian_phone}
                   onPress={() => openUrl(`tel:${profile.guardian_phone}`)}
                 />
@@ -460,7 +466,7 @@ export const ProfileScreen: React.FC = () => {
               {profile.guardian_email && (
                 <InfoRow
                   icon="mail-fill"
-                  label="Email"
+                  label={t('rows.email')}
                   value={profile.guardian_email}
                   onPress={() => openUrl(`mailto:${profile.guardian_email}`)}
                   isLast
@@ -472,13 +478,13 @@ export const ProfileScreen: React.FC = () => {
 
         {/* ═══ Club & support ═══ */}
         <Animated.View style={[s.section, clubEntry]}>
-          <SectionTitle>Club</SectionTitle>
+          <SectionTitle>{t('sections.club')}</SectionTitle>
           <Card>
-            <InfoRow icon="building-2-fill" label="Club" value={user.club?.name ?? '—'} />
+            <InfoRow icon="building-2-fill" label={t('rows.club')} value={user.club?.name ?? '—'} />
             {branding?.supportPhone && (
               <InfoRow
                 icon="phone-fill"
-                label="Call the club"
+                label={t('rows.callClub')}
                 value={branding.supportPhone}
                 onPress={() => openUrl(`tel:${branding.supportPhone}`)}
               />
@@ -486,20 +492,26 @@ export const ProfileScreen: React.FC = () => {
             {branding?.supportEmail && (
               <InfoRow
                 icon="mail-fill"
-                label="Email the club"
+                label={t('rows.emailClub')}
                 value={branding.supportEmail}
                 onPress={() => openUrl(`mailto:${branding.supportEmail}`)}
               />
             )}
             <InfoRow
               icon="user-3-fill"
-              label="Account email"
+              label={t('rows.accountEmail')}
               value={user.email}
             />
             <InfoRow
+              icon="earth-line"
+              label={t('rows.language')}
+              value={language === 'ar' ? 'العربية' : 'English'}
+              onPress={() => setLanguageSheetVisible(true)}
+            />
+            <InfoRow
               icon="lock-line"
-              label="Password"
-              value="Change password"
+              label={t('rows.password')}
+              value={t('rows.changePassword')}
               onPress={() => navigation.navigate('ChangePassword')}
               isLast
             />
@@ -510,6 +522,11 @@ export const ProfileScreen: React.FC = () => {
       <DeleteAccountSheet
         visible={deleteSheetVisible}
         onClose={() => setDeleteSheetVisible(false)}
+      />
+
+      <LanguageSheet
+        visible={languageSheetVisible}
+        onClose={() => setLanguageSheetVisible(false)}
       />
     </>
   );

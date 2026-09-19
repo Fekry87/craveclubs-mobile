@@ -1,0 +1,20 @@
+{
+  "tabs": {
+    "home": "الرئيسية",
+    "sessions": "الجلسات",
+    "awards": "الجوائز",
+    "progress": "التقدّم",
+    "plans": "الخطط",
+    "schedule": "الجدول",
+    "profile": "الملف الشخصي",
+    "analytics": "التحليلات",
+    "coaches": "المدرّبون"
+  },
+  "titles": {
+    "notifications": "الإشعارات",
+    "profile": "الملف الشخصي",
+    "changePassword": "تغيير كلمة المرور",
+    "session": "الجلسة",
+    "allEvaluations": "كل التقييمات"
+  }
+}

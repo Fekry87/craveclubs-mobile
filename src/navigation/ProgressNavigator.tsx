@@ -2,7 +2,8 @@ import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { Icon } from '../components/common/Icon';
+import { useTranslation } from 'react-i18next';
+import { DirectionalIcon } from '../components/common/DirectionalIcon';
 import { ProgressAndMeasurementsScreen, EvaluationsScreen } from '../screens/Progress';
 import { ProgressStackParamList } from './types';
 import { colors, fontFamily } from '../theme';
@@ -17,12 +18,13 @@ const BackButton: React.FC = () => {
       activeOpacity={0.7}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
-      <Icon name="arrow-left-s-line" size={28} color={colors.text} />
+      <DirectionalIcon name="arrow-left-s-line" size={28} color={colors.text} />
     </TouchableOpacity>
   );
 };
 
 export const ProgressNavigator: React.FC = () => {
+  const { t } = useTranslation('nav');
   return (
     <Stack.Navigator
       screenOptions={{
@@ -48,7 +50,7 @@ export const ProgressNavigator: React.FC = () => {
         name="Evaluations"
         component={EvaluationsScreen}
         options={{
-          title: 'All Evaluations',
+          title: t('titles.allEvaluations'),
           headerBackVisible: false,
           headerLeft: () => <BackButton />,
         }}

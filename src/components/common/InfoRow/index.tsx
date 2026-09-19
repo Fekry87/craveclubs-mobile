@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Icon, IconName } from '../Icon';
+import { DirectionalIcon } from '../DirectionalIcon';
 import { colors } from '../../../theme';
 import { styles } from './styles';
 
@@ -43,7 +44,7 @@ export const InfoRow: React.FC<InfoRowProps> = ({
         ) : null}
       </View>
       {onPress && (
-        <Icon name="arrow-right-s-line" size={20} color={colors.textDim} />
+        <DirectionalIcon name="arrow-right-s-line" size={20} color={colors.textDim} />
       )}
     </>
   );
