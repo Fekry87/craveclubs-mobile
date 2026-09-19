@@ -56,6 +56,10 @@ module.exports = ({ config }) => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: bundleId,
+      infoPlist: {
+        // Standard/exempt encryption only (HTTPS) — avoids the per-build prompt.
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
 
     android: {
@@ -94,5 +98,11 @@ module.exports = ({ config }) => {
         },
       ],
     ],
+
+    extra: {
+      eas: {
+        projectId: '26d7f815-e833-4d56-b1fa-646d4f83731c',
+      },
+    },
   };
 };
