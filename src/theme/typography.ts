@@ -1,18 +1,18 @@
-import { TextStyle } from 'react-native';
+import { TextStyle, I18nManager } from 'react-native';
 
 /**
  * Typography System
  *
- * Heading: Outfit — geometric, calm, medium-weight (Ahead-style)
- *   → Screen titles, section headers, big numbers
+ * Latin (LTR): Outfit for headings, DM Sans for body — geometric, calm.
+ * Arabic (RTL): IBM Plex Sans Arabic across the board — Outfit/DM Sans carry no
+ * Arabic glyphs.
  *
- * Body: DM Sans — clean, highly legible at small sizes
- *   → Paragraphs, labels, buttons, captions
- *
- * Key names are stable across redesigns — consumers reference roles,
- * never font names.
+ * The map is chosen at module load from `I18nManager.isRTL`, which persists
+ * natively across restarts. A language switch flips that flag and reloads, so
+ * `StyleSheet.create` captures the right family on the next launch. Key names
+ * are stable — consumers reference roles, never font names.
  */
-export const fontFamily = {
+const latinFonts = {
   headingSemiBold: 'Outfit_500Medium',
   headingBold: 'Outfit_600SemiBold',
   headingHeavy: 'Outfit_700Bold',
@@ -21,6 +21,18 @@ export const fontFamily = {
   bodySemiBold: 'DMSans_600SemiBold',
   bodyBold: 'DMSans_700Bold',
 };
+
+const arabicFonts = {
+  headingSemiBold: 'IBMPlexSansArabic_500Medium',
+  headingBold: 'IBMPlexSansArabic_600SemiBold',
+  headingHeavy: 'IBMPlexSansArabic_700Bold',
+  bodyRegular: 'IBMPlexSansArabic_400Regular',
+  bodyMedium: 'IBMPlexSansArabic_500Medium',
+  bodySemiBold: 'IBMPlexSansArabic_600SemiBold',
+  bodyBold: 'IBMPlexSansArabic_700Bold',
+};
+
+export const fontFamily = I18nManager.isRTL ? arabicFonts : latinFonts;
 
 export const typography: Record<string, TextStyle> = {
   /** One statement headline per screen at most (the club-name entry screen). */

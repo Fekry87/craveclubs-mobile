@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useTranslation } from 'react-i18next';
 import { HomeScreen } from '../screens/Home';
 import { SessionsScreen } from '../screens/Sessions';
 import { PlanAndReportScreen } from '../screens/TrainingPlan';
@@ -126,6 +127,7 @@ export const AppNavigator: React.FC = () => {
   const hasNewPlan = useTrainingPlanStore((s) => s.hasNewPlan);
   const { availableModules, currentModule } = useSportModuleStore();
   const showSwitcher = availableModules.length > 1;
+  const { t } = useTranslation('nav');
 
   // Keep WebSocket connection alive across all tabs
   useRealtime();
@@ -194,31 +196,31 @@ export const AppNavigator: React.FC = () => {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'Home' }}
+        options={{ title: t('tabs.home') }}
       />
       <Tab.Screen
         name="Sessions"
         component={SessionsScreen}
-        options={{ title: 'Sessions' }}
+        options={{ title: t('tabs.sessions') }}
       />
       {hasLeaderboard && (
         <Tab.Screen
           name="Leaderboard"
           component={LeaderboardScreen}
-          options={{ title: 'Awards' }}
+          options={{ title: t('tabs.awards') }}
         />
       )}
       <Tab.Screen
         name="Progress"
         component={ProgressNavigator}
-        options={{ title: 'Progress' }}
+        options={{ title: t('tabs.progress') }}
       />
       {hasTrainingPlans && (
         <Tab.Screen
           name="MyPlan"
           component={PlanAndReportScreen}
           options={{
-            title: 'Plans',
+            title: t('tabs.plans'),
             tabBarBadge: hasNewPlan ? '' : undefined,
             tabBarBadgeStyle: hasNewPlan
               ? {

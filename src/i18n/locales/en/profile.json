@@ -1,0 +1,34 @@
+{
+  "sections": {
+    "myProgress": "My progress",
+    "myCoach": "My coach",
+    "training": "Training",
+    "personal": "Personal",
+    "guardian": "Guardian",
+    "club": "Club"
+  },
+  "rows": {
+    "group": "Group",
+    "branch": "Branch",
+    "poolHours": "Pool hours",
+    "level": "Level",
+    "mySchedule": "My schedule",
+    "myGoal": "My goal",
+    "memberSince": "Member since",
+    "dateOfBirth": "Date of birth",
+    "gender": "Gender",
+    "heightWeight": "Height · weight",
+    "medicalNotes": "Medical notes",
+    "noneOnFile": "None on file",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "club": "Club",
+    "callClub": "Call the club",
+    "emailClub": "Email the club",
+    "accountEmail": "Account email",
+    "password": "Password",
+    "changePassword": "Change password",
+    "language": "Language"
+  }
+}

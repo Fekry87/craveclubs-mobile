@@ -12,15 +12,19 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
 import { Icon, IconName } from '../../components/common/Icon';
+import { DirectionalIcon } from '../../components/common/DirectionalIcon';
+import { LanguageSheet } from '../../components/features/profile/LanguageSheet';
 import { useAnimatedEntry } from '../../hooks/useAnimatedEntry';
 import { useCoachProfileStore } from '../../store/coachProfile.store';
 import { useCoachStore } from '../../store/coach.store';
 import { useAuthStore } from '../../store/auth.store';
+import { useLanguageStore } from '../../store/language.store';
 import {
   colors,
   spacing,
@@ -62,7 +66,10 @@ const InfoRow: React.FC<InfoRowProps> = ({
 
 export const CoachProfileScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { t } = useTranslation('profile');
   const { user, logout } = useAuthStore();
+  const language = useLanguageStore((st) => st.language);
+  const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const { profile, isLoading, error, isUpdating, fetchProfile, updateProfile } =
     useCoachProfileStore();
   const { dashboard, fetchDashboard } = useCoachStore();
@@ -175,6 +182,7 @@ export const CoachProfileScreen: React.FC = () => {
   const initials = `${firstName.charAt(0)}${(lastName || 'C').charAt(0)}`.toUpperCase();
 
   return (
+    <>
     <ScrollView
       style={s.container}
       contentContainerStyle={[
@@ -399,7 +407,40 @@ export const CoachProfileScreen: React.FC = () => {
           />
         </Card>
       </Animated.View>
+
+      {/* ═══ Language ═══ */}
+      <Animated.View style={clubEntry}>
+        <View style={s.sectionHeader}>
+          <Icon name="earth-line" size={16} color={colors.primary} />
+          <Text style={s.sectionTitle}>{t('rows.language')}</Text>
+        </View>
+        <Card>
+          <TouchableOpacity
+            style={[s.infoRow, s.infoRowLast]}
+            onPress={() => setLanguageSheetVisible(true)}
+            activeOpacity={0.6}
+            accessibilityRole="button"
+          >
+            <View style={[s.infoIcon, { backgroundColor: colors.primaryDim }]}>
+              <Icon name="earth-line" size={16} color={colors.primary} />
+            </View>
+            <View style={s.infoContent}>
+              <Text style={s.infoLabel}>{t('rows.language')}</Text>
+              <Text style={s.infoValue}>
+                {language === 'ar' ? 'العربية' : 'English'}
+              </Text>
+            </View>
+            <DirectionalIcon name="arrow-right-s-line" size={20} color={colors.textDim} />
+          </TouchableOpacity>
+        </Card>
+      </Animated.View>
     </ScrollView>
+
+    <LanguageSheet
+      visible={languageSheetVisible}
+      onClose={() => setLanguageSheetVisible(false)}
+    />
+    </>
   );
 };
 

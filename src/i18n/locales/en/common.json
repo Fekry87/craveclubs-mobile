@@ -1,0 +1,23 @@
+{
+  "error": {
+    "oops": "Oops!",
+    "generic": "Something went wrong. Please try again.",
+    "tryAgain": "Try again"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "done": "Done",
+    "ok": "OK",
+    "close": "Close"
+  },
+  "language": {
+    "title": "Language",
+    "english": "English",
+    "arabic": "العربية",
+    "sheetTitle": "Choose language",
+    "restartNote": "The app will restart to apply the new language.",
+    "restartNeededTitle": "Restart needed",
+    "restartNeededBody": "Close the app completely and reopen it to finish switching the language."
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "sections": {
+    "myProgress": "تقدّمي",
+    "myCoach": "مدرّبي",
+    "training": "التدريب",
+    "personal": "بيانات شخصية",
+    "guardian": "ولي الأمر",
+    "club": "النادي"
+  },
+  "rows": {
+    "group": "المجموعة",
+    "branch": "الفرع",
+    "poolHours": "مواعيد المسبح",
+    "level": "المستوى",
+    "mySchedule": "جدولي",
+    "myGoal": "هدفي",
+    "memberSince": "عضو منذ",
+    "dateOfBirth": "تاريخ الميلاد",
+    "gender": "النوع",
+    "heightWeight": "الطول · الوزن",
+    "medicalNotes": "ملاحظات طبية",
+    "noneOnFile": "لا يوجد",
+    "name": "الاسم",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني",
+    "club": "النادي",
+    "callClub": "اتصل بالنادي",
+    "emailClub": "راسل النادي",
+    "accountEmail": "بريد الحساب",
+    "password": "كلمة المرور",
+    "changePassword": "تغيير كلمة المرور",
+    "language": "اللغة"
+  }
+}

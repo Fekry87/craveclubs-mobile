@@ -78,6 +78,7 @@ module.exports = ({ config }) => {
 
     plugins: [
       'expo-font',
+      'expo-localization',
       // @react-native-community/datetimepicker is deliberately not listed. Its
       // config plugin only writes Android picker theme colors when it is given
       // `android.datePicker` / `android.timePicker` options, and it was listed

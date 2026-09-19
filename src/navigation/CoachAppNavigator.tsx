@@ -2,6 +2,7 @@ import React from 'react';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { CoachProfileScreen, SessionCalendarScreen } from '../screens/Coach';
 import { CoachSessionsNavigator } from './CoachSessionsNavigator';
 import { Icon, IconName } from '../components/common/Icon';
@@ -63,6 +64,7 @@ const TabIcon: React.FC<{ routeName: string; focused: boolean }> = ({
 
 export const CoachAppNavigator: React.FC = () => {
   useAuthStore();
+  const { t } = useTranslation('nav');
 
   return (
     <Tab.Navigator
@@ -95,7 +97,7 @@ export const CoachAppNavigator: React.FC = () => {
           const routeName = getFocusedRouteNameFromRoute(route);
           const hideTabBar = routeName && HIDE_TAB_BAR_SCREENS.includes(routeName);
           return {
-            title: 'Sessions',
+            title: t('tabs.sessions'),
             headerShown: false,
             // Hide the floating bar on deep screens (detail/live/attendance).
             tabBarStyle: hideTabBar ? { display: 'none' as const } : undefined,
@@ -105,12 +107,12 @@ export const CoachAppNavigator: React.FC = () => {
       <Tab.Screen
         name="CoachCalendar"
         component={SessionCalendarScreen}
-        options={{ title: 'Schedule', headerShown: false }}
+        options={{ title: t('tabs.schedule'), headerShown: false }}
       />
       <Tab.Screen
         name="CoachProfile"
         component={CoachProfileScreen}
-        options={{ title: 'Profile' }}
+        options={{ title: t('tabs.profile') }}
       />
     </Tab.Navigator>
   );
