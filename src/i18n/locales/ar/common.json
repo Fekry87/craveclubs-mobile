@@ -4,6 +4,11 @@
     "generic": "حدث خطأ ما. من فضلك حاول مرة أخرى.",
     "tryAgain": "حاول مرة أخرى"
   },
+  "relative": {
+    "today": "اليوم",
+    "tomorrow": "غدًا",
+    "yesterday": "أمس"
+  },
   "actions": {
     "cancel": "إلغاء",
     "save": "حفظ",

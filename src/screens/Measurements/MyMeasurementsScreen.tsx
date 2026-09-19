@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -17,7 +18,7 @@ import { MeasurementRows } from '../../components/features/measurements/Measurem
 import { MeasurementProgressChart } from '../../components/features/measurements/MeasurementProgressChart';
 import { useMyMeasurementsStore } from '../../store/myMeasurements.store';
 import { MeasurementDayInterface } from '../../types/models.types';
-import { formatDate, getRelativeDate } from '../../utils/formatters';
+import { formatDate, getRelativeDate, relativeDayDiff } from '../../utils/formatters';
 import { colors, spacing, fontFamily, borderRadius, typography, shadows } from '../../theme';
 import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
@@ -29,9 +30,14 @@ interface DayCardProps {
 
 /** One training day: tap the header to open its times. */
 const DayCard: React.FC<DayCardProps> = React.memo(({ day, expanded, onToggle }) => {
+  const { t } = useTranslation('progress');
   const relative = getRelativeDate(day.date);
   const full = formatDate(`${day.date}T00:00:00`);
-  const isNamedDay = relative === 'Today' || relative === 'Yesterday' || relative === 'Tomorrow';
+  const isNamedDay = Math.abs(relativeDayDiff(day.date)) <= 1;
+  const timesLabel =
+    day.count === 1
+      ? t('measurements.timeOne', { count: day.count })
+      : t('measurements.timeOther', { count: day.count });
 
   return (
     <View style={s.card}>
@@ -41,7 +47,7 @@ const DayCard: React.FC<DayCardProps> = React.memo(({ day, expanded, onToggle })
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
-        accessibilityLabel={`${full}, ${day.count} ${day.count === 1 ? 'time' : 'times'}`}
+        accessibilityLabel={`${full}, ${timesLabel}`}
       >
         <View style={[s.dateTile, { backgroundColor: colors.primaryDim }]}>
           <Icon name="calendar-event-line" size={20} color={colors.primary} />
@@ -58,7 +64,7 @@ const DayCard: React.FC<DayCardProps> = React.memo(({ day, expanded, onToggle })
         </View>
         <View style={[s.countPill, { backgroundColor: colors.primaryDim }]}>
           <Text style={[s.countText, { color: colors.primary }]}>
-            {day.count} {day.count === 1 ? 'time' : 'times'}
+            {timesLabel}
           </Text>
         </View>
         <Icon
@@ -83,6 +89,7 @@ const DayCard: React.FC<DayCardProps> = React.memo(({ day, expanded, onToggle })
  * "My Measurements" tab. Read-only: coaches record the times during a session.
  */
 export const MyMeasurementsScreen: React.FC = () => {
+  const { t } = useTranslation('progress');
   const days = useMyMeasurementsStore((st) => st.days);
   const page = useMyMeasurementsStore((st) => st.page);
   const lastPage = useMyMeasurementsStore((st) => st.lastPage);
@@ -133,7 +140,7 @@ export const MyMeasurementsScreen: React.FC = () => {
   );
 
   if (!loaded || (isLoading && days.length === 0 && !error)) {
-    return <Loader message="Loading your times..." />;
+    return <Loader message={t('measurements.loading')} />;
   }
 
   if (error && days.length === 0) {
@@ -172,11 +179,11 @@ export const MyMeasurementsScreen: React.FC = () => {
       ListEmptyComponent={
         <EmptyState
           icon="timer-line"
-          title={unavailable ? 'Not available' : 'No times yet'}
+          title={unavailable ? t('measurements.unavailableTitle') : t('measurements.emptyTitle')}
           message={
             unavailable
-              ? "Your club doesn't record swim times in the app."
-              : 'When your coach times your swims during a session, they show up here by day.'
+              ? t('measurements.unavailableMessage')
+              : t('measurements.emptyMessage')
           }
         />
       }

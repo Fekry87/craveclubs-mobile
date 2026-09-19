@@ -24,7 +24,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { useCoachStore } from '../../store/coach.store';
 import { CoachSessionInterface } from '../../types/models.types';
 import { CoachSessionsStackParamList } from '../../navigation/types';
-import { getRelativeDate } from '../../utils/formatters';
+import { getRelativeDate, relativeDayDiff } from '../../utils/formatters';
 import { colors, spacing, fontFamily, borderRadius, shadows } from '../../theme';
 import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
@@ -130,8 +130,8 @@ type ListRow =
 const STICKY_TABS = [1];
 
 const isHighlightDate = (dateStr: string): boolean => {
-  const label = getRelativeDate(dateStr);
-  return label === 'Today' || label === 'Tomorrow';
+  const diff = relativeDayDiff(dateStr);
+  return diff === 0 || diff === 1;
 };
 
 /* ═══ Empty state messages per segment ═══ */

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Svg, {
   Defs,
   LinearGradient,
@@ -40,10 +41,10 @@ interface Point {
   count: number;
 }
 
-const PERIODS: { key: MeasurementPeriod; label: string; noun: string }[] = [
-  { key: 'day', label: 'Days', noun: 'day' },
-  { key: 'week', label: 'Weeks', noun: 'week' },
-  { key: 'month', label: 'Months', noun: 'month' },
+const PERIODS: { key: MeasurementPeriod }[] = [
+  { key: 'day' },
+  { key: 'week' },
+  { key: 'month' },
 ];
 
 const AREA_GRADIENT = 'measureProgressFill';
@@ -67,6 +68,7 @@ export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> =
   loading = false,
   onPeriodChange,
 }) => {
+  const { t } = useTranslation('progress');
   const [strokeId, setStrokeId] = useState<number | null>(null);
   const [width, setWidth] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
@@ -127,11 +129,11 @@ export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> =
     const previous = points[points.length - 2].pace;
     if (previous <= 0) return null;
     const percent = ((previous - latest) / previous) * 100;
-    if (Math.abs(percent) < 0.05) return { label: 'Steady', color: colors.textMuted, icon: null };
+    if (Math.abs(percent) < 0.05) return { label: t('chart.steady'), color: colors.textMuted, icon: null };
     return percent > 0
-      ? { label: `${percent.toFixed(1)}% faster`, color: colors.swimmer, icon: 'arrow-up-s-line' as const }
-      : { label: `${Math.abs(percent).toFixed(1)}% slower`, color: colors.warningDark, icon: 'arrow-down-s-line' as const };
-  }, [points]);
+      ? { label: t('chart.faster', { pct: percent.toFixed(1) }), color: colors.swimmer, icon: 'arrow-up-s-line' as const }
+      : { label: t('chart.slower', { pct: Math.abs(percent).toFixed(1) }), color: colors.warningDark, icon: 'arrow-down-s-line' as const };
+  }, [points, t]);
 
   // Faster (lower pace) sits higher. A flat run keeps its dots off the edges.
   const mapPace = useMemo(() => {
@@ -145,13 +147,12 @@ export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> =
   }, [minPace, maxPace]);
 
   const period = progress.period;
-  const periodNoun = PERIODS.find((item) => item.key === period)?.noun ?? 'week';
 
   if (strokeId === null || points.length === 0) {
     return (
       <View style={styles.card}>
         <PeriodToggle period={period} onChange={onPeriodChange} />
-        <Text style={styles.emptyText}>No times for this range yet.</Text>
+        <Text style={styles.emptyText}>{t('chart.empty')}</Text>
       </View>
     );
   }
@@ -184,7 +185,7 @@ export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> =
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Progress</Text>
+        <Text style={styles.title}>{t('chart.title')}</Text>
         {trend && (
           <View style={[styles.trendPill, { backgroundColor: `${trend.color}1F` }]}>
             {trend.icon && <Icon name={trend.icon} size={14} color={trend.color} />}
@@ -192,7 +193,7 @@ export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> =
           </View>
         )}
       </View>
-      <Text style={styles.subtitle}>Average pace per 50m — higher is faster</Text>
+      <Text style={styles.subtitle}>{t('chart.subtitle')}</Text>
 
       <PeriodToggle period={period} onChange={onPeriodChange} />
 
@@ -238,7 +239,7 @@ export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> =
         {/* The average, pinned left so it stays put while the line scrolls under it. */}
         {width > 0 && (
           <View style={[styles.avgLabel, { top: avgY - 8 }]} pointerEvents="none">
-            <Text style={styles.avgText}>avg {formatSwimTime(average)}</Text>
+            <Text style={styles.avgText}>{t('chart.avg', { time: formatSwimTime(average) })}</Text>
           </View>
         )}
 
@@ -338,35 +339,52 @@ export const MeasurementProgressChart: React.FC<MeasurementProgressChartProps> =
       </View>
 
       <Text style={styles.footerText}>
-        {totalCount} {totalCount === 1 ? 'swim' : 'swims'} across {n}{' '}
-        {n === 1 ? periodNoun : `${periodNoun}s`}
+        {t('chart.footer', {
+          count: totalCount,
+          swim: totalCount === 1 ? t('chart.swimOne') : t('chart.swimOther'),
+          span: n,
+          unit: unitLabel(t, period, n),
+        })}
       </Text>
     </View>
   );
+};
+
+/** The span unit word (day/week/month) in the right singular/plural form. */
+const unitLabel = (
+  t: (key: string) => string,
+  period: MeasurementPeriod,
+  n: number,
+): string => {
+  const cap = period.charAt(0).toUpperCase() + period.slice(1);
+  return t(`chart.unit${cap}${n === 1 ? 'One' : 'Other'}`);
 };
 
 /** Day / Week / Month segmented control. */
 const PeriodToggle: React.FC<{
   period: MeasurementPeriod;
   onChange: (period: MeasurementPeriod) => void;
-}> = ({ period, onChange }) => (
-  <View style={styles.toggle}>
-    {PERIODS.map((item) => {
-      const active = item.key === period;
-      return (
-        <TouchableOpacity
-          key={item.key}
-          style={[styles.toggleBtn, active && styles.toggleBtnActive]}
-          onPress={() => onChange(item.key)}
-          activeOpacity={0.8}
-          accessibilityRole="tab"
-          accessibilityState={{ selected: active }}
-        >
-          <Text style={[styles.toggleText, active && styles.toggleTextActive]}>
-            {item.label}
-          </Text>
-        </TouchableOpacity>
-      );
-    })}
-  </View>
-);
+}> = ({ period, onChange }) => {
+  const { t } = useTranslation('progress');
+  return (
+    <View style={styles.toggle}>
+      {PERIODS.map((item) => {
+        const active = item.key === period;
+        return (
+          <TouchableOpacity
+            key={item.key}
+            style={[styles.toggleBtn, active && styles.toggleBtnActive]}
+            onPress={() => onChange(item.key)}
+            activeOpacity={0.8}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+          >
+            <Text style={[styles.toggleText, active && styles.toggleTextActive]}>
+              {t(`chart.periods.${item.key}`)}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};

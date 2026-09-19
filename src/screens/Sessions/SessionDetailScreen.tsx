@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { RouteProp, useFocusEffect, useRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/common/Card';
 import { Icon } from '../../components/common/Icon';
 import { InfoRow } from '../../components/common/InfoRow';
@@ -74,6 +75,7 @@ const SectionTitle: React.FC<{ children: string }> = ({ children }) => (
  * a swimmer must act on (bring fins, pool changed, start earlier).
  */
 export const SessionDetailScreen: React.FC = () => {
+  const { t } = useTranslation('sessions');
   const { sessionId } = useRoute<DetailRoute>().params;
   const session = useSessionStore((st) => st.sessionDetail);
   const isLoading = useSessionStore((st) => st.isDetailLoading);
@@ -98,14 +100,14 @@ export const SessionDetailScreen: React.FC = () => {
   const current = session?.id === sessionId ? session : null;
 
   if (!current && isLoading) {
-    return <Loader message="Loading session…" />;
+    return <Loader message={t('detail.loading')} />;
   }
 
   if (!current) {
     return (
       <View style={s.centered}>
         <ErrorView
-          message={error ?? "Couldn't load this session."}
+          message={error ?? t('detail.loadError')}
           onRetry={load}
         />
       </View>
@@ -138,7 +140,7 @@ export const SessionDetailScreen: React.FC = () => {
           <View style={s.pillRow}>
             <View style={[s.pill, { backgroundColor: tone.bg }]}>
               <Text style={[s.pillText, { color: tone.fg }]}>
-                {current.status}
+                {t(`status.${current.status}`)}
               </Text>
             </View>
             {current.type ? (
@@ -150,7 +152,7 @@ export const SessionDetailScreen: React.FC = () => {
             ) : null}
           </View>
 
-          <Text style={s.title}>{current.title || current.type || 'Session'}</Text>
+          <Text style={s.title}>{current.title || current.type || t('detail.titleFallback')}</Text>
 
           <View style={s.metaRow}>
             <Icon name="calendar-event-line" size={16} color={colors.textMuted} />
@@ -168,10 +170,10 @@ export const SessionDetailScreen: React.FC = () => {
               <Icon name="close-circle-line" size={20} color={colors.error} />
               <View style={s.cancelledBody}>
                 <Text style={[s.cancelledTitle, { color: colors.error }]}>
-                  This session was cancelled
+                  {t('detail.cancelledTitle')}
                 </Text>
                 <Text style={s.cancelledReason} selectable>
-                  {current.cancellation_reason || 'Your club cancelled this session.'}
+                  {current.cancellation_reason || t('card.cancelledDefault')}
                 </Text>
               </View>
             </View>
@@ -182,7 +184,7 @@ export const SessionDetailScreen: React.FC = () => {
             <View style={[s.xpBanner, { backgroundColor: colors.primaryDim }]}>
               <Icon name="flashlight-fill" size={18} color={colors.primary} />
               <Text style={[s.xpText, { color: colors.primary }]}>
-                +{current.xp.per_attendance} XP when you attend
+                {t('detail.xpWhenAttend', { n: current.xp.per_attendance })}
               </Text>
             </View>
           )}
@@ -192,7 +194,7 @@ export const SessionDetailScreen: React.FC = () => {
       {/* ═══ Notes from the club ═══ */}
       {current.notes ? (
         <Animated.View style={[s.section, notesEntry]}>
-          <SectionTitle>Notes from your club</SectionTitle>
+          <SectionTitle>{t('detail.notesTitle')}</SectionTitle>
           <Card>
             <View style={s.notesRow}>
               <View style={[s.notesIcon, { backgroundColor: colors.primaryDim }]}>
@@ -208,16 +210,16 @@ export const SessionDetailScreen: React.FC = () => {
 
       {/* ═══ When & where ═══ */}
       <Animated.View style={[s.section, whenEntry]}>
-        <SectionTitle>When & where</SectionTitle>
+        <SectionTitle>{t('detail.whenWhere')}</SectionTitle>
         <Card>
           <InfoRow
             icon="calendar-event-line"
-            label="Date"
+            label={t('detail.date')}
             value={formatDate(current.date)}
           />
           <InfoRow
             icon="time-line"
-            label="Time"
+            label={t('detail.time')}
             value={formatTimeRange(current.start_time, current.end_time)}
             hint={duration ? `${duration} session` : undefined}
             isLast={!branch && !current.location}
@@ -225,7 +227,7 @@ export const SessionDetailScreen: React.FC = () => {
           {branch && (
             <InfoRow
               icon="building-2-line"
-              label="Branch"
+              label={t('detail.branch')}
               value={branch.name}
               hint={
                 [branch.address, branch.city].filter(Boolean).join(', ') ||
@@ -246,7 +248,7 @@ export const SessionDetailScreen: React.FC = () => {
           {current.location ? (
             <InfoRow
               icon="map-pin-line"
-              label="Pool"
+              label={t('detail.pool')}
               value={current.location}
               isLast
             />
@@ -256,12 +258,12 @@ export const SessionDetailScreen: React.FC = () => {
 
       {/* ═══ Training ═══ */}
       <Animated.View style={[s.section, trainingEntry]}>
-        <SectionTitle>Training</SectionTitle>
+        <SectionTitle>{t('detail.training')}</SectionTitle>
         <Card>
           {current.group && (
             <InfoRow
               icon="group-line"
-              label="Group"
+              label={t('detail.group')}
               value={current.group.name}
               isLast={!coach && !current.plan}
             />
@@ -269,12 +271,12 @@ export const SessionDetailScreen: React.FC = () => {
           {coach && (
             <InfoRow
               icon="user-line"
-              label="Coach"
+              label={t('detail.coach')}
               value={coach.name}
               hint={
                 [
                   coach.specialization,
-                  coach.phone ? 'Tap to call' : null,
+                  coach.phone ? t('detail.tapToCall') : null,
                 ]
                   .filter(Boolean)
                   .join(' · ') || undefined
@@ -288,13 +290,13 @@ export const SessionDetailScreen: React.FC = () => {
           {current.plan && (
             <InfoRow
               icon="clipboard-line"
-              label="Training plan"
+              label={t('detail.trainingPlan')}
               value={current.plan.title}
               isLast
             />
           )}
           {!current.group && !coach && !current.plan && (
-            <Text style={s.emptyText}>No training details for this session yet.</Text>
+            <Text style={s.emptyText}>{t('detail.noTraining')}</Text>
           )}
         </Card>
       </Animated.View>
@@ -302,7 +304,7 @@ export const SessionDetailScreen: React.FC = () => {
       {/* ═══ Your result — only once the coach has recorded something ═══ */}
       {(attendanceTaken || current.my_evaluation || current.group_evaluation) && (
         <Animated.View style={[s.section, resultEntry]}>
-          <SectionTitle>Your result</SectionTitle>
+          <SectionTitle>{t('detail.yourResult')}</SectionTitle>
           <Card>
             {current.my_attendance && (
               <InfoRow
@@ -311,13 +313,13 @@ export const SessionDetailScreen: React.FC = () => {
                     ? 'checkbox-circle-fill'
                     : 'close-circle-fill'
                 }
-                label="Attendance"
-                value={current.my_attendance.present ? 'Present' : 'Absent'}
+                label={t('detail.attendance')}
+                value={current.my_attendance.present ? t('detail.present') : t('detail.absent')}
                 hint={
                   current.xp.earned != null
                     ? current.xp.earned > 0
-                      ? `+${current.xp.earned} XP earned`
-                      : 'No XP for this session'
+                      ? t('detail.xpEarned', { n: current.xp.earned })
+                      : t('detail.noXp')
                     : undefined
                 }
                 isLast={!current.my_evaluation && !current.group_evaluation}
@@ -332,7 +334,7 @@ export const SessionDetailScreen: React.FC = () => {
                 ]}
               >
                 <View style={s.evalHeader}>
-                  <Text style={s.evalLabel}>Coach's rating for you</Text>
+                  <Text style={s.evalLabel}>{t('detail.coachRating')}</Text>
                   <Stars rating={current.my_evaluation.rating} />
                 </View>
                 {current.my_evaluation.notes ? (
@@ -346,7 +348,7 @@ export const SessionDetailScreen: React.FC = () => {
             {current.group_evaluation && (
               <View style={[s.evalBlock, s.evalBlockLast]}>
                 <View style={s.evalHeader}>
-                  <Text style={s.evalLabel}>Team feedback</Text>
+                  <Text style={s.evalLabel}>{t('detail.teamFeedback')}</Text>
                   <Stars rating={current.group_evaluation.rating} />
                 </View>
                 {current.group_evaluation.notes ? (
@@ -363,7 +365,7 @@ export const SessionDetailScreen: React.FC = () => {
       {/* ═══ القياس — the times the coach recorded for you in this session ═══ */}
       {current.my_measurements && current.my_measurements.length > 0 && (
         <Animated.View style={[s.section, resultEntry]}>
-          <SectionTitle>Your times</SectionTitle>
+          <SectionTitle>{t('detail.yourTimes')}</SectionTitle>
           <Card>
             <MeasurementRows measurements={current.my_measurements} />
           </Card>

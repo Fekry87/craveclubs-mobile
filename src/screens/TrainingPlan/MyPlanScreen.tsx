@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '../../components/common/Icon';
 import { Loader } from '../../components/common/Loader';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -33,6 +34,7 @@ const DIFFICULTY_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 export const MyPlanScreen: React.FC = () => {
+  const { t } = useTranslation('plan');
   const { assignment, plan, phases, isLoading, error, fetchTrainingPlan } =
     useTrainingPlanStore();
   const [expandedPhase, setExpandedPhase] = useState<number | null>(null);
@@ -82,15 +84,15 @@ export const MyPlanScreen: React.FC = () => {
     [],
   );
 
-  if (isLoading) return <Loader message="Loading training plan..." />;
+  if (isLoading) return <Loader message={t('loading')} />;
   if (error) return <ErrorView message={error} onRetry={fetchTrainingPlan} />;
   if (!assignment || !plan) {
     return (
       <View style={s.safeArea}>
         <EmptyState
           icon="clipboard-line"
-          title="No Training Plan"
-          message="You don't have an active training plan yet. Your coach will assign one to you."
+          title={t('emptyTitle')}
+          message={t('emptyMessage')}
         />
       </View>
     );
@@ -154,7 +156,7 @@ export const MyPlanScreen: React.FC = () => {
         {assignment.status === 'paused' && (
           <View style={s.pausedBanner}>
             <Icon name="pause-circle-line" size={18} color={colors.warningDark} />
-            <Text style={s.pausedText}>This plan is currently paused</Text>
+            <Text style={s.pausedText}>{t('paused')}</Text>
           </View>
         )}
 
@@ -179,13 +181,13 @@ export const MyPlanScreen: React.FC = () => {
               <View style={s.stat}>
                 <Icon name="time-line" size={16} color={colors.textMuted} />
                 <Text style={s.statText}>
-                  {plan.duration_weeks} weeks
+                  {t(plan.duration_weeks === 1 ? 'weeksOne' : 'weeksOther', { count: plan.duration_weeks })}
                 </Text>
               </View>
               <View style={s.stat}>
                 <Icon name="calendar-event-line" size={16} color={colors.textMuted} />
                 <Text style={s.statText}>
-                  {plan.sessions_per_week}x / week
+                  {t('perWeek', { count: plan.sessions_per_week })}
                 </Text>
               </View>
             </View>
@@ -222,7 +224,7 @@ export const MyPlanScreen: React.FC = () => {
         {/* Goals Section */}
         {plan.goals ? (
           <Animated.View style={goalsEntry}>
-            <Text style={s.sectionLabel}>Goals</Text>
+            <Text style={s.sectionLabel}>{t('goals')}</Text>
             <View style={s.goalsCard}>
               <Text style={s.goalsText}>{plan.goals}</Text>
             </View>
@@ -232,7 +234,7 @@ export const MyPlanScreen: React.FC = () => {
         {/* Phases Section */}
         {displayPhases.length > 0 && (
           <Animated.View style={phasesEntry}>
-            <Text style={s.sectionLabel}>Phases</Text>
+            <Text style={s.sectionLabel}>{t('phases')}</Text>
             {displayPhases.map((phase, idx) => (
               <PlanPhaseCard
                 key={`phase-${idx}`}
@@ -248,7 +250,7 @@ export const MyPlanScreen: React.FC = () => {
         {/* Items Flat List (if no phases but has items) */}
         {displayPhases.length === 0 && plan.items.length > 0 && (
           <Animated.View style={statsEntry}>
-            <Text style={s.sectionLabel}>Exercises</Text>
+            <Text style={s.sectionLabel}>{t('exercises')}</Text>
             <View style={s.exercisesCard}>
               {plan.items.map((item, idx) => (
                 <ExerciseItem

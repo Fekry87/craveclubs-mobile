@@ -1,3 +1,5 @@
+import i18n from '../i18n';
+
 export const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return date.toLocaleDateString('en-US', {
@@ -72,19 +74,26 @@ export const formatRating = (value: number | null | undefined): string => {
   return value.toFixed(1);
 };
 
-export const getRelativeDate = (dateStr: string): string => {
+/**
+ * Difference in whole calendar days between `dateStr` and today (negative =
+ * past). Language-independent — use it instead of comparing the localized
+ * output of getRelativeDate against 'Today'/'Yesterday'/'Tomorrow'.
+ */
+export const relativeDayDiff = (dateStr: string): number => {
   const date = new Date(dateStr);
   const now = new Date();
-
-  // Compare by calendar day (not time)
   const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffTime = dateOnly.getTime() - nowOnly.getTime();
-  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  return Math.round((dateOnly.getTime() - nowOnly.getTime()) / (1000 * 60 * 60 * 24));
+};
 
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Tomorrow';
-  if (diffDays === -1) return 'Yesterday';
+export const getRelativeDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const diffDays = relativeDayDiff(dateStr);
+
+  if (diffDays === 0) return i18n.t('relative.today', { ns: 'common' });
+  if (diffDays === 1) return i18n.t('relative.tomorrow', { ns: 'common' });
+  if (diffDays === -1) return i18n.t('relative.yesterday', { ns: 'common' });
 
   // Show actual date: "25 Feb 2026"
   return date.toLocaleDateString('en-GB', {

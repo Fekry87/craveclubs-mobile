@@ -18,6 +18,7 @@ import { Card } from '../../components/common/Card';
 import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
 import { Icon } from '../../components/common/Icon';
+import { DirectionalIcon } from '../../components/common/DirectionalIcon';
 import { StatCard } from '../../components/features/progress/StatCard';
 import { SessionCard } from '../../components/features/sessions/SessionCard';
 import { SessionSummaryPopup } from '../../components/features/sessions/SessionSummaryPopup';
@@ -37,6 +38,7 @@ import { DashboardResponseType, LeaderboardResponseType } from '../../types/api.
 import { TrainingSessionInterface } from '../../types/models.types';
 import { AppTabParamList } from '../../navigation/types';
 import { formatRating } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, fontFamily } from '../../theme';
 import { GLASS_TABBAR_CONTENT_INSET } from '../../components/common/GlassTabBar/styles';
 
@@ -49,6 +51,7 @@ type HomeNavProp = CompositeNavigationProp<
 >;
 
 export const HomeScreen: React.FC = () => {
+  const { t } = useTranslation('home');
   const { user } = useAuthStore();
   const navigation = useNavigation<HomeNavProp>();
   const [dashboard, setDashboard] = useState<DashboardResponseType | null>(
@@ -110,7 +113,7 @@ export const HomeScreen: React.FC = () => {
     } catch {
       // Only show error if there's no existing data to display
       if (!hasDataRef.current) {
-        setError('Failed to load dashboard.');
+        setError(t('error'));
       }
     } finally {
       setIsLoading(false);
@@ -205,15 +208,15 @@ export const HomeScreen: React.FC = () => {
   }, [dismissAward]);
 
   if (isLoading) {
-    return <Loader message="Loading dashboard..." />;
+    return <Loader message={t('loading')} />;
   }
 
   if (error) {
-    return <ErrorView message={error} onRetry={fetchDashboard} />;
+    return <ErrorView message={error ?? undefined} onRetry={fetchDashboard} />;
   }
 
   if (!dashboard) {
-    return <ErrorView message="No data available." onRetry={fetchDashboard} />;
+    return <ErrorView message={t('noData')} onRetry={fetchDashboard} />;
   }
 
   // Today's sessions that are still ahead (Scheduled or Live), plus any that
@@ -259,14 +262,14 @@ export const HomeScreen: React.FC = () => {
       {/* ═══ Greeting — clean, no icon ═══ */}
       <Animated.View style={[screenStyles.greetingSection, greetingEntry]}>
         <Text style={screenStyles.greeting}>
-          Hey{' '}
+          {t('greetingPrefix')}
           <Text style={screenStyles.greetingName}>
             {dashboard.profile.first_name}
           </Text>
-          !
+          {t('greetingSuffix')}
         </Text>
         <Text style={screenStyles.greetingSub}>
-          Ready to make a splash today?
+          {t('greetingSub')}
         </Text>
       </Animated.View>
 
@@ -305,7 +308,7 @@ export const HomeScreen: React.FC = () => {
           <StatCard
             icon="flashlight-fill"
             value="–"
-            label="XP"
+            label={t('stats.xp')}
             color="primary"
             index={0}
           />
@@ -313,14 +316,14 @@ export const HomeScreen: React.FC = () => {
         <StatCard
           icon="star-fill"
           value={formatRating(dashboard.average_rating)}
-          label="Avg Rating"
+          label={t('stats.avgRating')}
           color="warning"
           index={1}
         />
         <StatCard
           icon="award-fill"
           value={dashboard.sessions_attended.toString()}
-          label="Attended"
+          label={t('stats.attended')}
           color="success"
           index={2}
         />
@@ -329,14 +332,14 @@ export const HomeScreen: React.FC = () => {
       {/* ═══ Today's Sessions ═══ */}
       <Animated.View style={[screenStyles.section, sessionsEntry]}>
         <View style={screenStyles.sectionHeader}>
-          <Text style={screenStyles.sectionTitle}>Today's Sessions</Text>
+          <Text style={screenStyles.sectionTitle}>{t('todaysSessions')}</Text>
           <TouchableOpacity
             onPress={navigateToSessions}
             style={screenStyles.seeAllBtn}
             activeOpacity={0.7}
           >
-            <Text style={screenStyles.seeAllText}>See All</Text>
-            <Icon
+            <Text style={screenStyles.seeAllText}>{t('seeAll')}</Text>
+            <DirectionalIcon
               name="arrow-right-s-line"
               size={16}
               color={colors.primary}
@@ -382,10 +385,10 @@ export const HomeScreen: React.FC = () => {
                 />
               </View>
               <Text style={screenStyles.noSessionsTitle}>
-                No sessions today
+                {t('noSessions.title')}
               </Text>
               <Text style={screenStyles.noSessionsMsg}>
-                Enjoy your rest day! Check back tomorrow.
+                {t('noSessions.message')}
               </Text>
             </View>
           </Card>
@@ -396,14 +399,14 @@ export const HomeScreen: React.FC = () => {
       {dashboard.recent_evaluations?.length > 0 && dashboard.recent_evaluations[0] && (
         <Animated.View style={[screenStyles.section, evalsEntry]}>
           <View style={screenStyles.sectionHeader}>
-            <Text style={screenStyles.sectionTitle}>Latest Evaluation</Text>
+            <Text style={screenStyles.sectionTitle}>{t('latestEvaluation')}</Text>
             <TouchableOpacity
               onPress={navigateToEvaluations}
               style={screenStyles.seeAllBtn}
               activeOpacity={0.7}
             >
-              <Text style={screenStyles.seeAllText}>See All</Text>
-              <Icon
+              <Text style={screenStyles.seeAllText}>{t('seeAll')}</Text>
+              <DirectionalIcon
                 name="arrow-right-s-line"
                 size={16}
                 color={colors.primary}
@@ -451,7 +454,7 @@ export const HomeScreen: React.FC = () => {
                       </Text>
                     </View>
                     <Text style={screenStyles.evalGroupName}>
-                      {evaluation.session?.group?.name ?? 'Training Session'}
+                      {evaluation.session?.group?.name ?? t('trainingSession')}
                     </Text>
                     {evaluation.notes && (
                       <Text style={screenStyles.evalNotes} numberOfLines={2}>

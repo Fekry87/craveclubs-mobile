@@ -9,6 +9,7 @@ import {
   Easing,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/common/Card';
 import { Loader } from '../../components/common/Loader';
 import { ErrorView } from '../../components/common/ErrorView';
@@ -109,6 +110,7 @@ const LevelStep: React.FC<LevelStepProps> = ({ tier, status }) => (
 
 /* ─── Leaderboard Screen ─── */
 export const LeaderboardScreen: React.FC = () => {
+  const { t } = useTranslation('leaderboard');
   const [data, setData] = useState<LeaderboardResponseType | null>(null);
   const [awards, setAwards] = useState<SwimmerAwardInterface[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -166,7 +168,7 @@ export const LeaderboardScreen: React.FC = () => {
       hasDataRef.current = true;
     } catch {
       if (!hasDataRef.current) {
-        setError('Failed to load leaderboard.');
+        setError(t('error'));
       }
     } finally {
       setIsLoading(false);
@@ -186,9 +188,9 @@ export const LeaderboardScreen: React.FC = () => {
     fetchLeaderboard();
   }, [fetchLeaderboard]);
 
-  if (isLoading) return <Loader message="Loading leaderboard..." />;
+  if (isLoading) return <Loader message={t('loading')} />;
   if (error) return <ErrorView message={error} onRetry={fetchLeaderboard} />;
-  if (!data) return <EmptyState icon="trophy-line" title="No leaderboard data" />;
+  if (!data) return <EmptyState icon="trophy-line" title={t('noData')} />;
 
   const top3 = data.all_rankings.filter((e) => e.rank <= 3);
   const restRankings = data.all_rankings.filter((e) => e.rank > 3);
@@ -226,7 +228,7 @@ export const LeaderboardScreen: React.FC = () => {
               <Animated.View style={{ transform: [{ translateY: floatY }] }}>
                 <Icon name="trophy-fill" size={20} color={colors.warning} />
               </Animated.View>
-              <Text style={s.podiumTitle}>Top Swimmers</Text>
+              <Text style={s.podiumTitle}>{t('topSwimmers')}</Text>
               <View style={s.swimmerCountPill}>
                 <Icon name="group-fill" size={11} color={colors.textMuted} />
                 <Text style={s.swimmerCountText}>{data.total_swimmers}</Text>
@@ -261,7 +263,7 @@ export const LeaderboardScreen: React.FC = () => {
                   {currentUser
                     ? currentUser.full_name ||
                       `${currentUser.first_name} ${currentUser.last_initial}`
-                    : 'You'}
+                    : t('you')}
                 </Text>
                 <Text style={s.myNameDot}>{' \u2022 '}</Text>
                 <Text style={[s.myLevelInline, { color: data.my_level.color }]}>
@@ -312,7 +314,7 @@ export const LeaderboardScreen: React.FC = () => {
                 <Icon name="flashlight-line" size={13} color={colors.primary} />
                 <Text style={s.xpLeftText}>
                   <Text style={s.xpLeftValue}>{data.my_level.xp_to_next}</Text>
-                  {` XP to be a ${data.my_level.next_level_name}`}
+                  {t('xpToNext', { level: data.my_level.next_level_name })}
                 </Text>
               </View>
             )}
@@ -327,7 +329,7 @@ export const LeaderboardScreen: React.FC = () => {
             <XpStat
               icon="star-fill"
               value={data.my_xp.rating_xp}
-              label="Rating"
+              label={t('stats.rating')}
               color={colors.orange}
               dimColor={colors.orangeDim}
             />
@@ -335,7 +337,7 @@ export const LeaderboardScreen: React.FC = () => {
             <XpStat
               icon="check-line"
               value={data.my_xp.attendance_xp}
-              label="Attend"
+              label={t('stats.attend')}
               color={colors.swimmer}
               dimColor={colors.swimmerDim}
             />
@@ -343,7 +345,7 @@ export const LeaderboardScreen: React.FC = () => {
             <XpStat
               icon="fire-fill"
               value={data.my_xp.streak_xp}
-              label="Streak"
+              label={t('stats.streak')}
               color={colors.error}
               dimColor={colors.errorDim}
             />
@@ -351,7 +353,7 @@ export const LeaderboardScreen: React.FC = () => {
             <XpStat
               icon="trophy-fill"
               value={data.my_xp.award_xp ?? 0}
-              label="Awards"
+              label={t('stats.awards')}
               color={colors.warningDark}
               dimColor={colors.warningDim}
             />
@@ -364,7 +366,7 @@ export const LeaderboardScreen: React.FC = () => {
         <Animated.View style={awardsEntry}>
           <View style={s.sectionHeader}>
             <Icon name="trophy-fill" size={18} color={colors.warning} />
-            <Text style={s.sectionTitle}>Recent Awards</Text>
+            <Text style={s.sectionTitle}>{t('recentAwards')}</Text>
             <View style={s.countChip}>
               <Text style={s.countChipText}>{awards.length}</Text>
             </View>
@@ -382,7 +384,7 @@ export const LeaderboardScreen: React.FC = () => {
               size={18}
               color={colors.textMuted}
             />
-            <Text style={s.sectionTitle}>All Swimmers</Text>
+            <Text style={s.sectionTitle}>{t('allSwimmers')}</Text>
             <View style={s.countChip}>
               <Text style={s.countChipText}>{data.all_rankings.length}</Text>
             </View>

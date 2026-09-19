@@ -1,0 +1,86 @@
+{
+  "tabs": {
+    "all": "All",
+    "upcoming": "Upcoming",
+    "completed": "Completed"
+  },
+  "loading": "Loading sessions...",
+  "empty": {
+    "all": {
+      "title": "No sessions yet",
+      "message": "Your training sessions will show up here."
+    },
+    "upcoming": {
+      "title": "No upcoming sessions",
+      "message": "Check back soon — new sessions are coming!"
+    },
+    "completed": {
+      "title": "No completed sessions",
+      "message": "Start attending sessions to see your history!"
+    }
+  },
+  "status": {
+    "Scheduled": "Scheduled",
+    "Live": "Live",
+    "Completed": "Completed",
+    "Cancelled": "Cancelled"
+  },
+  "card": {
+    "attendToEarn": "Attend to earn",
+    "earned": "Earned",
+    "missed": "Missed",
+    "xp": "XP",
+    "xpValue": "+{{n}} XP",
+    "zeroXp": "0 XP",
+    "cancelled": "Session cancelled",
+    "cancelledDefault": "Your club cancelled this session.",
+    "motivation": [
+      "Show up & level up!",
+      "Every lap counts!",
+      "Dive in & earn XP!",
+      "Keep your streak alive!",
+      "Champions train daily!",
+      "Make a splash!"
+    ],
+    "celebration": [
+      "Great job, champ!",
+      "You crushed it!",
+      "Keep swimming!",
+      "Way to go!",
+      "Amazing effort!"
+    ],
+    "missedMsg": [
+      "Catch the next one!",
+      "You'll get it next time!",
+      "Come back stronger!"
+    ]
+  },
+  "detail": {
+    "loading": "Loading session…",
+    "loadError": "Couldn't load this session.",
+    "titleFallback": "Session",
+    "cancelledTitle": "This session was cancelled",
+    "xpWhenAttend": "+{{n}} XP when you attend",
+    "notesTitle": "Notes from your club",
+    "whenWhere": "When & where",
+    "date": "Date",
+    "time": "Time",
+    "branch": "Branch",
+    "pool": "Pool",
+    "group": "Group",
+    "coach": "Coach",
+    "training": "Training",
+    "trainingPlan": "Training plan",
+    "tapToCall": "Tap to call",
+    "noTraining": "No training details for this session yet.",
+    "yourResult": "Your result",
+    "attendance": "Attendance",
+    "present": "Present",
+    "absent": "Absent",
+    "xpEarned": "+{{n}} XP earned",
+    "noXp": "No XP for this session",
+    "coachRating": "Coach's rating for you",
+    "teamFeedback": "Team feedback",
+    "yourTimes": "Your times"
+  }
+}

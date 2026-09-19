@@ -10,6 +10,7 @@ import {
   DimensionValue,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation.types';
 import { Card } from '../../components/common/Card';
@@ -260,6 +261,7 @@ const LoadingSkeleton: React.FC = () => (
    ═══════════════════════════════════════════════════ */
 
 export const WeeklyReportScreen: React.FC = () => {
+  const { t } = useTranslation('plan');
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [currentWeek, setCurrentWeek] = useState(getCurrentISOWeek);
@@ -375,8 +377,8 @@ export const WeeklyReportScreen: React.FC = () => {
       ) : !report || report.sessions_scheduled === 0 ? (
         <EmptyState
           icon="calendar-event-line"
-          title="No sessions this week"
-          message="Try checking the previous week"
+          title={t('report.emptyTitle')}
+          message={t('report.emptyMessage')}
         />
       ) : (
         <ScrollView
@@ -422,7 +424,7 @@ export const WeeklyReportScreen: React.FC = () => {
                   >
                     {report.sessions_attended}/{report.sessions_scheduled}
                   </Text>
-                  <Text style={s.summaryLabel}>Sessions</Text>
+                  <Text style={s.summaryLabel}>{t('report.sessions')}</Text>
                 </View>
               </Card>
             </View>
@@ -458,7 +460,7 @@ export const WeeklyReportScreen: React.FC = () => {
                   {report.avg_rating !== null && (
                     <Stars rating={Math.round(report.avg_rating)} size={10} />
                   )}
-                  <Text style={s.summaryLabel}>Avg Rating</Text>
+                  <Text style={s.summaryLabel}>{t('report.avgRating')}</Text>
                 </View>
               </Card>
             </View>
@@ -519,7 +521,7 @@ export const WeeklyReportScreen: React.FC = () => {
 
           {/* ═══ 2. Session Cards List ═══ */}
           <Animated.View style={sessionsEntry}>
-            <Text style={s.sectionTitle}>Session Details</Text>
+            <Text style={s.sectionTitle}>{t('report.sessionDetails')}</Text>
             {[...report.evaluations]
               .sort((a, b) => a.date.localeCompare(b.date))
               .map((evaluation) => (
@@ -576,7 +578,7 @@ export const WeeklyReportScreen: React.FC = () => {
                           },
                         ]}
                       >
-                        {evaluation.present ? 'Present' : 'Absent'}
+                        {evaluation.present ? t('report.present') : t('report.absent')}
                       </Text>
                     </View>
                   </View>
@@ -620,7 +622,7 @@ export const WeeklyReportScreen: React.FC = () => {
                       color={colors.primary}
                     />
                   </View>
-                  <Text style={s.planTitle}>Current Training Plan</Text>
+                  <Text style={s.planTitle}>{t('report.currentPlan')}</Text>
                 </View>
                 <Text style={s.planName}>
                   {report.current_plan_phase.plan_name}

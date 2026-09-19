@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useTrainingPlanStore } from '../../store/trainingPlan.store';
 import { MyPlanScreen } from './MyPlanScreen';
 import { WeeklyReportScreen } from '../WeeklyReport/WeeklyReportScreen';
@@ -10,16 +11,17 @@ import { colors } from '../../theme';
 type Segment = 'plan' | 'report';
 
 export const PlanAndReportScreen: React.FC = () => {
+  const { t } = useTranslation('plan');
   const [activeSegment, setActiveSegment] = useState<Segment>('plan');
 
   const markPlanViewed = useTrainingPlanStore((s) => s.markPlanViewed);
 
   const segments = useMemo<SegmentItem[]>(
     () => [
-      { key: 'plan', label: 'My Plan' },
-      { key: 'report', label: 'My Report' },
+      { key: 'plan', label: t('tabs.plan') },
+      { key: 'report', label: t('tabs.report') },
     ],
-    [],
+    [t],
   );
 
   useFocusEffect(

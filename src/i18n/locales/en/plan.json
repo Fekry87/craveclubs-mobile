@@ -1,0 +1,26 @@
+{
+  "tabs": {
+    "plan": "My Plan",
+    "report": "My Report"
+  },
+  "loading": "Loading training plan...",
+  "emptyTitle": "No training plan",
+  "emptyMessage": "You don't have an active training plan yet. Your coach will assign one to you.",
+  "paused": "This plan is currently paused",
+  "weeksOne": "{{count}} week",
+  "weeksOther": "{{count}} weeks",
+  "perWeek": "{{count}}x / week",
+  "goals": "Goals",
+  "phases": "Phases",
+  "exercises": "Exercises",
+  "report": {
+    "emptyTitle": "No sessions this week",
+    "emptyMessage": "Try checking the previous week",
+    "sessions": "Sessions",
+    "avgRating": "Avg Rating",
+    "sessionDetails": "Session Details",
+    "currentPlan": "Current Training Plan",
+    "present": "Present",
+    "absent": "Absent"
+  }
+}

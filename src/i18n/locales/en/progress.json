@@ -1,0 +1,57 @@
+{
+  "tabs": {
+    "progress": "My Progress",
+    "measurements": "My Measurements"
+  },
+  "stats": {
+    "attendance": "Attendance",
+    "avgRating": "Avg Rating",
+    "totalSessions": "Total Sessions",
+    "bestRating": "Best Rating"
+  },
+  "latestEvaluations": "Latest Evaluations",
+  "seeAll": "See All",
+  "trainingSession": "Training Session",
+  "evaluations": {
+    "loading": "Loading evaluations...",
+    "error": "Failed to load evaluations.",
+    "emptyTitle": "No evaluations yet",
+    "emptyMessage": "Your coach evaluations will appear here after sessions."
+  },
+  "loading": "Loading progress...",
+  "error": "Failed to load progress data.",
+  "noData": "No data available",
+  "measurements": {
+    "loading": "Loading your times...",
+    "emptyTitle": "No times yet",
+    "emptyMessage": "When your coach times your swims during a session, they show up here by day.",
+    "unavailableTitle": "Not available",
+    "unavailableMessage": "Your club doesn't record swim times in the app.",
+    "timeOne": "{{count}} time",
+    "timeOther": "{{count}} times",
+    "swimFallback": "Swim"
+  },
+  "chart": {
+    "title": "Progress",
+    "subtitle": "Average pace per 50m — higher is faster",
+    "periods": {
+      "day": "Days",
+      "week": "Weeks",
+      "month": "Months"
+    },
+    "steady": "Steady",
+    "faster": "{{pct}}% faster",
+    "slower": "{{pct}}% slower",
+    "avg": "avg {{time}}",
+    "empty": "No times for this range yet.",
+    "footer": "{{count}} {{swim}} across {{span}} {{unit}}",
+    "swimOne": "swim",
+    "swimOther": "swims",
+    "unitDayOne": "day",
+    "unitDayOther": "days",
+    "unitWeekOne": "week",
+    "unitWeekOther": "weeks",
+    "unitMonthOne": "month",
+    "unitMonthOther": "months"
+  }
+}

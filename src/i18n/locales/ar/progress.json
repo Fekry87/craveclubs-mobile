@@ -1,0 +1,57 @@
+{
+  "tabs": {
+    "progress": "تقدّمي",
+    "measurements": "قياساتي"
+  },
+  "stats": {
+    "attendance": "الحضور",
+    "avgRating": "متوسط التقييم",
+    "totalSessions": "إجمالي الجلسات",
+    "bestRating": "أعلى تقييم"
+  },
+  "latestEvaluations": "آخر التقييمات",
+  "seeAll": "عرض الكل",
+  "trainingSession": "جلسة تدريب",
+  "evaluations": {
+    "loading": "جارٍ تحميل التقييمات...",
+    "error": "فشل تحميل التقييمات.",
+    "emptyTitle": "لا توجد تقييمات بعد",
+    "emptyMessage": "تقييمات الكابتن هتظهر هنا بعد الجلسات."
+  },
+  "loading": "جارٍ تحميل التقدّم...",
+  "error": "فشل تحميل بيانات التقدّم.",
+  "noData": "لا توجد بيانات",
+  "measurements": {
+    "loading": "جارٍ تحميل أوقاتك...",
+    "emptyTitle": "لا توجد أوقات بعد",
+    "emptyMessage": "لما الكابتن يسجّل أوقات سباحتك أثناء الجلسة، هتظهر هنا حسب اليوم.",
+    "unavailableTitle": "غير متاح",
+    "unavailableMessage": "ناديك لا يسجّل أوقات السباحة في التطبيق.",
+    "timeOne": "مرة {{count}}",
+    "timeOther": "{{count}} مرات",
+    "swimFallback": "سباحة"
+  },
+  "chart": {
+    "title": "التقدّم",
+    "subtitle": "متوسط السرعة لكل 50م — الأعلى أسرع",
+    "periods": {
+      "day": "أيام",
+      "week": "أسابيع",
+      "month": "شهور"
+    },
+    "steady": "ثابت",
+    "faster": "أسرع بنسبة {{pct}}%",
+    "slower": "أبطأ بنسبة {{pct}}%",
+    "avg": "المتوسط {{time}}",
+    "empty": "لا توجد أوقات لهذه الفترة بعد.",
+    "footer": "{{count}} {{swim}} خلال {{span}} {{unit}}",
+    "swimOne": "قياس",
+    "swimOther": "قياسات",
+    "unitDayOne": "يوم",
+    "unitDayOther": "أيام",
+    "unitWeekOne": "أسبوع",
+    "unitWeekOther": "أسابيع",
+    "unitMonthOne": "شهر",
+    "unitMonthOther": "شهور"
+  }
+}
