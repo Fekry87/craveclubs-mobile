@@ -163,6 +163,11 @@ export const GroupOption: React.FC<OptionProps<Group>> = ({ item, selected, onPr
     : (item.remaining_spots ?? 0) <= 3
       ? colors.warningDark
       : colors.swimmerDark;
+  const spotsBg = item.is_full
+    ? colors.errorDim
+    : (item.remaining_spots ?? 0) <= 3
+      ? colors.warningDim
+      : colors.swimmerDim;
 
   return (
     <SelectCard
@@ -231,9 +236,9 @@ export const GroupOption: React.FC<OptionProps<Group>> = ({ item, selected, onPr
       ) : null}
 
       {spots ? (
-        <View style={styles.metaRow}>
-          <Icon name="user-line" size={14} color={spotsColor} />
-          <Text style={[styles.metaText, { color: spotsColor }]}>{spots}</Text>
+        <View style={[styles.spotsPill, { backgroundColor: spotsBg }]}>
+          <Icon name="user-line" size={13} color={spotsColor} />
+          <Text style={[styles.spotsText, { color: spotsColor }]}>{spots}</Text>
         </View>
       ) : null}
     </SelectCard>

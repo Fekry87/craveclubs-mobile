@@ -134,4 +134,19 @@ export const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textMuted,
   },
+  spotsPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
+    marginTop: spacing.sm + 4,
+  },
+  spotsText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: fontFamily.bodySemiBold,
+  },
 });

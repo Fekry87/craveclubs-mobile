@@ -34,6 +34,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: spacing.sm,
+    // Room for the absolutely-positioned radio in the top-right corner.
+    paddingRight: spacing.lg,
   },
   title: {
     fontSize: 16,
@@ -60,6 +62,10 @@ export const styles = StyleSheet.create({
     color: colors.warningDark,
   },
   radio: {
-    paddingTop: 2,
+    // Floats in the top-right corner so the card body (day chips, time strip)
+    // spans the full width instead of stopping short at a radio column.
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
   },
 });
